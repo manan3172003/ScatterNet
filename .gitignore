@@ -6,6 +6,13 @@ __pycache__
 db.sqlite3
 media
 
+# our python stuff is housed in backend, so gotta ignore that stuff
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/venv/
+backend/env/
+backend/*.sqlite3
+
 # Backup files # 
 *.bak 
 
@@ -268,3 +275,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+*.log
+.DS_Store
+
+# similar story as the backend stuff above
+frontend/node_modules 
+
+.env
+.env.db
