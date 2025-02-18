@@ -284,3 +284,6 @@ frontend/node_modules
 
 .env
 .env.db
+
+backend/static/
+backend/staticfiles
