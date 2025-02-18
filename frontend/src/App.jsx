@@ -1,10 +1,18 @@
 import './App.css';
+import { BrowserRouter as Router, Routes, Route, Navigate} from "react-router-dom"
+import { useState } from 'react';
 
 function App() {
   return (
-    <div className="App">
-     <h1> Hello World </h1>
-    </div>
+   <Router>
+      <Routes>
+        <Route path="/" element={}/>
+
+      </Routes>
+
+
+
+   </Router>
   );
 }
 
