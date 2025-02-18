@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views as authors_views
+from ..posts import views as posts_views
 from ..follow import views as follows_views
 
 app_name = "authors"
@@ -20,4 +21,10 @@ urlpatterns = [
     path('/current-user', authors_views.get_current_user, name='author-current-user'),
     path('/<int:pk>', authors_views.AuthorRetrieveUpdateView.as_view(), name='author-list-or-update'),
     path('/<path:id_url>', authors_views.get_author_fqid, name='author-list-fqid'),
+
+    # Log In
+    path('/current-user', authors_views.get_current_user, name='author-current-user'),
+
+    # Post app
+    path("/<int:auth_id>/posts", posts_views.create_post, name="POST Post"),
 ]
