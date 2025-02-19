@@ -6,5 +6,7 @@ urlpatterns = [
     path('/login', views.AuthorLoginView.as_view(), name='author-login'),
     path('/signup', views.AuthorSignUpView.as_view(), name='author-signup'),
     path('', views.AuthorsView.as_view(), name='authors-list'),
-    path('/<int:pk>', views.AuthorView.as_view(), name='author-list')
+    path('/<int:pk>', views.AuthorView.as_view(), name='author-list'),
+    path('/<int:pk>/update', views.UpdateAuthorView.as_view(), name='author-update'),
+
 ]

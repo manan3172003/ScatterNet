@@ -1,12 +1,12 @@
 from django.contrib.auth import authenticate, login
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework import status
 from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from .models import Author
-from .serializers import AuthorSignUpSerializer, AuthorSerializer
+from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer
 from ..utils.paginators import AuthorsPaginator
 
 # Create your views here.
@@ -97,3 +97,8 @@ class AuthorView(RetrieveAPIView):
         response = super(AuthorView, self).retrieve(request, args, kwargs)
         response.data['type'] = 'author'
         return response
+
+class UpdateAuthorView(UpdateAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorUpdateSerializer
+

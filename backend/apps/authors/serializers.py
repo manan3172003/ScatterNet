@@ -41,3 +41,14 @@ class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
         fields = ('id', 'host', 'displayName', 'github', 'profileImageURL', 'page')
+
+class AuthorUpdateSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Author
+        fields = ('id', 'username', 'host', 'displayName', 'github', 'profileImageURL', 'page', 'state')
+        extra_kwargs = {
+            'displayName': {'required': False} #not necessary to update it p much
+        }
