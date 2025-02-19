@@ -24,3 +24,6 @@ RUN npm run build
 WORKDIR /backend
 
 RUN python manage.py collectstatic --no-input
+
+RUN python manage.py makemigrations --no-input
+RUN python manage.py migrate --no-input
