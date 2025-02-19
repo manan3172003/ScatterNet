@@ -37,4 +37,7 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
             **validated_data)
         return author
 
-
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ('id', 'host', 'displayName', 'github', 'profileImageURL', 'page')

@@ -1,14 +1,13 @@
-from django.shortcuts import render
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import status
 from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from .models import Author
-from .serializers import AuthorSignUpSerializer
-
+from .serializers import AuthorSignUpSerializer, AuthorSerializer
+from ..utils.paginators import AuthorsPaginator
 
 # Create your views here.
 class AuthorLoginView(APIView):
@@ -69,3 +68,32 @@ class AuthorSignUpView(APIView):
                 }
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class AuthorsView(ListAPIView):
+    serializer_class = AuthorSerializer
+    pagination_class = AuthorsPaginator
+    def get_queryset(self):
+        state = self.request.query_params.get('state')
+        if state:
+            queryset = Author.objects.filter(state=state)
+        else:
+            queryset = Author.objects.all()
+
+        username = self.request.query_params.get('username')
+        host = self.request.query_params.get('host')
+
+        if username:
+            queryset = queryset.filter(username=username)
+        if host:
+            queryset = queryset.filter(host=host)
+
+        return queryset
+
+class AuthorView(RetrieveAPIView):
+    serializer_class = AuthorSerializer
+    queryset = Author.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        response = super(AuthorView, self).retrieve(request, args, kwargs)
+        response.data['type'] = 'author'
+        return response
