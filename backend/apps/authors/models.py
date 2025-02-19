@@ -12,11 +12,11 @@ class Author(models.Model):
     )
 
     displayName = models.CharField(max_length=256)
-    host = models.URLField()
-    github = models.URLField()
+    host = models.URLField(default=None, blank=True, null=True) #this needs to be removed to be nullable later
+    github = models.URLField(default=None, blank=True, null=True)
     #not sure if this is gonna be just the url the frontend pulls or straight up the image, so it could be models.ImageField()
-    profileImageURL = models.URLField()
-    page = models.URLField()
+    profileImageURL = models.URLField(default=None, blank=True, null=True)
+    page = models.URLField(default=None, blank=True, null=True) #this too
 
     # basically we'll use this in the future to identify whether or not our current Author is from another node
     is_local = models.BooleanField(default=True)

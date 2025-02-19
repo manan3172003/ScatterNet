@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
-from django.http import JsonResponse
+from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from .models import Author
+from .serializers import AuthorSignUpSerializer
 
 
 # Create your views here.
@@ -18,24 +20,24 @@ class AuthorLoginView(APIView):
 
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
-        return JsonResponse({'detail': 'CSRF cookie set.'})
+        return Response({'detail': 'CSRF cookie set.'})
 
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
         password = request.data.get('password')
 
         if not username or not password:
-            return JsonResponse({'error': 'Missing Username or Password'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Missing Username or Password'}, status=status.HTTP_400_BAD_REQUEST)
 
         auth_user = authenticate(request, username=username, password=password)
         if auth_user is not None:
             try:
                 author = auth_user.author_profile
             except Author.DoesNotExist:
-                return JsonResponse({'error': 'No author found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'No author found'}, status=status.HTTP_404_NOT_FOUND)
 
             if not (author.state == 'ACTIVE'):
-                return JsonResponse({'error': 'This user cannot login to the system.'},
+                return Response({'error': 'This user cannot login to the system.'},
                                     status=status.HTTP_401_UNAUTHORIZED)
 
             login(request, auth_user)
@@ -48,11 +50,22 @@ class AuthorLoginView(APIView):
                     'author_id': author.id
                 }
             }
-            return JsonResponse(response, status=status.HTTP_200_OK)
+            return Response(response, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({'error': 'Incorrect Username or Password'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'error': 'Incorrect Username or Password'}, status=status.HTTP_401_UNAUTHORIZED)
 
+class AuthorSignUpView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = AuthorSignUpSerializer(data=request.data)
 
-
-
-
+        if serializer.is_valid():
+            author = serializer.save()
+            return Response({
+                'message': 'User created successfully.',
+                'user': {
+                    'username': author.username,
+                    'displayName': author.displayName,
+                    'author_id': author.id,
+                }
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
