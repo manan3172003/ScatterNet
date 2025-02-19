@@ -4,4 +4,83 @@
     background-color: #57659E;
     text-align: center;
 }
+.landing-main{
+    margin: 1em auto;
+    width:80%;
+    padding: 20px;
+    border-radius: 10px;
+    background: #1a202c;
+}
+.tab-switch {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
 
+.tab-switch button {
+    flex: 1;
+    padding: 10px;
+    background: #1e293b;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 5px;
+}
+  
+  .tab-switch button.active {
+    background: white;
+    color: black;
+    font-weight: bold;
+}
+.form-content {
+    text-align: left;
+}
+  
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+}
+.optional{
+    font-size: 0.9rem;
+    color: #888; /* Light gray to de-emphasize */
+    margin-left: 5px; 
+}
+  
+  .auth-form label {
+    color: white;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+  
+  .auth-form input {
+   
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: none;
+    background: #1e293b;
+    color: white;
+}
+  
+  .auth-form input::placeholder {
+    color: #94a3b8;
+}
+  
+  .auth-form button {
+    background: white;
+    color: black;
+    font-weight: bold;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+  
+  .auth-form button:hover {
+    background: #d1d5db;
+}
+.form-label {
+    font-size: 1rem;
+}

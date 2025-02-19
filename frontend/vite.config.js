@@ -1,11 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+
+import path from "path"
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(),
-    tailwindcss(),
   ],
+  resolve: {
+    alias: {
+      "@": path.resolve("frontend", "./src"),
+    },
+  },
 
   // This ensures that when you run npm run build, Vite places the CSS and JS  files in the correct location that Django expects.
 
