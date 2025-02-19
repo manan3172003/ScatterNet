@@ -15,17 +15,43 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name='Like',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('type', models.CharField(default='like', max_length=100)),
+                ('published', models.DateTimeField(default=datetime.datetime.now)),
+                ('id_url', models.URLField(unique=True)),
+                ('object', models.URLField()),
+                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='authors.author')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Post',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('type', models.CharField(default='post', max_length=100)),
                 ('title', models.CharField(max_length=200)),
-                ('id_url', models.URLField()),
+                ('id_url', models.URLField(unique=True)),
                 ('page', models.URLField()),
                 ('description', models.CharField(max_length=200)),
                 ('contentType', models.CharField(max_length=100)),
                 ('content', models.TextField()),
-                ('published', models.DateTimeField(default=datetime.datetime.now)),
+                ('published', models.DateTimeField(auto_now_add=True)),
+                ('visibility', models.CharField(choices=[('PUBLIC', 'PUBLIC'), ('FRIENDS', 'FRIENDS'), ('UNLISTED', 'UNLISTED'), ('DELETED', 'DELETED')], default='PUBLIC', max_length=10)),
                 ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='authors.author')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='Comment',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('type', models.CharField(default='comment', max_length=100)),
+                ('comment', models.TextField()),
+                ('contentType', models.CharField(max_length=100)),
+                ('published', models.DateTimeField(default=datetime.datetime.now)),
+                ('id_url', models.URLField(unique=True)),
+                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='authors.author')),
+                ('post', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.post')),
             ],
         ),
     ]
