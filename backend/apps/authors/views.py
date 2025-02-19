@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework import status
 from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -89,16 +89,19 @@ class AuthorsView(ListAPIView):
 
         return queryset
 
-class AuthorView(RetrieveAPIView):
-    serializer_class = AuthorSerializer
+class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
     queryset = Author.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        response = super(AuthorView, self).retrieve(request, args, kwargs)
+        response = super(AuthorRetrieveUpdateView, self).retrieve(request, args, kwargs)
         response.data['type'] = 'author'
         return response
 
-class UpdateAuthorView(UpdateAPIView):
-    queryset = Author.objects.all()
-    serializer_class = AuthorUpdateSerializer
+    #since we need the same endpoint, just change serializer being used based on what task we're doing
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return AuthorSerializer
+        else:
+            return AuthorUpdateSerializer
+
 
