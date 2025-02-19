@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'apps.authors',
     'apps.posts',
+    'apps.follow',
     'rest_framework',
 ]
 
