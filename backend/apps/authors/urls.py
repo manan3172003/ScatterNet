@@ -3,5 +3,6 @@ from . import views
 
 app_name = "authors"
 urlpatterns = [
-    path('login/', views.AuthorLoginView.as_view(), name='author-login')
+    path('login/', views.AuthorLoginView.as_view(), name='author-login'),
+    path('signup/', views.AuthorSignUpView.as_view(), name='author-signup')
 ]

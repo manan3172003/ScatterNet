@@ -30,7 +30,7 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
         created_user.set_password(password)
         created_user.save()
 
-        author = Author.object.create(
+        author = Author.objects.create(
             user=created_user,
             state='PENDING', #by default, we'll keep it pending until accepted by node admin
             is_local=True,
