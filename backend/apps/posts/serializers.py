@@ -1,23 +1,21 @@
 from rest_framework import serializers
 from .models import Post, visibility_options
 
-
 class PostSerializer(serializers.Serializer):
     type = 'post'
     title = serializers.CharField(max_length=200)
     id_url = None
-    page = serializers.URLField()
+    page = None
     description = serializers.CharField(max_length=200)
     contentType = serializers.CharField(max_length=100)
     content = serializers.CharField()
-    # need to change when author serializer is made
-    author_id = serializers.CharField(required=True)
     published = None
     visibility = serializers.ChoiceField(choices=visibility_options, default='PUBLIC')
 
-
     def create(self, validated_data):
         # creates the object
+        author_id = self.context['auth_id']
+        validated_data['author_id'] = author_id
         post = Post.objects.create(**validated_data)
         # updates the url_id to the actual value
         post.id_url = "http://localhost:8000/api/posts/{}".format(post.id)
