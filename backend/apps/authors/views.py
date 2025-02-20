@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -103,5 +104,21 @@ class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
             return AuthorSerializer
         else:
             return AuthorUpdateSerializer
+
+@api_view(['GET'])
+def get_current_user(request):
+    if request.user.is_authenticated:
+        author = request.user.author_profile
+        response = {
+            'message': "There is a current user logged in",
+            'user': {
+                'username': author.username,
+                'displayName': author.displayName,
+                'author_id': author.id,
+            }
+        }
+        return Response(response, status=status.HTTP_200_OK)
+    else:
+        return Response("User is not logged in.", status=status.HTTP_401_UNAUTHORIZED)
 
 
