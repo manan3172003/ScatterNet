@@ -50,5 +50,6 @@ class AuthorUpdateSerializer(serializers.ModelSerializer):
         model = Author
         fields = ('id', 'username', 'host', 'displayName', 'github', 'profileImageURL', 'page', 'state')
         extra_kwargs = {
-            'displayName': {'required': False} #not necessary to update it p much
+            'displayName': {'required': False}, #not necessary to update it p much
+            'state': {'required': False} #so users can also update other stuff
         }

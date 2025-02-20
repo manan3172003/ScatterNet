@@ -4,6 +4,7 @@ from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.permissions import BasePermission
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from .models import Author
@@ -90,8 +91,20 @@ class AuthorsView(ListAPIView):
 
         return queryset
 
+class CheckNodeAdminChangedState(BasePermission):
+
+    # https://www.django-rest-framework.org/api-guide/permissions/#custom-permissions neat feature
+    message = "Only Node Admins are Allowed to update an Author's state."
+
+    def has_permission(self, request, view):
+        if request.method == 'PUT' and 'state' in request.data:
+            return request.user.is_authenticated and request.user.is_staff
+        return True
+
 class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
     queryset = Author.objects.all()
+    http_method_names = ['get', 'put'] #explicitly only allows these two
+    permission_classes = [CheckNodeAdminChangedState]
 
     def retrieve(self, request, *args, **kwargs):
         response = super(AuthorRetrieveUpdateView, self).retrieve(request, args, kwargs)
