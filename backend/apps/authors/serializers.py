@@ -35,20 +35,42 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
             state='PENDING', #by default, we'll keep it pending until accepted by node admin
             is_local=True,
             **validated_data)
+
+        author.id_url = "http://localhost:8000/api/authors/{}".format(author.id)
+        author.page = "http://localhost:8000/authors/{}".format(author.id)
+        author.save()
+
         return author
 
 class AuthorSerializer(serializers.ModelSerializer):
+    id = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Author
-        fields = ('id', 'host', 'displayName', 'github', 'profileImageURL', 'page')
+        fields = ('type', 'id', 'host', 'displayName', 'github', 'profileImageURL', 'page')
+
+    def get_id(self, obj):
+        return obj.id_url
+
+    def get_type(self, obj):
+        return "author"
 
 class AuthorUpdateSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
     username = serializers.CharField(read_only=True)
+    id = serializers.SerializerMethodField(read_only=True)
+    type = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Author
-        fields = ('id', 'username', 'host', 'displayName', 'github', 'profileImageURL', 'page', 'state')
+        fields = ('type', 'id', 'username', 'host', 'displayName', 'github', 'profileImageURL', 'page', 'state')
         extra_kwargs = {
-            'displayName': {'required': False} #not necessary to update it p much
+            'displayName': {'required': False}, #not necessary to update it p much
+            'state': {'required': False} #so users can also update other stuff
         }
+
+    def get_id(self, obj):
+        return obj.id_url
+
+    def get_type(self, obj):
+        return "author"
