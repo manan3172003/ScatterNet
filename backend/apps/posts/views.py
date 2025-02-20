@@ -44,8 +44,10 @@ class PostListCreateView(ListAPIView):
 
         if not self.request.user.is_authenticated:
             return  queryset.filter(visibility='PUBLIC')
-        elif self.request.user.author_profile.id == auth_id:
+        elif self.request.user.author_profile.id == auth_id and not self.request.user.is_staff:
             return queryset
+        elif self.request.user.is_staff:
+            return Post.objects.filter(author_id=auth_id)
         elif self.request.user.author_profile.id != auth_id:
             # need to validate based on friends and followers
             return queryset
