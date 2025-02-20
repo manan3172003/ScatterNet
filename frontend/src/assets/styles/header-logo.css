@@ -1,0 +1,14 @@
+.logo {
+    font-family: 'Karantina', cursive;
+    margin: 0;
+    padding:0;
+    color: #FFFFFF;
+    font-size: 3.5rem;
+    line-height: 150%;
+    -webkit-text-stroke-color: #C57284;
+    -webkit-text-stroke-width: 3px;
+    text-shadow: 
+        2px 2px 0px #C57284,
+        4px 4px 0px #C57284;
+
+}
