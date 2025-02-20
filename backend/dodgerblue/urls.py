@@ -19,6 +19,6 @@ from django.urls import path, include, re_path
 from apps.frontend import views
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('authors/', include("apps.authors.urls")),
+    path('api/authors', include("apps.authors.urls")),
     re_path(r'^.*', views.home, name='frontend'),
 ]
