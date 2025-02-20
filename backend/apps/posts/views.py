@@ -27,25 +27,41 @@ def get_post(request, url_id):
     serializer = PostSerializer(post)
     return Response(serializer.data)
 
-# @api_view(["GET", "POST"])
-# def get_posts(request):
-#     posts = Post.objects.all()
-#     serializer = PostSerializer(posts, many=True)
-#     return Response(serializer.data)
+@api_view(["GET"])
+def get_posts(request):
+    posts = Post.objects.all()
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data)
 
-class PostListCreateView(APIView, ListAPIView):
-    queryset = Post.objects.all()
+class PostListCreateView(ListAPIView):
     serializer_class = PostSerializer
     pagination_class = PostsPaginator
 
-    def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            queryset = Post.objects.filter(author_id=kwargs.get("auth_id"),visibility='PUBLIC').values()
-        elif request.user.author_profile
+    def get_queryset(self):
+        auth_id = self.kwargs.get('auth_id')
+        queryset = Post.objects.filter(author_id=auth_id)
+        queryset = queryset.exclude(visibility='DELETED')
 
+        if not self.request.user.is_authenticated:
+            return  queryset.filter(visibility='PUBLIC')
+        elif self.request.user.author_profile.id == auth_id:
+            return queryset
+        elif self.request.user.author_profile.id != auth_id:
+            # need to validate based on friends and followers
+            return queryset
 
+    def post(self, request, *args, **kwargs):
+        auth_id = self.kwargs.get('auth_id')
 
-
+        if not self.request.user.is_authenticated or auth_id != self.request.user.author_profile.id:
+            return Response(status=401)
+        elif self.request.user.author_profile.id == auth_id:
+            serializer = PostSerializer(data=request.data, context={'auth_id': auth_id})
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=201)
+            else:
+                return Response(serializer.errors, status=400)
 
 @api_view(["POST"])
 def create_post(request, auth_id):
