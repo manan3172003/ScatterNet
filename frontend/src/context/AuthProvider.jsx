@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
+            console.log("sending login request....")
             const response = await fetch("http://localhost:8000/api/authors/login", {
                 method: "POST",
                 headers: {
@@ -47,7 +48,8 @@ export const AuthProvider = ({ children }) => {
                 body : JSON.stringify({
                     "username": username,
                     "password":password
-                })
+                }),
+                
             });
 
             const data = await response.json();

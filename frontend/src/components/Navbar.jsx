@@ -1,12 +1,13 @@
-import {Home, User, Bell, SquarePlus} from "lucide-react"
+import {Home, User, SquarePlus} from "lucide-react"
 import { useState,useEffect } from "react"
 import {motion} from "framer-motion"
 import { Link } from "react-router";
+import "../assets/styles/navbar.css"
 const navItems = [
     {icon: Home, label: "Home", path:"/home"},
+    {icon: SquarePlus, label: "Post",path:"/post"},
     {icon: User, label: "Profile", path:"/profile"},
-    {icon: Bell, label: "Notifications",path:"/messages"},
-    {icon: SquarePlus, label: "Post",path:"/post"}
+    
 ]
 
 export default function Navbar(){
@@ -29,15 +30,15 @@ export default function Navbar(){
         >   
         
             <ul className={`nav-list ${onMobile ? "mobile" : "desktop"}`}>
-                {navItems.map((item, index) => {
+                {navItems.map((item, index) => (
                     <li key={index}>
-                        <Link to={item.path} className="nav-bar-item">
+                        <Link to={item.path} className="nav-item">
                             <item.icon size={24}/>
                             <span className="nav-label">{item.label}</span>
                         </Link>
                     </li>
 
-                })}
+                ))}
 
 
             </ul>

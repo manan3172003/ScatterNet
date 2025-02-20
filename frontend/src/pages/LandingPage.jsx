@@ -3,10 +3,11 @@ import HeaderLogo from "../components/HeaderLogo"
 import {useContext, useState} from "react"
 import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/landing-page.css"
-
+import {useNavigate } from "react-router-dom"
 
 export default function LandingPage(){
     const {login} = useContext(AuthContext)
+    const navigate = useNavigate()
     const [activeTab,setActiveTab] = useState("login")
     const [formData, setFormData] = useState({
         github: "",
@@ -49,7 +50,8 @@ export default function LandingPage(){
                     github: formData.github || null,
                     displayName: formData.displayName,
                     profileImageURL: formData.profileImageURL || null,
-                })
+                }),
+                credentials: "include"
             })
 
             const data = await response.json()
@@ -80,7 +82,8 @@ export default function LandingPage(){
     async function handleSubmit(e){
       e.preventDefault()
       if (activeTab == "login"){
-        const response = await login(formData.username, formData.password);
+        console.log("made it here")
+        let response = await login(formData.username, formData.password);
 
         if (!response.success) {
             if (response.status === "401") {
@@ -90,6 +93,8 @@ export default function LandingPage(){
             }
         } else {
             setSuccessMessage("Login successful! Redirecting...");
+            
+            navigate("/home")
         }
       }
       else {
