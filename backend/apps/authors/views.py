@@ -1,7 +1,8 @@
 from django.contrib.auth import authenticate, login
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -89,16 +90,35 @@ class AuthorsView(ListAPIView):
 
         return queryset
 
-class AuthorView(RetrieveAPIView):
-    serializer_class = AuthorSerializer
+class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
     queryset = Author.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        response = super(AuthorView, self).retrieve(request, args, kwargs)
+        response = super(AuthorRetrieveUpdateView, self).retrieve(request, args, kwargs)
         response.data['type'] = 'author'
         return response
 
-class UpdateAuthorView(UpdateAPIView):
-    queryset = Author.objects.all()
-    serializer_class = AuthorUpdateSerializer
+    #since we need the same endpoint, just change serializer being used based on what task we're doing
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return AuthorSerializer
+        else:
+            return AuthorUpdateSerializer
+
+@api_view(['GET'])
+def get_current_user(request):
+    if request.user.is_authenticated:
+        author = request.user.author_profile
+        response = {
+            'message': "There is a current user logged in",
+            'user': {
+                'username': author.username,
+                'displayName': author.displayName,
+                'author_id': author.id,
+            }
+        }
+        return Response(response, status=status.HTTP_200_OK)
+    else:
+        return Response("User is not logged in.", status=status.HTTP_401_UNAUTHORIZED)
+
 
