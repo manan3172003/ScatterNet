@@ -1,6 +1,6 @@
 
 .navbar {
-    background-color: #1f2937; 
+    background-color: #2d3748; 
     color: white;
     padding: 16px;
 }
@@ -15,8 +15,11 @@
 }
 
 .navbar.desktop {
-    width: 256px; 
+    width: 200px; 
     height: 100%;
+    position: fixed;
+    left:0;
+    top:0;
 }
 
 

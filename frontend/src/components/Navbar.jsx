@@ -26,7 +26,7 @@ export default function Navbar(){
         className={`navbar ${onMobile ? "mobile": "desktop"}`}
         initial={{ opacity: 0, x: onMobile ? 0 : -50, y: onMobile ? 50 : 0 }}
         animate={{ opacity: 1, x: 0, y: 0 }} // Layout position so 0
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.7}}
         >   
         
             <ul className={`nav-list ${onMobile ? "mobile" : "desktop"}`}>

@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (username, password) => {
         try {
+            fetchUserData()
             console.log("sending login request....")
             const response = await fetch("http://localhost:8000/api/authors/login", {
                 method: "POST",
