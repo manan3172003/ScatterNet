@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from .models import Post
 from .serializers import PostSerializer
 from rest_framework.generics import ListAPIView
-from rest_framework.views import APIView
 from ..utils.paginators import PostsPaginator
 
 
@@ -27,9 +26,26 @@ def get_post(request, url_id):
     serializer = PostSerializer(post)
     return Response(serializer.data)
 
+# def get_author_post(auth_id, post_id):
+#     post =
+# def put_author_post(request, auth_id, post_id):
+# def delete_author_post(request, auth_id, post_id):
+#
+# @api_view(["GET", "PUT", "DELETE"])
+# def author_post(request, auth_id, post_id):
+#     if request.method == 'GET':
+#         get_author_post(auth_id, post_id)
+#     elif request.method == 'PUT':
+#         put_author_post(request, auth_id, post_id)
+#     elif request.method == 'DELETE':
+#         delete_author_post(request, auth_id, post_id)
+
 @api_view(["GET"])
 def get_posts(request):
-    posts = Post.objects.all()
+    try:
+        posts = Post.objects.all()
+    except Post.DoesNotExist:
+        return Response({})
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data)
 

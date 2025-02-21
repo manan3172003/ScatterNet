@@ -1,32 +1,37 @@
 from rest_framework import serializers
-from .models import Post, visibility_options
+from .models import Post, visibility_options, Comment, Like
+from ..authors.models import Author
+from ..authors.serializers import AuthorSerializer
 
-class PostSerializer(serializers.Serializer):
-    type = 'post'
-    title = serializers.CharField(max_length=200)
-    id_url = None
-    page = None
-    description = serializers.CharField(max_length=200)
-    contentType = serializers.CharField(max_length=100)
-    content = serializers.CharField()
-    published = None
-    visibility = serializers.ChoiceField(choices=visibility_options, default='PUBLIC')
+class PostSerializer(serializers.ModelSerializer):
+    id = serializers.SerializerMethodField(read_only=True)
+    page = serializers.URLField(read_only=True)
+    type = serializers.CharField(read_only=True, default='post')
+    author = AuthorSerializer(read_only=True)
+    comments = serializers.SerializerMethodField(read_only=True)
+    likes = serializers.SerializerMethodField(read_only=True)
+    published = serializers.DateTimeField(read_only=True, default=None)
+
+    class Meta:
+        model = Post
+        fields = ['type', 'title', 'id', 'page', 'description', 'contentType', 'content', 'author', 'comments', 'likes', 'published', 'visibility']
 
     def create(self, validated_data):
-        # creates the object
         author_id = self.context['auth_id']
-        validated_data['author_id'] = author_id
-        post = Post.objects.create(**validated_data)
-        # updates the url_id to the actual value
-        post.id_url = "http://localhost:8000/api/posts/{}".format(post.id)
-        post.page = "http://localhost:8000/posts/{}".format(post.id)
+        author = Author.objects.get(id=author_id)
+        post = Post.objects.create(author=author, **validated_data)
+
+        # Update the post's id_url and page fields
+        post.id_url = f"http://localhost:8000/api/posts/{post.id}"
+        post.page = f"http://localhost:8000/posts/{post.id}"
         post.save()
         return post
 
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.description = validated_data.get('description', instance.description)
-        instance.content = validated_data.get('content', instance.content)
-        instance.visibility = validated_data.get('visibility', instance.visibility)
-        instance.save()
-        return instance
+    def get_id(self, obj):
+        return obj.id_url
+
+    def get_comments(self, obj):
+        return {}
+
+    def get_likes(self, obj):
+        return {}
