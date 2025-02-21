@@ -8,7 +8,7 @@ import LayoutWithNavbar from './components/LayoutWithNavbar';
 import { AuthContext } from './context/AuthContext';
 import { useContext } from 'react';
 import {Navigate} from "react-router-dom"
-
+import PublicPostPage from './pages/PublicPostPage';
 function App() {
   
   const {user} = useContext(AuthContext)
@@ -27,7 +27,7 @@ function App() {
         
         <Route
             path="/http://localhost:8000/authors/${}/posts/${}"
-            element={}
+            element={<PublicPostPage />}
         />
       </Routes>
 
