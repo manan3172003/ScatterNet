@@ -107,23 +107,18 @@ class FollowerDetailView(APIView):
         foreign_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
 
         is_follower = Follow.objects.filter(actor=foreign_author, object=author, isPending=False).exists()
+        follower_data = AuthorSerializer(foreign_author).data
 
-        # Could change if we need more info
         if not is_follower:
-            return Response({"relationship": "Not a follower"}, status=status.HTTP_404_NOT_FOUND)
-        return Response({"relationship": "Is a follower"}, status=status.HTTP_200_OK)
+            return Response({"error": "Not a follower"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"author": follower_data}, status=status.HTTP_200_OK)
 
     def put(self, request, author_id, foreign_id_url):
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
         foreign_author = get_object_or_404(Author, id_url=decoded_url, state="ACTIVE")
 
-        if request.user.author_profile.id != author.id:
-            return Response({
-                'error': 'Need to be logged in as the author to perform this action'
-            }, status=status.HTTP_401_UNAUTHORIZED)
-
-        if request.user.author_profile.id == foreign_author.id:
+        if foreign_author.id == author.id:
             return Response({
                 'error': 'Actor and object cannot be the same user'
             }, status=status.HTTP_401_UNAUTHORIZED)
@@ -133,6 +128,13 @@ class FollowerDetailView(APIView):
         # Check if follow exists
         # If isPending -> accept, if not, send an errpr
         if existing_follow:
+
+            # Ensure the person accepting the friend request is the author
+            if request.user.author_profile.id != author.id:
+                return Response({
+                    'error': 'Need to be logged in as the follow requestee to perform this action'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+
             if existing_follow.isPending:
                 existing_follow.isPending = False
                 existing_follow.save()
@@ -142,6 +144,12 @@ class FollowerDetailView(APIView):
                 return Response({
                     "error": "Follow relationship already exists and is accepted"
                 }, status=status.HTTP_409_CONFLICT)
+
+        # Ensure the person making the follow request is the foreign_author
+        if request.user.author_profile.id != foreign_author.id:
+            return Response({
+                'error': 'Need to be logged in as the follow requester to perform this action'
+            }, status=status.HTTP_401_UNAUTHORIZED)
 
         data = {
             "actor": foreign_author.id,
@@ -163,18 +171,27 @@ class FollowerDetailView(APIView):
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
         foreign_author = get_object_or_404(Author, id_url=decoded_url, state="ACTIVE")
 
-        if request.user.author_profile.id != author.id:
-            return Response({
-                'error': 'Need to be logged in as the author to perform this action'
-            }, status=status.HTTP_401_UNAUTHORIZED)
-
         follow_request = get_object_or_404(Follow, actor=foreign_author, object=author)
         follow_request.delete()
 
+        # When rejecting the follow request, the user logged in has to be the author
+        # that is receiving the follow request (FOREIGN_AUTHOR_FQID -> AUTHOR_SERIAL)
         if follow_request.isPending:
+            if request.user.author_profile.id != author.id:
+                return Response({
+                    'error': 'Need to be logged in as the follow requestee to perform this action'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+
             return Response({
                 'message': 'Follow request rejected'
             }, status=status.HTTP_200_OK)
+
+        # When unfollowing someone, the user logged in has to be the author
+        # that made the request, which would be the foreign_author_fqid
+        if request.user.author_profile.id != foreign_author.id:
+            return Response({
+                'error': 'Need to be logged in as the follow requester to perform this action'
+            }, status=status.HTTP_401_UNAUTHORIZED)
 
         return Response({
             'message': 'Unfollowed successfully',
