@@ -4,7 +4,6 @@ from ..follow import views as follows_views
 
 app_name = "authors"
 urlpatterns = [
-
     # Follow app
     # path('/<int:author_id>/inbox',follows_views.FollowView.as_view(),name='follow'),
     path('/<int:author_id>/followers',follows_views.FollowersListView.as_view(),name='followers-list'),
@@ -18,7 +17,7 @@ urlpatterns = [
     path('/login', authors_views.AuthorLoginView.as_view(), name='author-login'),
     path('/signup', authors_views.AuthorSignUpView.as_view(), name='author-signup'),
     path('', authors_views.AuthorsView.as_view(), name='authors-list'),
+    path('/current-user', authors_views.get_current_user, name='author-current-user'),
     path('/<int:pk>', authors_views.AuthorRetrieveUpdateView.as_view(), name='author-list-or-update'),
     path('/<path:id_url>', authors_views.get_author_fqid, name='author-list-fqid'),
-    path('/current-user', authors_views.get_current_user, name='author-current-user')
 ]
