@@ -20,6 +20,7 @@ urlpatterns = [
     path('', authors_views.AuthorsView.as_view(), name='authors-list'),
     path('/current-user', authors_views.get_current_user, name='author-current-user'),
     path('/<int:pk>', authors_views.AuthorRetrieveUpdateView.as_view(), name='author-list-or-update'),
+    path("/<int:auth_id>/posts/", posts_views.PostListCreateView.as_view(), name="author-posts"),
     path('/<path:id_url>', authors_views.get_author_fqid, name='author-list-fqid'),
 
     # Log In
