@@ -6,7 +6,7 @@ app_name = "authors"
 urlpatterns = [
 
     # Follow app
-    path('/<int:author_id>/inbox',follows_views.FollowView.as_view(),name='follow'),
+    # path('/<int:author_id>/inbox',follows_views.FollowView.as_view(),name='follow'),
     path('/<int:author_id>/followers',follows_views.FollowersListView.as_view(),name='followers-list'),
     path('/<int:author_id>/followers/<path:foreign_id_url>',follows_views.FollowerDetailView.as_view(),name='follower-detail'),
     # These three are not required based on spec, but will most likely be used when deciding to display certain posts
