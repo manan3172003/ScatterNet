@@ -104,6 +104,12 @@
     color: #fff;
   }
 .comment-pfp{
-  width: 24px;
-  height: 24px;
-  }
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.comment-actions{
+  justify-content: right;
+  display: flex;
+  align-items: center;
+}
