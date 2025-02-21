@@ -1,0 +1,79 @@
+:root {
+  --primaryBlue: #57659e;
+  --secondaryBlue: #a7a2c1;
+}
+p {
+  margin: 0;
+}
+.cover-wrapper {
+  background-color: var(--primaryBlue);
+  margin: auto;
+  width: 1200px;
+  height: 400px;
+  z-index: 3;
+  position: relative;
+}
+#cover-image {
+  height: 200px;
+  width: 1200px;
+  object-fit: cover;
+  position: absolute;
+  z-index: -2;
+  border-bottom: 8px solid var(--secondaryBlue);
+}
+.cover-buttons-wrapper {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+.info-wrapper {
+  display: flex;
+  gap: 10px;
+  margin: 0 20px;
+}
+#profile-image {
+  height: 200px;
+  width: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 8px solid var(--secondaryBlue);
+}
+.info-names-wrapper {
+  margin-top: 25px;
+}
+#displayname {
+  font-family: "Karantina";
+  font-size: 96px;
+  color: #ffffff;
+  -webkit-text-stroke-color: var(--secondaryBlue);
+  -webkit-text-stroke-width: 3px;
+}
+.info-names-subwrapper {
+  color: #ffffff;
+  font-size: 32px;
+  font-family: "Inter";
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+.button {
+  width: 200px;
+  height: 50px;
+  border-radius: 30px;
+  background-color: #ffffff;
+  margin-top: 100px;
+  margin-left: 150px;
+  transition: all 0.5s ease-in-out;
+}
+.button > p {
+  text-align: center;
+  font-family: "Karantina";
+  font-size: 48px;
+  color: var(--secondaryBlue);
+  -webkit-text-stroke-color: var(--primaryBlue);
+  -webkit-text-stroke-width: 3px;
+}
+.button:hover {
+  background-color: rgb(57, 67, 108);
+  transition: all 0.5s ease-in-out;
+}
