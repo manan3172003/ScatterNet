@@ -128,7 +128,7 @@ export default function Post({post, onPostClick,onCommentClick}){
             <span className="post-author-name">{post.author.displayName}</span> {post.description}
           </ReactMarkdown>
   
-          <span className="view-comments" >
+          <span className="view-comments" onClick={onCommentClick}>
             View all {post.comments.count} comments
           </span>
         </div>

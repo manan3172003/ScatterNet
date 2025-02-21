@@ -232,11 +232,10 @@ export default function HomePage(){
                 />
                 
             ))}
-            {!isMobile && selectedPost && <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />}
-            {isMobile && showComments && <MobileCommentModal post={selectedPost} onClose={() => setShowComments(false)} />}
-    
 
             </main>
+            {!isMobile && selectedPost && <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />}
+            {isMobile && showComments && <MobileCommentModal post={selectedPost} onClose={() => setShowComments(false)} />}
         </InfiniteScroll>
     )
 }
