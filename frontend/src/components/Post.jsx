@@ -1,15 +1,16 @@
 /* eslint-disable react/prop-types */
 
 import {useState} from "react"
-import AuthContext from "../context/AuthProvider"
+import { AuthContext } from "../context/AuthContext";
 import ReactMarkdown from "react-markdown"
+import "../assets/styles/post.css"
 // import MediaComponent from "./MediaComponent"
-
+import {useContext} from "react"
 import {Heart,MessageCircle,Share2} from "lucide-react"
-import Comments from "./Comments"
 
-export default function Post({post}){
-    const {user} = AuthContext
+
+export default function Post({post, onPostClick,onCommentClick}){
+    const {user} = useContext(AuthContext)
 
    
     const [hasLiked, setLikes] = useState(getLikeStatus(user))
@@ -20,6 +21,7 @@ export default function Post({post}){
 
 
     async function handleLike() {
+        
         const authorObject = await getAuthorObject(user)
         const response = await fetch(`${post.author.id}/inbox`,{
             method: "POST",
@@ -27,7 +29,7 @@ export default function Post({post}){
             headers : {
                 "Content-Type":"application/json"
             },
-
+            
             body : JSON.stringify({
                 "type": "like",
                 "author": JSON.stringify(authorObject),
@@ -55,6 +57,7 @@ export default function Post({post}){
     }
     async function getAuthorObject(user) {
         try {
+            console.log(user)
             const response = await fetch(`http://localhost/api/authors/${user.author_id}`);
     
             if (!response.ok) {
@@ -80,34 +83,72 @@ export default function Post({post}){
     /* Comments can't be deleted */
 
     return (
-        <div className="post-container">
-            <header className="post-header">
-                <img className="post-pfp" src={post.author.profileImage}/>
-                <div className="post-header-info">
-                    <h3 className="post-title">{post.title}</h3>
-                    <span>{post.author.displayName}</span>
-                </div>
-                <div className="post-main">
-                    {/* <MediaComponent /> For later  */}
-                    <ReactMarkdown className="post-description">
-                        {post.description}
-                    </ReactMarkdown>
-                    <div className="post-icons">
-                        <Heart size={24} className={`${hasLiked ? "liked" : ""}`} onClick={handleLike}/>
-                        <MessageCircle size={24}/>
-                        {post.visibility === "PUBLIC" ? <Share2 size={24} onClick={handleShare}/>: <></>}
+        // <div className="post-container">
+        //     <div className="post-header">
+        //         <h2 className="post-title">{post.title}</h2>
+        //         <div className="post-author">
+        //         <img
+        //             src={post.avatarUrl || "/placeholder.svg"}
+        //             alt={post.author}
+        //             className="post-avatar"
+        //         />
+        //         <span className="post-author-name">{post.author}</span>
+        //     </div>
+        //     <img />
+        // </div>
+        // <div className="post-main">
+        //             {/* <MediaComponent /> For later  */}
+        //     <ReactMarkdown className="post-description">
+        //             {post.description}
+        //     </ReactMarkdown>
+        //     <div className="post-icons">
+        //         <Heart size={24} className={`${hasLiked ? "liked" : ""}`} onClick={handleLike}/>
+        //         <MessageCircle size={24}/>
+        //         {post.visibility === "PUBLIC" ? <Share2 size={24} onClick={handleShare}/>: <></>}
 
-                    </div>
-                    <Comments comments={post.comments.src}/>
-
-                </div>
-
-                
-            </header>
+        //     </div>
+        //             {/* <Comments comments={post.comments.src}/> */} 
+        // </div>
             
+        // </div>
+
+    <div className="post-container" onClick={onPostClick}>
+        <div className="post-header">
+          <h2 className="post-title">{post.title}</h2>
+          <div className="post-author">
+            <img
+              src={post.author.profileImage}
+              alt={post.author.displayName}
+              className="post-avatar"
+            />
+            <span className="post-author-name">{post.author.displayName}</span>
+          </div>
         </div>
-
-
+  
+        <img
+        src={"https://i.imgur.com/k7XVwpB.jpeg"}
+        alt="Post"
+        className="post-image"
+      />
+  
+        <div className="post-body">
+          <div className="post-icons">
+           
+            <Heart size={24} className={`${hasLiked ? "liked" : ""}`} onClick={handleLike}/>
+            <MessageCircle size={24}/>
+            {post.visibility === "PUBLIC" ? <Share2 size={24} onClick={handleShare}/>: <></>}
+            
+          </div>
+          {post.visibility === "PUBLIC" ? <div className="likes">{post.likes.count} likes</div>:<></>}
+          <ReactMarkdown className="post-caption">
+            <span className="post-author-name">{post.author.displayName}</span> {post.description}
+          </ReactMarkdown>
+  
+          <span className="view-comments" onClick={onCommentClick}>
+            View all {post.comments.count} comments
+          </span>
+        </div>
+      </div>
 
     )
 }

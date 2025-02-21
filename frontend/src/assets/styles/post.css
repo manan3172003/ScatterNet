@@ -1,0 +1,100 @@
+
+.post-container {
+    overflow: hidden; 
+    border-radius: 0.5rem; 
+    background-color: #1F2937; 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+    width: 90%;
+    
+  }
+  
+  .post-header {
+    padding: 1rem; 
+  }
+  
+  .post-title {
+    margin-bottom: 0.5rem; 
+    font-size: 1.5rem;
+    line-height: 1.75rem; 
+    font-weight: 700; 
+    color: #F3F4F6; 
+
+  }
+  
+  .post-author {
+    display: flex;
+    align-items: center;
+  }
+  
+  .post-avatar {
+    width: 48px;
+    height: 48px;
+    margin-right: 0.75rem; 
+    border-radius: 50%;
+    
+  }
+  
+  .post-author-name {
+    font-weight: 600; 
+    color: #E5E7EB; 
+
+  }
+
+  .post-image {
+    width: 100%;
+    height: auto;
+    
+  }
+  
+
+  .post-body {
+    padding: 1rem; 
+  }
+  
+
+.post-icons {
+    display: flex; 
+    margin-bottom: 0.5rem; 
+    column-gap: 1rem;
+  }
+  
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+  
+.icon {
+  width: 24px;
+  height: 24px;
+  color: #bbb;
+  transition: color 0.2s ease-in-out;
+}
+
+
+.liked {
+  color: red;
+  fill: red;
+}
+
+
+.likes {
+  margin-bottom: 0.5rem; 
+  font-weight: 600; 
+  color: #E5E7EB; 
+}
+
+
+.post-caption {
+  margin-bottom: 10px;
+}
+
+
+.view-comments {
+  background: none;
+  border: none;
+  color: #bbb;
+  font-size: 0.9rem;
+  cursor: pointer;
+}

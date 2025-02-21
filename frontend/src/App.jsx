@@ -25,7 +25,10 @@ function App() {
           <Route path="/home" element={<ProtectedRoute element={<HomePage />} />} />
         </Route>
         
-           
+        <Route
+            path="/http://localhost:8000/authors/${}/posts/${}"
+            element={}
+        />
       </Routes>
 
    </Router>

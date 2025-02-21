@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
     AuthProvider.propTypes = {
         children: PropTypes.node.isRequired, // Ensures 'children' is required
       };  
-
+      
     const [user, setUser] = useState(null);
     const fetchUserData = async () => {
         try {
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
             });
 
             const data = await response.json();
-
+            print(data)
             if (response.ok) {
                 setUser(data.user);
             } else {

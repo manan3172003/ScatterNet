@@ -1,0 +1,8 @@
+.layout{
+    display: flex; 
+    flex-direction: column; 
+    
+    color: #F3F4F6; 
+    background-color: #111827; 
+
+}
