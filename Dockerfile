@@ -13,13 +13,17 @@ RUN npm run build
 
 WORKDIR /backend
 
+# Environment settings
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN pip install --upgrade pip
+# Install Python dependencies
 COPY ./backend/requirements.txt /backend/
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
+# Copy backend code
 COPY ./backend /backend/
 
+# Collect Django static files
 RUN python manage.py collectstatic --no-input

@@ -3,4 +3,10 @@ migrations:
 	python ./backend/manage.py migrate
 
 run-backend:
-	python ./backend/manage.py runserver
+	docker compose up --build
+
+tests:
+	docker compose build test
+
+run-tests:
+	docker compose run test

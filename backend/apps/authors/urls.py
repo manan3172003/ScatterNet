@@ -20,13 +20,14 @@ urlpatterns = [
     path('', authors_views.AuthorsView.as_view(), name='authors-list'),
     path('/current-user', authors_views.get_current_user, name='author-current-user'),
     path('/<int:pk>', authors_views.AuthorRetrieveUpdateView.as_view(), name='author-list-or-update'),
+
+    # Post app
     path("/<int:auth_id>/posts/<int:post_id>", posts_views.author_post, name="author-post"),
     path("/<int:auth_id>/posts/", posts_views.PostListCreateView.as_view(), name="author-posts"),
+
+    # Author app
     path('/<path:id_url>', authors_views.get_author_fqid, name='author-list-fqid'),
 
     # Log In
     path('/current-user', authors_views.get_current_user, name='author-current-user'),
-
-    # Post app
-    path("/<int:auth_id>/posts", posts_views.create_post, name="POST Post"),
 ]
