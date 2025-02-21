@@ -2,6 +2,7 @@
 
 import {useState} from "react"
 import AuthContext from "../context/AuthProvider"
+import ReactMarkdown from "react-markdown"
 // import MediaComponent from "./MediaComponent"
 
 import {Heart,MessageCircle,Share2} from "lucide-react"
@@ -10,14 +11,12 @@ import Comments from "./Comments"
 export default function Post({post}){
     const {user} = AuthContext
 
-    let hasLiked = getLikeStatus(user)
-    const [postLikes, setLikes] = useState(hasLiked)
+   
+    const [hasLiked, setLikes] = useState(getLikeStatus(user))
     /*
     Each post has its own post object as state
     
     */
-
-
 
 
     async function handleLike() {
@@ -41,8 +40,18 @@ export default function Post({post}){
         if (!response.ok) {
             throw new Error(`Error liking item: ${response.status}`);
         }
+        else {
+            setLikes(true)
+        }
 
        
+    }
+    function handleShare(){
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(post.page)
+                .then(() => alert("Post URL copied to clipboard!"))
+                .catch(err => console.error("Failed to copy URL", err));
+          }
     }
     async function getAuthorObject(user) {
         try {
@@ -68,7 +77,7 @@ export default function Post({post}){
             return exists;
         }
     }
-
+    /* Comments can't be deleted */
 
     return (
         <div className="post-container">
@@ -80,14 +89,13 @@ export default function Post({post}){
                 </div>
                 <div className="post-main">
                     {/* <MediaComponent /> For later  */}
-                    <span className="post-description">
+                    <ReactMarkdown className="post-description">
                         {post.description}
-                    </span>
+                    </ReactMarkdown>
                     <div className="post-icons">
-
-                        <Heart/>
-                        <MessageCircle/>
-                        <Share2/>
+                        <Heart size={24} className={`${hasLiked ? "liked" : ""}`} onClick={handleLike}/>
+                        <MessageCircle size={24}/>
+                        {post.visibility === "PUBLIC" ? <Share2 size={24} onClick={handleShare}/>: <></>}
 
                     </div>
                     <Comments comments={post.comments.src}/>
