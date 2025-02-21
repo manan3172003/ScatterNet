@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import ReactMarkdown from "react-markdown"
 import "../assets/styles/post.css"
 // import MediaComponent from "./MediaComponent"
-import {useContext} from "react"
+import {useContext,useEffect} from "react"
 import {Heart,MessageCircle,Share2} from "lucide-react"
 
 
@@ -13,13 +13,22 @@ export default function Post({post, onPostClick,onCommentClick}){
     const {user} = useContext(AuthContext)
 
    
-    const [hasLiked, setLikes] = useState(getLikeStatus(user))
-    /*
+        /*
     Each post has its own post object as state
     
     */
 
+    const [hasLiked, setLikes] = useState(false); // Default to false
 
+    useEffect(() => {
+        async function fetchLikeStatus() {
+            const liked = await getLikeStatus(user);
+            setLikes(liked);
+        }
+        if (user) {
+            fetchLikeStatus();
+        }
+    }, []);
     async function handleLike() {
         
         const authorObject = await getAuthorObject(user)
@@ -72,45 +81,20 @@ export default function Post({post, onPostClick,onCommentClick}){
         }
     }
     async function getLikeStatus(user) {
+        
         const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/liked`)
         if (response.ok){
-            const liked = response.json()
+            const liked = await response.json()
             const targetObject = post.id
             const exists = liked.src.some(like => like.object === targetObject)
+          
             return exists;
         }
     }
     /* Comments can't be deleted */
 
     return (
-        // <div className="post-container">
-        //     <div className="post-header">
-        //         <h2 className="post-title">{post.title}</h2>
-        //         <div className="post-author">
-        //         <img
-        //             src={post.avatarUrl || "/placeholder.svg"}
-        //             alt={post.author}
-        //             className="post-avatar"
-        //         />
-        //         <span className="post-author-name">{post.author}</span>
-        //     </div>
-        //     <img />
-        // </div>
-        // <div className="post-main">
-        //             {/* <MediaComponent /> For later  */}
-        //     <ReactMarkdown className="post-description">
-        //             {post.description}
-        //     </ReactMarkdown>
-        //     <div className="post-icons">
-        //         <Heart size={24} className={`${hasLiked ? "liked" : ""}`} onClick={handleLike}/>
-        //         <MessageCircle size={24}/>
-        //         {post.visibility === "PUBLIC" ? <Share2 size={24} onClick={handleShare}/>: <></>}
-
-        //     </div>
-        //             {/* <Comments comments={post.comments.src}/> */} 
-        // </div>
-            
-        // </div>
+      
 
     <div className="post-container" onClick={onPostClick}>
         <div className="post-header">
@@ -135,16 +119,16 @@ export default function Post({post, onPostClick,onCommentClick}){
           <div className="post-icons">
            
             <Heart size={24} className={`${hasLiked ? "liked" : ""}`} onClick={handleLike}/>
-            <MessageCircle size={24}/>
+            <MessageCircle size={24} onClick={onCommentClick}/>
             {post.visibility === "PUBLIC" ? <Share2 size={24} onClick={handleShare}/>: <></>}
             
           </div>
-          {post.visibility === "PUBLIC" ? <div className="likes">{post.likes.count} likes</div>:<></>}
+          {post.visibility === "PUBLIC" || post.visibility === "UNLISTED" ? <div className="likes">{post.likes.count} likes</div>:<></>}
           <ReactMarkdown className="post-caption">
             <span className="post-author-name">{post.author.displayName}</span> {post.description}
           </ReactMarkdown>
   
-          <span className="view-comments" onClick={onCommentClick}>
+          <span className="view-comments" >
             View all {post.comments.count} comments
           </span>
         </div>

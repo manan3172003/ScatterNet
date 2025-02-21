@@ -193,8 +193,11 @@ export default function HomePage(){
         }
 
     }
-    function handleCommentClick(post){
+    function handleCommentClick(post,e){
+        console.log("This got called!")
+        e.stopPropagation()
         if (isMobile){
+            
             setSelectedPost(post)
             setShowComments(true)
         }
