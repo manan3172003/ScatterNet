@@ -5,6 +5,7 @@ import AuthContext from "../context/AuthProvider"
 // import MediaComponent from "./MediaComponent"
 
 import {Heart,MessageCircle,Share2} from "lucide-react"
+import Comments from "./Comments"
 
 export default function Post({post}){
     const {user} = AuthContext
@@ -89,7 +90,7 @@ export default function Post({post}){
                         <Share2/>
 
                     </div>
-                    
+                    <Comments comments={post.comments.src}/>
 
                 </div>
 
