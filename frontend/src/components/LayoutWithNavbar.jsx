@@ -5,7 +5,7 @@ export default function LayoutWithNavbar() {
     return (
         <div className="layout">
             <Navbar />  
-            <Outlet />   
+            <Outlet className={"other"}/>   
         </div>
     );
 }
