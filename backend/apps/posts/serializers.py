@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from .models import Post, visibility_options, Comment, Like
 from ..authors.models import Author
@@ -26,6 +27,20 @@ class PostSerializer(serializers.ModelSerializer):
         post.page = f"http://localhost:8000/posts/{post.id}"
         post.save()
         return post
+
+    def update(self, instance, validated_data):
+        # Update only specific fields
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.contentType = validated_data.get('contentType', instance.contentType)
+        instance.content = validated_data.get('content', instance.content)
+        instance.visibility = validated_data.get('visibility', instance.visibility)
+
+        # Automatically update the published date
+        instance.published = timezone.now()
+
+        instance.save()
+        return instance
 
     def get_id(self, obj):
         return obj.id_url
