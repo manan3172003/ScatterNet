@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import BasePermission
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from urllib.parse import unquote
 from .models import Author
 from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer
@@ -24,6 +26,22 @@ class AuthorLoginView(APIView):
     def get(self, request, *args, **kwargs):
         return Response({'detail': 'CSRF cookie set.'})
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'password'],
+            properties={
+                'username': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Author's chosen username to login."
+                ),
+                'password': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Author's password to login."
+                )
+            }
+        )
+    )
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -57,6 +75,27 @@ class AuthorLoginView(APIView):
             return Response({'error': 'Incorrect Username or Password'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class AuthorSignUpView(APIView):
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'password', 'displayName'],
+            properties={
+                'username': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="A Unique Identifier for an Author."
+                ),
+                'password': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Password that will be used to log in."
+                ),
+                'displayName': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="String that is to be displayed on an author's profile"
+                )
+            }
+        )
+    )
     def post(self, request, *args, **kwargs):
         serializer = AuthorSignUpSerializer(data=request.data)
 
@@ -132,7 +171,7 @@ def get_author_fqid(request, id_url):
 
 @api_view(['GET'])
 def get_current_user(request):
-    if request.user.is_authenticated:
+    if request.user and request.user.is_authenticated:
         author = request.user.author_profile
         response = {
             'message': "There is a current user logged in",

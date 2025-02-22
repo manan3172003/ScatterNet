@@ -1,0 +1,287 @@
+from urllib.parse import unquote
+from .models import Follow
+from ..authors.models import Author
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .serializers import FollowSerializer
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from ..authors.serializers import AuthorSerializer
+
+# Create your views here.
+# We may have to move this somewhere else since a few requests use the same URL
+# class FollowView(APIView):
+#     permission_classes = [IsAuthenticated]
+#
+#     def post(self, request, author_id):
+#         """
+#         URL: authors/{author_id}/inbox
+#         """
+#         new_request = request.data
+#         request_type = new_request.get('type')
+#
+#         if request_type != 'follow':
+#             return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)
+#
+#         actor_id = new_request['actor']['id']
+#         object_id = new_request['object']['id']
+#
+#         actor = get_object_or_404(Author, id_url=actor_id)
+#         object = get_object_or_404(Author, id_url=object_id)
+#
+#         # Ensure logged-in user is the actor
+#         if request.user.author_profile.id != actor.id:
+#             return Response({
+#                 'error': 'You need to be the actor.'
+#             }, status=status.HTTP_401_UNAUTHORIZED)
+#
+#         # Ensure author and object aren't the same
+#         if request.user.author_profile.id == object.id:
+#             return Response({
+#                 'error': 'Actor and object cannot be the same user.'
+#             }, status=status.HTTP_401_UNAUTHORIZED)
+#
+#         # Check if follow relationship already exists
+#         if Follow.objects.filter(actor=actor, object=object).exists():
+#             return Response({
+#                 'error': 'Follow relationship already exists.'
+#             }, status=status.HTTP_409_CONFLICT)
+#
+#         data = {
+#             'actor': actor.id,
+#             'object': object.id,
+#         }
+#
+#         serializer = FollowSerializer(data=data)
+#         if serializer.is_valid():
+#             follow = serializer.save()
+#             return Response({
+#                 'message': 'Follow successfully created',
+#                 'follow': f"{follow.actor.displayName} -> {follow.object.displayName}"
+#             }, status=status.HTTP_201_CREATED)
+#
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FollowersListView(APIView):
+    """
+    URL: authors/{author_id}/followers
+    """
+    def get(self, request, author_id):
+        isPending = request.GET.get('isPending', "false").lower() == "true"
+        author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
+
+        if not isPending:
+            authors_followers = Follow.objects.filter(object=author, isPending=False).values_list('actor', flat=True)
+            followers = Author.objects.filter(id__in=authors_followers, state="ACTIVE")
+
+            serializer = AuthorSerializer(followers, many=True)
+            return Response({
+                "type": 'followers',
+                "followers": serializer.data,
+            }, status=status.HTTP_200_OK)
+
+        else:
+            authors_follow_requests = Follow.objects.filter(object=author, isPending=True).values_list('actor', flat=True)
+            follow_requests = Author.objects.filter(id__in=authors_follow_requests, state="ACTIVE")
+
+            serializer = FollowSerializer(follow_requests, many=True)
+            return Response({
+                "type": 'follow requests',
+                "follow requests": serializer.data,
+            }, status=status.HTTP_200_OK)
+
+class FollowerDetailView(APIView):
+    """
+    URL: authors/{author_id}/followers/{foreign_id_url}
+    """
+    def get_permissions(self):
+        if self.request.method in ['DELETE', 'PUT']:
+            return [IsAuthenticated()]
+        return [AllowAny()]
+
+    def get(self, request, author_id, foreign_id_url):
+        decoded_url = unquote(foreign_id_url)
+        author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
+        foreign_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
+
+        is_follower = Follow.objects.filter(actor=foreign_author, object=author, isPending=False).exists()
+        follower_data = AuthorSerializer(foreign_author).data
+
+        if not is_follower:
+            return Response({"error": "Not a follower"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(follower_data, status=status.HTTP_200_OK)
+
+    """
+    ://service/api/authors/{AUTHOR_1_SERIAL}/followers/{AUTHOR_2_SERIAL}
+    if AUTHOR_2 is logged in and makes PUT request:
+        - if there is no request:
+            - AUTHOR_2 makes the follow request to author 1
+        - if there is a request:
+            - error: Follow request already sent
+ 
+    if AUTHOR_1 is logged in and makes PUT request:
+        - if there is a request:
+            - AUTHOR_1 makes the PUT request to accept the follow request
+        - if there is no request:
+            - Error
+    """
+    def put(self, request, author_id, foreign_id_url):
+        decoded_url = unquote(foreign_id_url)
+        author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
+        foreign_author = get_object_or_404(Author, id_url=decoded_url, state="ACTIVE")
+
+        if foreign_author.id == author.id:
+            return Response({
+                'error': 'Actor and object cannot be the same user'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        existing_follow = Follow.objects.filter(actor=foreign_author, object=author).first()
+
+        # Check if follow exists
+        # If isPending -> accept, if not, send an errpr
+        if existing_follow:
+
+            # Ensure the person accepting the friend request is the author
+            if request.user.author_profile.id != author.id:
+                return Response({
+                    'error': 'Follow request has already been sent'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if existing_follow.isPending:
+                existing_follow.isPending = False
+                existing_follow.save()
+                return Response({"message": "Follow request accepted"}, status=status.HTTP_200_OK)
+
+            else:
+                return Response({
+                    "error": "Follow relationship already exists and is accepted"
+                }, status=status.HTTP_409_CONFLICT)
+
+        # Ensure the person making the follow request is the foreign_author
+        if request.user.author_profile.id != foreign_author.id:
+            return Response({
+                'error': 'Need to be logged in as the follow requester to perform this action'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        data = {
+            "actor": foreign_author.id,
+            "object": author.id,
+        }
+
+        serializer = FollowSerializer(data=data)
+        if serializer.is_valid():
+            follow_request = serializer.save()
+            return Response({
+                'message': 'Follow request successfully created',
+                'follow': f"{follow_request.actor.displayName} -> {follow_request.object.displayName}"
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    """
+    if AUTHOR_1 follow requests AUTHOR_2:
+        - if AUTHOR_1 is logged in:
+            - Cannot delete
+        - if AUTHOR_2 is logged in:
+            - Successful delete
+    
+    if AUTHOR_1 follows AUTHOR_2:
+        - if AUTHOR_1 is logged in:
+            - Successful Unfollow
+        - if AUTHOR_2 is logged in:
+            - Cannot delete
+    
+    """
+    def delete(self, request, author_id, foreign_id_url):
+        decoded_url = unquote(foreign_id_url)
+        author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
+        foreign_author = get_object_or_404(Author, id_url=decoded_url, state="ACTIVE")
+
+        follow_request = get_object_or_404(Follow, actor=foreign_author, object=author)
+
+
+        # When rejecting the follow request, the user logged in has to be the author
+        # that is receiving the follow request (FOREIGN_AUTHOR_FQID -> AUTHOR_SERIAL)
+        if follow_request.isPending:
+            if request.user.author_profile.id != author.id:
+                return Response({
+                    'error': 'Need to be logged in as the follow requestee to perform this action'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+
+            follow_request.delete()
+            return Response({
+                'message': 'Follow request rejected'
+            }, status=status.HTTP_200_OK)
+
+        # When unfollowing someone, the user logged in has to be the author
+        # that made the request, which would be the foreign_author_fqid
+        if request.user.author_profile.id != foreign_author.id:
+            return Response({
+                'error': 'Need to be logged in as the follower to perform this action'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        follow_request.delete()
+        return Response({
+            'message': 'Unfollowed successfully',
+        }, status=status.HTTP_200_OK)
+
+class FollowingListView(APIView):
+    """
+    URL: authors/{author_id}/following/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, author_id):
+        author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
+        authors_following = Follow.objects.filter(actor=author, isPending=False).values_list('object', flat=True)
+        following = Author.objects.filter(id__in=authors_following, state='ACTIVE')
+
+        serializer = AuthorSerializer(following, many=True)
+        return Response({
+            "type": 'following',
+            "following": serializer.data,
+        }, status=status.HTTP_200_OK)
+
+class FriendsListView(APIView):
+    """
+    URL: authors/{author_id}/friends/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, author_id):
+        author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
+
+        authors_following = Follow.objects.filter(actor=author, isPending=False).values_list('object', flat=True)
+        authors_followers = Follow.objects.filter(object=author, isPending=False).values_list('actor', flat=True)
+        authors_friends = set(authors_following).intersection(authors_followers)
+
+        friends = Author.objects.filter(id__in=authors_friends)
+
+        serializer = AuthorSerializer(friends, many=True)
+        return Response({
+            "type": 'friends',
+            "friends": serializer.data
+        }, status=status.HTTP_200_OK)
+
+class FriendDetailView(APIView):
+    """
+    URL: authors/{author_id}/friends/{other_author_url}/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, author_id, other_author_url):
+        decoded_url = unquote(other_author_url)
+        author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
+        other_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
+
+        does_author_follow = Follow.objects.filter(actor=author, object=other_author, isPending=False).exists()
+        does_other_author_follow = Follow.objects.filter(object=other_author, actor=author, isPending=False).exists()
+
+        if does_author_follow and does_other_author_follow:
+            return Response({"relationship": "Are friends"}, status=status.HTTP_200_OK)
+
+        else:
+            return Response({"relationship": "Not friends"}, status=status.HTTP_404_NOT_FOUND)
