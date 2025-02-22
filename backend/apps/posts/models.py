@@ -25,18 +25,17 @@ class Post(models.Model):
 
 #i also feel like comments and likes should be added as models HERE, since they make up the whole post object, they are dependent on that to exist
 class Comment(models.Model):
-    type = models.CharField(max_length=100, default='comment')
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     comment = models.TextField()
     contentType = models.CharField(max_length=100)
     published = models.DateTimeField(default=datetime.now)
     id_url = models.URLField(unique=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    page = models.URLField(blank=True, null=True)
 
 
 class Like(models.Model):
-    type = models.CharField(max_length=100, default='like')
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     published = models.DateTimeField(default=datetime.now)
     id_url = models.URLField(unique=True)
-    object = models.URLField()
+    object = models.URLField() #this is the id_url of the thing that was liked, post/comment

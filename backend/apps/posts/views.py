@@ -1,15 +1,19 @@
 from urllib.parse import unquote
 
 from django.http.response import Http404
+from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Post
-from .serializers import PostSerializer
-from rest_framework.generics import ListAPIView
+from .models import Post, Like, Comment
+from .serializers import PostSerializer, LikeSerializer
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+
 
 from ..authors.models import Author
-from ..utils.paginators import PostsPaginator
+from ..utils.paginators import PostsPaginator, LikesPaginator
 
 
 # Create your views here.
@@ -142,3 +146,109 @@ class PostListCreateView(ListAPIView):
                 return Response(serializer.data, status=201)
             else:
                 return Response(serializer.errors, status=400)
+
+
+class LikesListView(ListAPIView):
+    serializer_class = LikeSerializer
+    pagination_class = LikesPaginator
+
+    def get_queryset(self):
+        author_serial = self.kwargs.get('author_serial')
+        post_serial = self.kwargs.get('post_serial')
+        comment_fqid = self.kwargs.get('comment_fqid')
+
+        if author_serial and post_serial:
+            if comment_fqid: #implement comment first
+                comment = get_object_or_404(Comment, id_url=comment_fqid)
+                queryset = Like.objects.filter(object=comment.id_url)
+                return queryset
+
+            else:
+                author = get_object_or_404(Author, pk=author_serial)
+                post = get_object_or_404(Post, pk=post_serial, author_id=author.id)
+                queryset = Like.objects.filter(object=post.id_url)
+                return queryset
+
+        elif author_serial:
+            author = get_object_or_404(Author, pk=author_serial)
+            queryset = Like.objects.filter(author_id=author.id)
+            return queryset
+
+        author_fqid = self.kwargs.get('author_fqid')
+        if author_fqid:
+            author = get_object_or_404(Author, id_url=author_fqid)
+            queryset = Like.objects.filter(author_id=author.id)
+            return queryset
+
+        post_fqid = self.kwargs.get('post_fqid')
+
+        if post_fqid:
+            post = get_object_or_404(Post, id_url=post_fqid)
+            queryset = Like.objects.filter(object=post.id)
+            return queryset
+
+class LikeRetrieveView(RetrieveAPIView):
+    serializer_class = LikeSerializer
+
+    def get_queryset(self):
+        like_fqid = self.kwargs.get('like_fqid')
+        if like_fqid:
+            queryset = Like.objects.filter(id_url=like_fqid)
+            return queryset
+        else:
+            author_serial = self.kwargs.get('author_serial')
+            like_serial = self.kwargs.get('like_serial')
+            queryset = Like.objects.filter(author_id=author_serial, pk=like_serial)
+            return queryset
+
+
+def post_like(author_id, object_url):
+    author = get_object_or_404(Author, id=author_id)
+    created_like = Like.objects.create(
+        author=author,
+        object=object_url,
+    )
+    created_like.id_url = "http://localhost:8000/authors/{}/liked/{}".format(author.id, created_like.id)
+    created_like.save()
+
+    return Response({'message': 'Like created successfully'}, status=status.HTTP_201_CREATED)
+
+
+def delete_like(author_id, object_url):
+    like = get_object_or_404(Like, author_id=author_id, object=object_url)
+    like.delete()
+    return Response({'message': 'Like deleted successfully'}, status=status.HTTP_202_ACCEPTED)
+
+
+@swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['author_id', 'object'],
+            properties={
+                'author_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="ID of the Author performing the like action."
+                ),
+                'object': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="URL ID of the Object (Post/Comment) that was liked."
+                )
+            }
+        ),
+        methods=['post', 'delete'],
+    )
+@api_view(['POST','DELETE'])
+def create_or_delete_like(request):
+    author_id = request.data.get('author_id')
+    object_url = request.data.get('object')
+    if not author_id:
+        return Response({'error': 'No author id found with the like.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not object_url:
+        return Response({'error': 'No object url present in request, cannot identify what was liked.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == "POST":
+        return post_like(author_id, object_url)
+    else:
+        return delete_like(author_id, object_url)
+
