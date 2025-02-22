@@ -23,6 +23,7 @@ urlpatterns = [
     # Likes endpoints with numeric converters
     path("/<int:author_serial>/posts/<int:post_serial>/comments/<path:comment_fqid>/likes", posts_views.LikesListView.as_view(), name="author-post-comment-likes"),
     path("/<int:author_serial>/posts/<int:post_serial>/likes", posts_views.LikesListView.as_view(), name="author-post-likes"),
+    path("/<int:author_serial>/posts/<int:post_serial>/comments", posts_views.CommentsListView.as_view(), name="author-post-comments"),
     path("/<int:author_serial>/liked", LikesListView.as_view(), name="author-liked"),
 
     # Post app endpoints
