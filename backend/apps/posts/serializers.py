@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import Post, visibility_options, Comment, Like
 from ..authors.models import Author
 from ..authors.serializers import AuthorSerializer
+from ..utils.paginators import LikesPaginator, CommentsPaginator
 
 class PostSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField(read_only=True)
@@ -68,4 +69,36 @@ class LikeSerializer(serializers.ModelSerializer):
     def get_type(self, obj):
         return "like"
 
+class CommentSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField(read_only=True)
+    id = serializers.SerializerMethodField(read_only=True)
+    author = AuthorSerializer(read_only=True)
+    published = serializers.DateTimeField(read_only=True)
+    comment = serializers.CharField(read_only=True)
+    contentType = serializers.CharField(read_only=True)
+    post = serializers.SerializerMethodField(read_only=True)
+    likes = serializers.SerializerMethodField(read_only=True)
 
+    class Meta:
+        model = Comment
+        fields = ['type', 'author', 'comment', 'contentType', 'published', 'id', 'post', 'likes']
+
+    def get_id(self, obj):
+        return obj.id_url
+
+    def get_type(self, obj):
+        return "comment"
+
+    def get_post(self, obj):
+        return obj.post.id_url
+
+    def get_likes(self, obj):
+        #can pass context to serializer if needed for future permissions.
+
+        queryset = Like.objects.filter(object=obj.id_url)
+
+        paginator = LikesPaginator()
+        paginated_likes = paginator.paginate_queryset(queryset)
+
+        serializer = LikeSerializer(paginated_likes, many=True)
+        return paginator.get_paginated_response(serializer.data).data

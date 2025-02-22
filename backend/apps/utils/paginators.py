@@ -29,10 +29,25 @@ class PostsPaginator(PageNumberPagination):
             'src': data
         })
 
+#TODO: add the "page" section in the likes and comments paginator
 class LikesPaginator(PageNumberPagination):
     page_size = 5
     page_size_query_param = 'size'
     object_type = 'likes'
+
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'type': self.object_type,
+            'src': data
+        })
+
+class CommentsPaginator(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'size'
+    object_type = 'comments'
 
     def get_paginated_response(self, data):
         return Response({

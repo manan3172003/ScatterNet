@@ -8,12 +8,12 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Post, Like, Comment
-from .serializers import PostSerializer, LikeSerializer
+from .serializers import PostSerializer, LikeSerializer, CommentSerializer
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 
 from ..authors.models import Author
-from ..utils.paginators import PostsPaginator, LikesPaginator
+from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
 
 
 # Create your views here.
@@ -252,3 +252,25 @@ def create_or_delete_like(request):
     else:
         return delete_like(author_id, object_url)
 
+
+class CommentsListView(ListAPIView):
+    serializer_class = CommentSerializer
+    pagination_class = CommentsPaginator
+
+    def get_queryset(self):
+        author_serial = self.kwargs.get('author_serial')
+        post_serial = self.kwargs.get('post_serial')
+
+        if author_serial and post_serial:
+            author = get_object_or_404(Author, id=author_serial)
+            post = get_object_or_404(Post, author=author, id=post_serial)
+            queryset = Comment.objects.filter(post=post)
+            return queryset
+
+        post_fqid = self.kwargs.get('post_fqid')
+        if post_fqid:
+            post = get_object_or_404(Post, id_url=post_fqid)
+            queryset = Comment.objects.filter(post=post)
+            return queryset
+
+# TODO: URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
