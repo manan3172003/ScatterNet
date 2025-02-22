@@ -16,9 +16,13 @@
     "@tailwindcss/vite": "^4.0.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "framer-motion": "^12.4.7",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-infinite-scroll-component": "^6.1.0",
+    "react-markdown": "^10.0.0",
     "react-router-dom": "^7.1.5",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7"

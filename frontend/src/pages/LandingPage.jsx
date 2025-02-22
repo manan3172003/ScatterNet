@@ -3,19 +3,19 @@ import HeaderLogo from "../components/HeaderLogo"
 import {useContext, useState} from "react"
 import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/landing-page.css"
-
+import {useNavigate } from "react-router-dom"
 
 export default function LandingPage(){
     const {login} = useContext(AuthContext)
+    const navigate = useNavigate()
     const [activeTab,setActiveTab] = useState("login")
     const [formData, setFormData] = useState({
         github: "",
         username: "",
-        email: "",
         password: "",
         confirmPassword: "",
-        profilePicture: null, 
-        displayname:""
+        profileImageURL: null, 
+        displayName:""
     })
     const [, setErrorMessage] = useState("");  
     const [, setSuccessMessage] = useState("");
@@ -39,19 +39,19 @@ export default function LandingPage(){
         }
 
         try {
-            const response = await fetch("http://localhost:8000/authors/api/signup",{
+            const response = await fetch("http://localhost:8000/api/authors/signup",{
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     username: formData.username,
-                    email: formData.email,
                     password: formData.password,
                     github: formData.github || null,
-                    displayname: formData.displayname,
-                    profilePicture: formData.profilePicture || null,
-                })
+                    displayName: formData.displayName,
+                    profileImageURL: formData.profileImageURL || null,
+                }),
+                credentials: "include"
             })
 
             const data = await response.json()
@@ -64,8 +64,8 @@ export default function LandingPage(){
                     email: "",
                     password: "",
                     confirmPassword: "",
-                    profilePicture: null,
-                    displayname: "",
+                    profileImageURL: null,
+                    displayName: "",
                 })
             }
 
@@ -82,7 +82,8 @@ export default function LandingPage(){
     async function handleSubmit(e){
       e.preventDefault()
       if (activeTab == "login"){
-        const response = await login(formData.username, formData.password);
+        console.log("made it here")
+        let response = await login(formData.username, formData.password);
 
         if (!response.success) {
             if (response.status === "401") {
@@ -92,6 +93,8 @@ export default function LandingPage(){
             }
         } else {
             setSuccessMessage("Login successful! Redirecting...");
+            
+            navigate("/home")
         }
       }
       else {
@@ -101,7 +104,7 @@ export default function LandingPage(){
 
 
     }
-
+    
     
 
     return <div className="landing-container">
@@ -137,19 +140,19 @@ export default function LandingPage(){
                             <input type="text" name="username" placeholder="Enter a desired username" required onChange={handleChange} value={formData.username}/>
 
                             <label className="form-label">Display Name</label>
-                            <input type="text" name="displayname" placeholder="Enter a desired display name" required onChange={handleChange} value={formData.displayname}/>
+                            <input type="text" name="displayName" placeholder="Enter a desired display name" required onChange={handleChange} value={formData.displayName}/>
 
                             <label className="form-label">Github Url</label>
-                            <input type="url" name="github" placeholder="A link to your Github Profile" required onChange={handleChange} value={formData.github}/>
+                            <input type="url" name="github" placeholder="A link to your Github Profile" onChange={handleChange} value={formData.github}/>
 
                             <label className="form-label">Profile Image Url</label>
-                            <input type="url" name="profilePicture" placeholder="A link to your Profile picture" required onChange={handleChange} value={formData.profilePicture}/>
+                            <input type="url" name="profileImageURL" placeholder="A link to your Profile picture" onChange={handleChange} value={formData.profileImageURL}/>
                             
                             <label className="form-label">Password</label>
                             <input type="password" name="password" required onChange={handleChange} value={formData.password}/>
 
                             <label className="form-label">Confirm Password</label>
-                            <input type="password" name="password" required onChange={handleChange} value={formData.con}/>
+                            <input type="password" name="confirmPassword" required onChange={handleChange} value={formData.confirmPassword}/>
                             
                             <button>Sign Up</button>
                         </form>

@@ -4,8 +4,10 @@ from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.permissions import BasePermission
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from urllib.parse import unquote
 from .models import Author
 from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer
 from ..utils.paginators import AuthorsPaginator
@@ -90,12 +92,24 @@ class AuthorsView(ListAPIView):
 
         return queryset
 
+class CheckNodeAdminChangedState(BasePermission):
+
+    # https://www.django-rest-framework.org/api-guide/permissions/#custom-permissions neat feature
+    message = "Only Node Admins are Allowed to update an Author's state."
+
+    def has_permission(self, request, view):
+        if request.method == 'PUT' and 'state' in request.data:
+            return request.user.is_authenticated and request.user.is_staff
+        return True
+
 class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
     queryset = Author.objects.all()
+    http_method_names = ['get', 'put'] #explicitly only allows these two
+    permission_classes = [CheckNodeAdminChangedState]
 
     def retrieve(self, request, *args, **kwargs):
         response = super(AuthorRetrieveUpdateView, self).retrieve(request, args, kwargs)
-        response.data['type'] = 'author'
+        # response.data['type'] = 'author'
         return response
 
     #since we need the same endpoint, just change serializer being used based on what task we're doing
@@ -104,6 +118,17 @@ class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
             return AuthorSerializer
         else:
             return AuthorUpdateSerializer
+
+@api_view(['GET'])
+def get_author_fqid(request, id_url):
+    decoded_url = unquote(id_url)
+    try:
+        author = Author.objects.get(id_url=decoded_url)
+    except Author.DoesNotExist:
+        return Response({'error': 'Author does not exist with this id'}, status=status.HTTP_404_NOT_FOUND)
+    serializer = AuthorSerializer(author)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_current_user(request):
@@ -119,6 +144,6 @@ def get_current_user(request):
         }
         return Response(response, status=status.HTTP_200_OK)
     else:
-        return Response("User is not logged in.", status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'error': "User is not logged in."}, status=status.HTTP_401_UNAUTHORIZED)
 
 
