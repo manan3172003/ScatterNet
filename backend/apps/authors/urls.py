@@ -2,7 +2,6 @@ from django.urls import path
 from . import views as authors_views
 from ..posts import views as posts_views
 from ..follow import views as follows_views
-from ..posts.views import LikesListView, LikeRetrieveView
 
 app_name = "authors"
 urlpatterns = [
@@ -22,17 +21,22 @@ urlpatterns = [
 
     # Likes endpoints with numeric converters
     path("/<int:author_serial>/posts/<int:post_serial>/comments/<path:comment_fqid>/likes", posts_views.LikesListView.as_view(), name="author-post-comment-likes"),
+    path("/<int:author_serial>/liked/<int:like_serial>", posts_views.LikeRetrieveView.as_view(), name="author-single-liked"),
+    path("/<int:author_serial>/commented/<int:comment_serial>", posts_views.CommentRetrieveView.as_view(), name="author-single-comment"),
     path("/<int:author_serial>/posts/<int:post_serial>/likes", posts_views.LikesListView.as_view(), name="author-post-likes"),
     path("/<int:author_serial>/posts/<int:post_serial>/comments", posts_views.CommentsListView.as_view(), name="author-post-comments"),
-    path("/<int:author_serial>/liked", LikesListView.as_view(), name="author-liked"),
+    path("/<int:author_serial>/liked", posts_views.LikesListView.as_view(), name="author-liked"),
+    path("/<int:author_serial>/commented", posts_views.CommentedListCreateView.as_view(), name="author-commented"),
+
 
     # Post app endpoints
     path("/<int:auth_id>/posts/<int:post_id>", posts_views.author_post, name="author-post"),
     path("/<int:auth_id>/posts/", posts_views.PostListCreateView.as_view(), name="author-posts"),
 
     # Likes endpoints with a generic path converter
-    path("/<path:author_serial>/liked/<int:like_serial>", LikeRetrieveView.as_view(), name="author-single-liked"),
-    path("/<path:author_fqid>/liked", LikesListView.as_view(), name="author-id_url-liked"),
+
+    path("/<path:author_fqid>/liked", posts_views.LikesListView.as_view(), name="author-id_url-liked"),
+    path("/<path:author_fqid>/commented", posts_views.CommentedListCreateView.as_view(), name="author-id_url-commented"),
 
     path('/<path:id_url>', authors_views.get_author_fqid, name='author-list-fqid'),
 ]

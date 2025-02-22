@@ -8,8 +8,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Post, Like, Comment
-from .serializers import PostSerializer, LikeSerializer, CommentSerializer
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from .serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentCreateSerializer
+from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
 
 
 from ..authors.models import Author
@@ -274,3 +274,39 @@ class CommentsListView(ListAPIView):
             return queryset
 
 # TODO: URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
+
+class CommentedListCreateView(ListCreateAPIView):
+    pagination_class = CommentsPaginator
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return CommentSerializer
+        else:
+            return CommentCreateSerializer
+
+    def get_queryset(self):
+        if 'author_serial' in self.kwargs:
+            return Comment.objects.filter(author__id=self.kwargs.get("author_serial"))
+        elif 'author_fqid' in self.kwargs:
+            return Comment.objects.filter(author__id_url=self.kwargs.get("author_fqid"))
+
+    def post(self, request, *args, **kwargs):
+        if 'author_fqid' in self.kwargs:
+            return Response({"error": "POST is not allowed on this endpoint."},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().post(request, *args, **kwargs)
+
+
+class CommentRetrieveView(RetrieveAPIView):
+    serializer_class = CommentSerializer
+
+    def get_object(self):
+        if 'comment_serial' in self.kwargs:
+            author_serial = self.kwargs.get('author_serial')
+            comment_serial = self.kwargs.get('comment_serial')
+            author = get_object_or_404(Author, pk=author_serial)
+            return get_object_or_404(Comment, author=author, pk=comment_serial)
+
+        elif 'comment_fqid' in self.kwargs:
+            comment_fqid = self.kwargs.get('comment_fqid')
+            return get_object_or_404(Comment, id_url=comment_fqid)
