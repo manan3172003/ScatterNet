@@ -1,0 +1,85 @@
+.posting-header{
+    background-color: #57659E;
+    text-align: center;
+  }
+  .posting-main{
+    margin: 1em auto;
+    width:80%;
+    padding: 20px;
+    border-radius: 10px;
+    background: #1a202c;
+  }
+  
+  .form-content {
+    text-align: left;
+  }
+  
+  .post-form {
+    display: flex;
+    flex-direction: column;
+  }
+  .optional{
+    font-size: 0.9rem;
+    color: #888; /* Light gray to de-emphasize */
+    margin-left: 5px; 
+  }
+  
+  .post-form label {
+    color: white;
+    margin-bottom: 5px;
+    font-size: 14px;
+  }
+  
+  .post-form input {
+   
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: none;
+    background: #1e293b;
+    color: white;
+  }
+  .post-form textarea {
+   
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: none;
+    background: #1e293b;
+    color: white;
+  }
+  
+ select {
+   
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: none;
+    background: #1e293b;
+    color: white;
+  }
+  
+  .post-form input::placeholder {
+    color: #94a3b8;
+  }
+  .post-form textarea::placeholder {
+    color: #94a3b8;
+  }
+  
+  .post-form button {
+    background: white;
+    color: black;
+    font-weight: bold;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .post-form button:hover {
+    background: #d1d5db;
+  }
+  .form-label {
+    font-size: 1rem;
+  }
