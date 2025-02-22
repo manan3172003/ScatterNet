@@ -111,8 +111,22 @@ class FollowerDetailView(APIView):
 
         if not is_follower:
             return Response({"error": "Not a follower"}, status=status.HTTP_404_NOT_FOUND)
-        return Response({"author": follower_data}, status=status.HTTP_200_OK)
+        return Response(follower_data, status=status.HTTP_200_OK)
 
+    """
+    ://service/api/authors/{AUTHOR_1_SERIAL}/followers/{AUTHOR_2_SERIAL}
+    if AUTHOR_2 is logged in and makes PUT request:
+        - if there is no request:
+            - AUTHOR_2 makes the follow request to author 1
+        - if there is a request:
+            - error: Follow request already sent
+ 
+    if AUTHOR_1 is logged in and makes PUT request:
+        - if there is a request:
+            - AUTHOR_1 makes the PUT request to accept the follow request
+        - if there is no request:
+            - Error
+    """
     def put(self, request, author_id, foreign_id_url):
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
@@ -132,8 +146,8 @@ class FollowerDetailView(APIView):
             # Ensure the person accepting the friend request is the author
             if request.user.author_profile.id != author.id:
                 return Response({
-                    'error': 'Need to be logged in as the follow requestee to perform this action'
-                }, status=status.HTTP_401_UNAUTHORIZED)
+                    'error': 'Follow request has already been sent'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             if existing_follow.isPending:
                 existing_follow.isPending = False
@@ -166,13 +180,28 @@ class FollowerDetailView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+    """
+    if AUTHOR_1 follow requests AUTHOR_2:
+        - if AUTHOR_1 is logged in:
+            - Cannot delete
+        - if AUTHOR_2 is logged in:
+            - Successful delete
+    
+    if AUTHOR_1 follows AUTHOR_2:
+        - if AUTHOR_1 is logged in:
+            - Successful Unfollow
+        - if AUTHOR_2 is logged in:
+            - Cannot delete
+    
+    """
     def delete(self, request, author_id, foreign_id_url):
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
         foreign_author = get_object_or_404(Author, id_url=decoded_url, state="ACTIVE")
 
         follow_request = get_object_or_404(Follow, actor=foreign_author, object=author)
-        follow_request.delete()
+
 
         # When rejecting the follow request, the user logged in has to be the author
         # that is receiving the follow request (FOREIGN_AUTHOR_FQID -> AUTHOR_SERIAL)
@@ -182,6 +211,7 @@ class FollowerDetailView(APIView):
                     'error': 'Need to be logged in as the follow requestee to perform this action'
                 }, status=status.HTTP_401_UNAUTHORIZED)
 
+            follow_request.delete()
             return Response({
                 'message': 'Follow request rejected'
             }, status=status.HTTP_200_OK)
@@ -190,9 +220,10 @@ class FollowerDetailView(APIView):
         # that made the request, which would be the foreign_author_fqid
         if request.user.author_profile.id != foreign_author.id:
             return Response({
-                'error': 'Need to be logged in as the follow requester to perform this action'
+                'error': 'Need to be logged in as the follower to perform this action'
             }, status=status.HTTP_401_UNAUTHORIZED)
 
+        follow_request.delete()
         return Response({
             'message': 'Unfollowed successfully',
         }, status=status.HTTP_200_OK)
