@@ -50,3 +50,22 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_likes(self, obj):
         return {}
+
+class LikeSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField(read_only=True)
+    id = serializers.SerializerMethodField(read_only=True)
+    author = AuthorSerializer(read_only=True)
+    published = serializers.DateTimeField(read_only=True)
+    object = serializers.URLField(read_only=True)
+
+    class Meta:
+        model = Like
+        fields = ['type', 'author', 'published', 'id', 'object']
+
+    def get_id(self, obj):
+        return obj.id_url
+
+    def get_type(self, obj):
+        return "like"
+
+
