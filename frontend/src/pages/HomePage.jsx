@@ -205,6 +205,8 @@ export default function HomePage(){
     async function fetchMorePosts(){
         try {
             const response = await fetch(`http://localhost:8000/api/posts?page=${1}`); // to be added
+            /*Replace fakePosts with a state called "posts" Use a useEffect to make a initial fetch to get the
+            first batch/page of posts. Then in the infinite scroll component call fetchMorePosts until "next" is null */
             const data = await response.json();
             console.log(data) // to be added
             
