@@ -35,7 +35,7 @@ export default function Post({post, onPostClick,onCommentClick}){
             return
         }
         const authorObject = await getAuthorObject(user)
-        const response = await fetch(`${post.author.id}/inbox`,{
+        const response = await fetch(`/like`,{
             method: "POST",
             credentials: "include",
             headers : {
@@ -43,10 +43,7 @@ export default function Post({post, onPostClick,onCommentClick}){
             },
             
             body : JSON.stringify({
-                "type": "like",
-                "author": JSON.stringify(authorObject),
-                "published": new Date().toISOString(),
-                "id": `http://localhost:8000/api/authors/${user.author_id}/liked/${crypto.randomUUID()}`,
+                "author": `${user.author_id}`,
                 "object": `${post.id}`
             })
 
