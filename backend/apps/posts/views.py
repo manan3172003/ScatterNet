@@ -15,6 +15,7 @@ from ..utils.paginators import PostsPaginator
 # Create your views here.
 @api_view(["GET"])
 def get_post(request, url_id):
+    context = {'request': request}
     decoded_url = unquote(url_id)
     try:
         post = Post.objects.get(id_url=decoded_url)
@@ -22,15 +23,15 @@ def get_post(request, url_id):
         return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     if post.visibility in ["PUBLIC", "UNLISTED"]:
-        return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+        return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
 
     if request.user.is_authenticated:
         if request.user.is_staff:
-            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+            return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
         elif post.visibility == "DELETED":
             return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
         elif request.user.author_profile.id == post.author.id or are_friends(request.user.author_profile.id, post.author.id):
-            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+            return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'This post cannot be accessed.'}
                             , status=status.HTTP_403_FORBIDDEN)
@@ -41,6 +42,7 @@ def get_post(request, url_id):
         return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 def get_author_post(request, auth_id, post_id):
+    context = {'request': request}
     try:
         author = Author.objects.get(id=auth_id)
         if author.state != "ACTIVE":
@@ -54,15 +56,15 @@ def get_author_post(request, auth_id, post_id):
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
     if post.visibility in ["PUBLIC", "UNLISTED"]:
-        return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+        return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
 
     if request.user.is_authenticated:
         if request.user.is_staff:
-            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+            return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
         elif post.visibility == "DELETED":
             return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
         elif request.user.author_profile.id == post.author.id or are_friends(request.user.author_profile.id, post.author.id):
-            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+            return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'This post cannot be accessed.'})
     elif post.visibility != "DELETED":
@@ -72,6 +74,7 @@ def get_author_post(request, auth_id, post_id):
 
 
 def put_author_post(request, auth_id, post_id):
+    context = {'request': request}
     if not request.user.is_authenticated:
         return Response({'error': 'Need to be logged in to update a post'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -83,7 +86,7 @@ def put_author_post(request, auth_id, post_id):
     except Post.DoesNotExist:
         return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = PostSerializer(post, data=request.data, partial=True)
+    serializer = PostSerializer(post, data=request.data, partial=True, context=context)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -149,7 +152,8 @@ class PostListCreateView(ListAPIView):
         if not self.request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         elif self.request.user.author_profile.id == auth_id or self.request.user.author_profile.is_staff:
-            serializer = PostSerializer(data=request.data, context={'auth_id': auth_id})
+            context = {'auth_id': auth_id, 'request': request}
+            serializer = PostSerializer(data=request.data, context=context)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)

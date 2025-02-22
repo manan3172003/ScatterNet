@@ -49,9 +49,12 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_comments(self, obj):
         request = self.context.get('request')
-        queryset = Comment.objects.filter(post_id=obj.id)
+
+        queryset = Comment.objects.filter(post__id=obj.id)
+
         paginator = CommentsPaginator()
         paginated_comments = paginator.paginate_queryset(queryset, request)
+
         serializer = CommentSerializer(paginated_comments, many=True, context=self.context)
         return paginator.get_paginated_response(serializer.data).data
 
@@ -119,8 +122,7 @@ class CommentSerializer(serializers.ModelSerializer):
         return paginator.get_paginated_response(serializer.data).data
 
 class CommentCreateSerializer(serializers.ModelSerializer):
-    # TODO: verify if it is going to be the ID or the entire post body object, then i gotta extract id out instead
-    post = serializers.IntegerField(write_only=True)
+    post = serializers.URLField(write_only=True)
 
     class Meta:
         model = Comment
@@ -129,8 +131,8 @@ class CommentCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         author_serial = self.context.get("view").kwargs.get("author_serial")
         author = get_object_or_404(Author, pk=author_serial)
-        post_id = validated_data.pop('post')
-        post = get_object_or_404(Post, id=post_id)
+        post_id_url = validated_data.pop('post')
+        post = get_object_or_404(Post, id_url=post_id_url)
 
         comment = Comment.objects.create(
             author=author,
