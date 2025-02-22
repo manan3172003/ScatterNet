@@ -14,6 +14,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIV
 
 from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
+from ..utils.helper import are_friends, follows
 
 
 # Create your views here.
@@ -22,44 +23,58 @@ def get_post(request, url_id):
     decoded_url = unquote(url_id)
     try:
         post = Post.objects.get(id_url=decoded_url)
-        if post.visibility == 'FRIENDS':
-            # validate the user is friend of author or is author
-            print("Are Friends")
-        elif post.visibility != 'PUBLIC':
-            raise Http404
     except Post.DoesNotExist:
-        raise Http404
+        return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = PostSerializer(post)
-    return Response(serializer.data)
+    if post.visibility in ["PUBLIC", "UNLISTED"]:
+        return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+        elif post.visibility == "DELETED":
+            return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+        elif request.user.author_profile.id == post.author.id or are_friends(request.user.author_profile.id, post.author.id):
+            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'This post cannot be accessed.'}
+                            , status=status.HTTP_403_FORBIDDEN)
+    elif post.visibility != "DELETED":
+        return Response({'error': 'This post cannot be accessed.'}
+                        , status=status.HTTP_403_FORBIDDEN)
+    else:
+        return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 def get_author_post(request, auth_id, post_id):
     try:
         author = Author.objects.get(id=auth_id)
         if author.state != "ACTIVE":
-            return Response({"error": "Author not found"}, status=404)
+            return Response({"error": "Author not found"}, status=status.HTTP_404_NOT_FOUND)
     except Author.DoesNotExist:
-        return Response({"error": "Author not found"}, status=404)
+        return Response({"error": "Author not found"}, status=status.HTTP_404_NOT_FOUND)
 
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=404)
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    if post.visibility == 'PUBLIC' or post.visibility == 'UNLISTED':
-        serializer = PostSerializer(post)
-        return Response(serializer.data, status=200)
-    elif post.visibility == 'FRIENDS':
-        # Need to check for friends validation
-        print("Are Friends")
-        serializer = PostSerializer(post)
-        return Response(serializer.data, status=200)
-    else:
-        if request.user.is_authenticated and request.user.is_staff:
-            serializer = PostSerializer(post)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+    if post.visibility in ["PUBLIC", "UNLISTED"]:
+        return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+        elif post.visibility == "DELETED":
+            return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+        elif request.user.author_profile.id == post.author.id or are_friends(request.user.author_profile.id, post.author.id):
+            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'This post cannot be accessed.'})
+    elif post.visibility != "DELETED":
+        return Response({'error': 'This post cannot be accessed.'})
+    else:
+        return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+
 
 def put_author_post(request, auth_id, post_id):
     if not request.user.is_authenticated:
@@ -84,7 +99,7 @@ def delete_author_post(request, auth_id, post_id):
     if not request.user.is_authenticated:
         return Response({'error': 'Need to be logged in to delete a post'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    if request.user.author_profile.id != auth_id:
+    if request.user.author_profile.id != auth_id and not request.user.is_staff:
         return Response({'error': 'Incorrect author'}, status=status.HTTP_403_FORBIDDEN)
 
     try:
@@ -106,14 +121,6 @@ def author_post(request, auth_id, post_id):
     elif request.method == 'DELETE':
         return delete_author_post(request, auth_id, post_id)
 
-# @api_view(["GET"])
-# def get_posts(request):
-#     try:
-#         posts = Post.objects.all()
-#     except Post.DoesNotExist:
-#         return Response({})
-#     serializer = PostSerializer(posts, many=True)
-#     return Response(serializer.data)
 
 class PostListCreateView(ListAPIView):
     serializer_class = PostSerializer
@@ -123,29 +130,38 @@ class PostListCreateView(ListAPIView):
         auth_id = self.kwargs.get('auth_id')
         queryset = Post.objects.filter(author_id=auth_id)
         queryset = queryset.exclude(visibility='DELETED')
+        queryset = queryset.order_by('-published')
 
         if not self.request.user.is_authenticated:
             return  queryset.filter(visibility='PUBLIC')
+
         elif self.request.user.author_profile.id == auth_id and not self.request.user.is_staff:
             return queryset
         elif self.request.user.is_staff:
-            return Post.objects.filter(author_id=auth_id)
+            return Post.objects.filter(author_id=auth_id).order_by('-published')
         elif self.request.user.author_profile.id != auth_id:
-            # need to validate based on friends and followers
-            return queryset
+            if are_friends(self.request.user.author_profile.id, auth_id):
+                return queryset.filter(visibility='FRIENDS')
+            elif follows(self.request.user.author_profile.id, auth_id):
+                return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
+            else:
+                return queryset.filter(visibility='PUBLIC')
+
 
     def post(self, request, *args, **kwargs):
         auth_id = self.kwargs.get('auth_id')
 
-        if not self.request.user.is_authenticated or auth_id != self.request.user.author_profile.id:
-            return Response(status=401)
-        elif self.request.user.author_profile.id == auth_id:
+        if not self.request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        elif self.request.user.author_profile.id == auth_id or self.request.user.author_profile.is_staff:
             serializer = PostSerializer(data=request.data, context={'auth_id': auth_id})
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=201)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
-                return Response(serializer.errors, status=400)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class LikesListView(ListAPIView):
