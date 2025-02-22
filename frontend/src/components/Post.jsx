@@ -30,7 +30,10 @@ export default function Post({post, onPostClick,onCommentClick}){
         }
     }, []);
     async function handleLike() {
-        
+        if (user === null){
+            // Not logged in so do nothing
+            return
+        }
         const authorObject = await getAuthorObject(user)
         const response = await fetch(`${post.author.id}/inbox`,{
             method: "POST",
