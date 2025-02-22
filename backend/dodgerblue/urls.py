@@ -20,5 +20,5 @@ from apps.frontend import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/authors', include("apps.authors.urls")),
-    re_path(r'^.*', views.home, name='frontend'),
+    re_path(r'^.*', views.home, name='frontend')
 ]

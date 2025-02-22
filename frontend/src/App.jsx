@@ -1,5 +1,5 @@
-import './App.css';
-import { BrowserRouter as Router, Routes, Route} from "react-router-dom"
+import "./App.css";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import LandingPage from './pages/LandingPage';
 import ProtectedRoute from "./components/ProtectedRoute"
@@ -9,18 +9,18 @@ import { AuthContext } from './context/AuthContext';
 import { useContext } from 'react';
 import {Navigate} from "react-router-dom"
 import PublicPostPage from './pages/PublicPostPage';
+import UserProfile from "./pages/UserProfile";
 function App() {
   
   const {user} = useContext(AuthContext)
   
   return (
-   <Router>
+    <Router>
       <Routes>
         <Route
             path="/"
             element={user ? <Navigate to="/home" replace /> : <LandingPage />}
         />
-
         <Route element={<LayoutWithNavbar/>}>
           <Route path="/home" element={<ProtectedRoute element={<HomePage />} />} />
         </Route>
@@ -29,6 +29,7 @@ function App() {
             path="/http://localhost:8000/authors/${}/posts/${}"
             element={<PublicPostPage />}
         />
+        <Route path="/userProfile/" element={<UserProfile />} />
       </Routes>
 
    </Router>
