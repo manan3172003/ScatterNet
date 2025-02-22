@@ -23,8 +23,8 @@ class PostSerializer(serializers.ModelSerializer):
         post = Post.objects.create(author=author, **validated_data)
 
         # Update the post's id_url and page fields
-        post.id_url = f"http://localhost:8000/api/posts/{post.id}"
-        post.page = f"http://localhost:8000/posts/{post.id}"
+        post.id_url = f"http://localhost:8000/api/authors/{author.id}/posts/{post.id}"
+        post.page = f"http://localhost:8000/authors/{author.id}/posts/{post.id}"
         post.save()
         return post
 
