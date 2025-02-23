@@ -1,4 +1,5 @@
 from ..follow.models import Follow
+import heapq
 
 def are_friends(author1_id, author2_id):
     try:
@@ -14,3 +15,9 @@ def follows(author1_id, author2_id):
         return True
     except Follow.DoesNotExist:
         return False
+
+def merge_sorted_post_lists(*lists):
+    """
+    Perform a k-way merge on the sorted lists of posts using their published date.
+    """
+    return heapq.merge(*lists, key=lambda post: post.published, reverse=True)

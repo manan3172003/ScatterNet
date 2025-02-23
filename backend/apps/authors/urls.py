@@ -31,7 +31,7 @@ urlpatterns = [
 
     # Post app endpoints
     path("/<int:auth_id>/posts/<int:post_id>", posts_views.author_post, name="author-post"),
-    path("/<int:auth_id>/posts/", posts_views.PostListCreateView.as_view(), name="author-posts"),
+    path("/<int:auth_id>/posts", posts_views.PostListCreateView.as_view(), name="author-posts"),
 
     # Likes endpoints with a generic path converter
 
