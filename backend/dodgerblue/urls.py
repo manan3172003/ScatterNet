@@ -17,8 +17,32 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from apps.frontend import views
+from apps.posts.views import LikeRetrieveView, create_or_delete_like, CommentRetrieveView
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="OnlyNodes API",
+      default_version='v1',
+      description="API Covering all available OnlyNodes APIs",
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('api/authors', include("apps.authors.urls")),
-    re_path(r'^.*', views.home, name='frontend')
+    path('api/posts', include("apps.posts.urls")),
+    path('api/liked/<path:like_fqid>', LikeRetrieveView.as_view(), name="get-like"),
+    path('api/like', create_or_delete_like, name='post-delete-like'),
+    path('api/commented/<path:comment_fqid>', CommentRetrieveView.as_view(), name="get-comment"),
+    re_path(r'^.*', views.home, name='frontend'),
 ]
