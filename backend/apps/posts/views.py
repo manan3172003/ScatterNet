@@ -32,15 +32,13 @@ from ..utils.helper import are_friends, follows, merge_sorted_post_lists
         404: 'Post not found'
     }
 )
-# Create your views here.
-
-"""
-http://{node}/api/posts/{POST_FQID}
-
-GETs a post with id_url POST_FQID if the caller has permissions
-"""
 @api_view(["GET"])
 def get_post(request, url_id):
+    """
+    http://{node}/api/posts/{POST_FQID}
+
+    GETs a post with id_url POST_FQID if the caller has permissions
+    """
     context = {'request': request}
     decoded_url = unquote(url_id)
     try:
