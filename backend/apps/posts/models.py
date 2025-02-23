@@ -28,7 +28,7 @@ class Comment(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     comment = models.TextField()
     contentType = models.CharField(max_length=100)
-    published = models.DateTimeField(default=datetime.now)
+    published = models.DateTimeField(auto_now_add=True)
     id_url = models.URLField(unique=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     page = models.URLField(blank=True, null=True)
@@ -36,6 +36,6 @@ class Comment(models.Model):
 
 class Like(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    published = models.DateTimeField(default=datetime.now)
+    published = models.DateTimeField(auto_now_add=True)
     id_url = models.URLField(unique=True)
     object = models.URLField() #this is the id_url of the thing that was liked, post/comment
