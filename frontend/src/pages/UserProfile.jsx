@@ -1,5 +1,5 @@
 import ProfileHeader from "../components/ProfileHeader";
-import Navbar from "../components/Navbar";
+import profilePic from "../assets/sample-images/party.jpg";
 import "../assets/styles/profile-header.css";
 import "../assets/styles/user-profile.css";
 import { useParams } from "react-router-dom";
@@ -9,7 +9,12 @@ export default function UserProfile() {
 
   return (
     <div className="profile-page-wrapper">
-      <ProfileHeader />
+      <ProfileHeader
+        displayname="John Doe"
+        username="johnDoe"
+        github="github"
+        profilepic={profilePic}
+      />
       <div className="feed-container"></div>
     </div>
   );

@@ -1,32 +1,7 @@
-import profilePic from "../assets/sample-images/party.jpg";
 import backBtn from "../assets/icons/back.png";
 import editBtn from "../assets/icons/edit.png";
 
-import { useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
-
-export default function ProfileHeader() {
-  const { user } = useContext(AuthContext);
-
-  async function getAuthorObject(user) {
-    //get author
-    try {
-      console.log(user);
-      const response = await fetch(
-        `http://localhost/api/authors/${user.author_id}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error fetching author: ${response.status}`);
-      }
-
-      const authorObject = await response.json();
-      return authorObject;
-    } catch (error) {
-      console.error("Failed to fetch author:", error);
-      return null;
-    }
-  }
+export default function ProfileHeader(user_properties) {
   return (
     <div className="profile-header">
       <div class="cover-wrapper">
@@ -40,13 +15,13 @@ export default function ProfileHeader() {
         </div>
         <div class="info-wrapper">
           <div class="info-subwrapper">
-            <img id="profile-image" src={profilePic} />
+            <img id="profile-image" src={user_properties.profilepic} />
             <div class="info-names-wrapper">
-              <p id="displayname">Meghan</p>
+              <p id="displayname">{user_properties.displayname}</p>
               <div class="info-names-subwrapper">
-                <p id="username">meghanmarie</p>
+                <p id="username">{user_properties.username}</p>
                 <p>|</p>
-                <p id="github">meghanwickstrand</p>
+                <p id="github">{user_properties.github}</p>
               </div>
             </div>
           </div>
