@@ -231,6 +231,10 @@ class StreamListView(ListAPIView):
 
 
 class LikesListView(ListAPIView):
+    """
+    View to retrieve a collection of paginated likes
+    the body is a likes object, with the src list containing a single like object
+    """
     serializer_class = LikeSerializer
     pagination_class = LikesPaginator
 
@@ -270,18 +274,20 @@ class LikesListView(ListAPIView):
             return queryset
 
 class LikeRetrieveView(RetrieveAPIView):
+    """
+    View that only retrieves a single Like object based on either the api/liked/id_url path or
+    api/author_serial/liked/like_serial
+    """
     serializer_class = LikeSerializer
 
-    def get_queryset(self):
+    def get_object(self):
         like_fqid = self.kwargs.get('like_fqid')
         if like_fqid:
-            queryset = Like.objects.filter(id_url=like_fqid)
-            return queryset
+            return get_object_or_404(Like, id_url=like_fqid)
         else:
             author_serial = self.kwargs.get('author_serial')
             like_serial = self.kwargs.get('like_serial')
-            queryset = Like.objects.filter(author_id=author_serial, pk=like_serial)
-            return queryset
+            return get_object_or_404(Like, author_id=author_serial, pk=like_serial)
 
 
 def post_like(author_id, object_url):
@@ -321,6 +327,11 @@ def delete_like(author_id, object_url):
     )
 @api_view(['POST','DELETE'])
 def create_or_delete_like(request):
+    """
+    Internal endpoint that facilitates liking an object or deleting a liked object
+
+    Delete hasn't been mentioned in the API spec yet so it might be removed in the future if required
+    """
     author_id = request.data.get('author_id')
     object_url = request.data.get('object')
     if not author_id:
@@ -336,6 +347,10 @@ def create_or_delete_like(request):
 
 
 class CommentsListView(ListAPIView):
+    """
+    Similar stuff to likes above, this returns a Comments collection, with also a likes section that is paginated in
+    the layer underneath
+    """
     serializer_class = CommentSerializer
     pagination_class = CommentsPaginator
 
@@ -360,6 +375,9 @@ class CommentsListView(ListAPIView):
 # TODO: URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
 
 class CommentedListCreateView(ListCreateAPIView):
+    """
+    APIView to both, list a collection and create a comment on that endpoint
+    """
     pagination_class = CommentsPaginator
 
     def get_serializer_class(self):
@@ -384,6 +402,9 @@ class CommentedListCreateView(ListCreateAPIView):
 
 
 class CommentRetrieveView(RetrieveAPIView):
+    """
+    This view to return a single comment object
+    """
     serializer_class = CommentSerializer
 
     def get_object(self):
