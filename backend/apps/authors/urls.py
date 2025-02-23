@@ -10,6 +10,7 @@ urlpatterns = [
     path('/<int:author_id>/followers/<path:foreign_id_url>',follows_views.FollowerDetailView.as_view(),name='follower-detail'),
     # These three are not required based on spec, but will most likely be used when deciding to display certain posts
     path('/<int:author_id>/following', follows_views.FollowingListView.as_view(),name='following-list'),
+    path('/<int:author_id>/following/<path:foreign_id_url>',follows_views.FollowingDetailView.as_view(),name='following-detail'),
     path('/<int:author_id>/friends',follows_views.FriendsListView.as_view(),name='friends-list'),
     path('/<int:author_id>/friends/<path:other_author_url>',follows_views.FriendDetailView.as_view(),name='friend-detail'),
 

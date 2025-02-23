@@ -287,6 +287,35 @@ class FollowingListView(APIView):
         })
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class FollowingDetailView(APIView):
+    """
+    URL: authors/{author_id}/following/{foreign_id_url}
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="Returns author details if the author is following the author specified in the foreign id",
+                schema=AuthorSerializer()
+            ),
+            404: openapi.Response(description="Author is not following the other author"),
+        }
+    )
+    def get(self, request, author_id, foreign_id_url):
+        decoded_url = unquote(foreign_id_url)
+        author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
+        foreign_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
+
+        is_following = Follow.objects.filter(actor=author, object=foreign_author, isPending=False).exists()
+        following_data = AuthorSerializer(foreign_author).data
+
+        if not is_following:
+            return Response({"error": "Not following"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(following_data, status=status.HTTP_200_OK)
+
+
+
 class FriendsListView(APIView):
     """
     URL: authors/{author_id}/friends/
