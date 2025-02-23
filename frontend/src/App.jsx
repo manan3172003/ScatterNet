@@ -26,9 +26,8 @@ function App() {
             path="/home"
             element={<ProtectedRoute element={<HomePage />} />}
           />
+          <Route path="/authors/:authorid" element={<UserProfile />} />
         </Route>
-
-        <Route path="/authors/:authorid" element={<UserProfile />} />
 
         <Route
           path="/http://localhost:8000/authors/${}/posts/${}"
