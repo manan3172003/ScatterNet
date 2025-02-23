@@ -73,7 +73,7 @@ class FollowersListView(APIView):
     @swagger_auto_schema(
         responses={
             200: openapi.Response(
-                description="List of authors that are followers of the specified author",
+                description="List of authors that are followers of the specified author or sent a follow request",
                 schema=FollowersListSerializer()
             )
         }
@@ -96,11 +96,11 @@ class FollowersListView(APIView):
             authors_follow_requests = Follow.objects.filter(object=author, isPending=True).values_list('actor', flat=True)
             follow_requests = Author.objects.filter(id__in=authors_follow_requests, state="ACTIVE")
 
-            serializer = FollowSerializer(follow_requests, many=True)
-            return Response({
-                "type": 'follow requests',
-                "follow requests": serializer.data,
-            }, status=status.HTTP_200_OK)
+            serializer = FollowersListSerializer(instance={
+                "type": "followers",
+                "followers": follow_requests
+            })
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 class FollowerDetailView(APIView):
     """
@@ -271,21 +271,34 @@ class FollowingListView(APIView):
     @swagger_auto_schema(
         responses={
             200: openapi.Response(
-                description="List of authors that the specified author is following",
+                description="List of authors that the specified author is following or sent a follow request to",
                 schema=FollowingListSerializer()
             )
         }
     )
     def get(self, request, author_id):
+        isPending = request.GET.get('isPending', "false").lower() == "true"
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
-        authors_following = Follow.objects.filter(actor=author, isPending=False).values_list('object', flat=True)
-        following = Author.objects.filter(id__in=authors_following, state='ACTIVE')
 
-        serializer = FollowingListSerializer(instance={
-            "type": "following",
-            "following": following
-        })
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if not isPending:
+            authors_following = Follow.objects.filter(actor=author, isPending=False).values_list('object', flat=True)
+            following = Author.objects.filter(id__in=authors_following, state='ACTIVE')
+
+            serializer = FollowingListSerializer(instance={
+                "type": "following",
+                "following": following
+            })
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        else:
+            authors_following_requests = Follow.objects.filter(actor=author, isPending=True).values_list('object', flat=True)
+            following_requests = Author.objects.filter(id__in=authors_following_requests, state='ACTIVE')
+
+            serializer = FollowingListSerializer(instance={
+                "type": "following",
+                "following": following_requests
+            })
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 class FollowingDetailView(APIView):
     """
