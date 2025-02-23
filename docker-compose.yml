@@ -20,6 +20,7 @@ services:
       - "5432:5432"
 
   test:
+    profiles: ["test"]
     build: .
     command: pytest --disable-warnings
     volumes:

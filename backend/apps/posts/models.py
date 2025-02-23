@@ -11,6 +11,7 @@ visibility_options = [("PUBLIC", "PUBLIC"),
                       ]
 
 class Post(models.Model):
+    # TODO: remove the type field from the model and add it so only the serializer sends it
     type = models.CharField(max_length=100, default='post')
     title = models.CharField(max_length=200)
     id_url = models.URLField(unique=True)
@@ -23,7 +24,6 @@ class Post(models.Model):
     visibility = models.CharField(max_length=10, default='PUBLIC', choices=visibility_options)
 
 
-#i also feel like comments and likes should be added as models HERE, since they make up the whole post object, they are dependent on that to exist
 class Comment(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     comment = models.TextField()

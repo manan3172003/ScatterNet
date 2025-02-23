@@ -1,6 +1,6 @@
+# TODO: Cleanup this file for example make validations cleaner and replace try excepts with get_object_or_404
 from urllib.parse import unquote
 
-from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -103,6 +103,7 @@ def delete_author_post(request, auth_id, post_id):
         return Response({'error': 'Need to be logged in to delete a post'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if request.user.author_profile.id != auth_id and not request.user.is_staff:
+        # TODO: Fix error message to something like "You cannot edit this post unless you made it or you are a Node Admin"
         return Response({'error': 'Incorrect author'}, status=status.HTTP_403_FORBIDDEN)
 
     try:
