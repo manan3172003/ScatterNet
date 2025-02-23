@@ -22,7 +22,7 @@ services:
   test:
     profiles: ["test"]
     build: .
-    command: pytest --disable-warnings
+    command: pytest
     volumes:
       - .:/app
     env_file:
