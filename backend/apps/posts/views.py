@@ -14,10 +14,16 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIV
 
 from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
-from ..utils.helper import are_friends, follows
+from ..utils.helper import are_friends, follows, merge_sorted_post_lists
 
 
 # Create your views here.
+
+"""
+http://{node}/api/posts/{POST_FQID}
+
+GETs a post with id_url POST_FQID if the caller has permissions
+"""
 @api_view(["GET"])
 def get_post(request, url_id):
     context = {'request': request}
@@ -45,6 +51,13 @@ def get_post(request, url_id):
                         , status=status.HTTP_403_FORBIDDEN)
     else:
         return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+"""
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
+
+GETs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
+if the caller has permissions
+"""
 
 def get_author_post(request, auth_id, post_id):
     context = {'request': request}
@@ -78,6 +91,13 @@ def get_author_post(request, auth_id, post_id):
         return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
+"""
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
+
+PUTs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
+if the caller has permissions (Caller needs to be author AUTHOR_SERIAL or node admin)
+"""
+
 def put_author_post(request, auth_id, post_id):
     context = {'request': request}
     if not request.user.is_authenticated:
@@ -97,6 +117,13 @@ def put_author_post(request, auth_id, post_id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+"""
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
+
+DELETEs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
+if the caller has permissions (Caller needs to be author AUTHOR_SERIAL or node admin)
+"""
 
 def delete_author_post(request, auth_id, post_id):
     if not request.user.is_authenticated:
@@ -125,32 +152,43 @@ def author_post(request, auth_id, post_id):
     elif request.method == 'DELETE':
         return delete_author_post(request, auth_id, post_id)
 
+"""
+Helper function which returns the list of posts belonging to author with id AUTHOR_SERIAL
+Shows the posts of author with id AUTHOR_SERIAL to the caller if the caller has permissions
+"""
+def filter_author_post(request, auth_id):
+    queryset = Post.objects.filter(author_id=auth_id)
+    queryset = queryset.exclude(visibility='DELETED')
+    queryset = queryset.order_by('-published')
 
+    if not request.user.is_authenticated:
+        return queryset.filter(visibility='PUBLIC')
+
+    elif request.user.author_profile.id == auth_id and not request.user.is_staff:
+        return queryset
+    elif request.user.is_staff:
+        return Post.objects.filter(author_id=auth_id).order_by('-published')
+    elif request.user.author_profile.id != auth_id:
+        if are_friends(request.user.author_profile.id, auth_id):
+            return queryset.filter(visibility='FRIENDS')
+        elif follows(request.user.author_profile.id, auth_id):
+            return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
+        else:
+            return queryset.filter(visibility='PUBLIC')
+
+"""
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts
+
+GET calls the above helper function
+POST creates a new post for author with id AUTHOR_SERIAL if the caller has permissions
+"""
 class PostListCreateView(ListAPIView):
     serializer_class = PostSerializer
     pagination_class = PostsPaginator
 
     def get_queryset(self):
         auth_id = self.kwargs.get('auth_id')
-        queryset = Post.objects.filter(author_id=auth_id)
-        queryset = queryset.exclude(visibility='DELETED')
-        queryset = queryset.order_by('-published')
-
-        if not self.request.user.is_authenticated:
-            return  queryset.filter(visibility='PUBLIC')
-
-        elif self.request.user.author_profile.id == auth_id and not self.request.user.is_staff:
-            return queryset
-        elif self.request.user.is_staff:
-            return Post.objects.filter(author_id=auth_id).order_by('-published')
-        elif self.request.user.author_profile.id != auth_id:
-            if are_friends(self.request.user.author_profile.id, auth_id):
-                return queryset.filter(visibility='FRIENDS')
-            elif follows(self.request.user.author_profile.id, auth_id):
-                return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
-            else:
-                return queryset.filter(visibility='PUBLIC')
-
+        return filter_author_post(self.request, auth_id)
 
     def post(self, request, *args, **kwargs):
         auth_id = self.kwargs.get('auth_id')
@@ -167,6 +205,29 @@ class PostListCreateView(ListAPIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+"""
+http://{node}/api/posts
+
+GET calls the above helper function on every ACTIVE author in DB
+so we can get a stream of posts in order of latest to earliest published date
+"""
+class StreamListView(ListAPIView):
+    serializer_class = PostSerializer
+    pagination_class = PostsPaginator
+
+    def get_queryset(self):
+        authors = Author.objects.filter(state="ACTIVE")
+        author_posts = []
+        for author in authors:
+            author_posts.append(list(filter_author_post(self.request, author.id)))
+
+        merged_posts = list(merge_sorted_post_lists(*author_posts))
+
+        paginator = self.pagination_class()
+        paginated_posts = paginator.paginate_queryset(merged_posts, self.request)
+
+        return paginated_posts
 
 
 class LikesListView(ListAPIView):
