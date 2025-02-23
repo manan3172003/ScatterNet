@@ -1,7 +1,10 @@
 import backBtn from "../assets/icons/back.png";
 import editBtn from "../assets/icons/edit.png";
+import { UserContext } from "../pages/UserProfile";
+import { useContext } from "react";
 
-export default function ProfileHeader(user_properties) {
+export default function ProfileHeader() {
+  const user = useContext(UserContext);
   return (
     <div className="profile-header">
       <div class="cover-wrapper">
@@ -15,13 +18,13 @@ export default function ProfileHeader(user_properties) {
         </div>
         <div class="info-wrapper">
           <div class="info-subwrapper">
-            <img id="profile-image" src={user_properties.profilepic} />
+            <img id="profile-image" src={user.profilepic} />
             <div class="info-names-wrapper">
-              <p id="displayname">{user_properties.displayname}</p>
+              <p id="displayname">{user.displayname}</p>
               <div class="info-names-subwrapper">
-                <p id="username">{user_properties.username}</p>
+                <p id="username">{user.username}</p>
                 <p>|</p>
-                <p id="github">{user_properties.github}</p>
+                <p id="github">{user.github}</p>
               </div>
             </div>
           </div>
