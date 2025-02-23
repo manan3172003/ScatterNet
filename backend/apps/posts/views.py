@@ -16,7 +16,22 @@ from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
 from ..utils.helper import are_friends, follows
 
-
+@swagger_auto_schema(
+    method='get',
+    manual_parameters=[
+        openapi.Parameter(
+            'url_id',
+            openapi.IN_PATH,
+            description="Encoded FQID of the post.",
+            type=openapi.TYPE_STRING
+        )
+    ],
+    responses={
+        200: openapi.Response('OK', PostSerializer),
+        403: 'Access forbidden to the post',
+        404: 'Post not found'
+    }
+)
 # Create your views here.
 @api_view(["GET"])
 def get_post(request, url_id):
@@ -116,6 +131,33 @@ def delete_author_post(request, auth_id, post_id):
 
     return Response({'message': 'Post deleted'}, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Response('OK', PostSerializer),
+        404: 'Post not found',
+        403: 'Access forbidden'
+    }
+)
+@swagger_auto_schema(
+    method='put',
+    request_body=PostSerializer,
+    responses={
+        200: openapi.Response('OK', PostSerializer),
+        400: 'Bad request due to validation errors',
+        401: 'Unauthorized',
+        404: 'Post not found'
+    }
+)
+@swagger_auto_schema(
+    method='delete',
+    responses={
+        200: 'Post deleted',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        404: 'Post not found'
+    }
+)
 @api_view(["GET", "PUT", "DELETE"])
 def author_post(request, auth_id, post_id):
     if request.method == 'GET':
@@ -252,7 +294,7 @@ def delete_like(author_id, object_url):
                 ),
                 'object': openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description="URL ID of the Object (Post/Comment) that was liked."
+                    description="FQID of the Object (Post/Comment) that was liked."
                 )
             }
         ),
