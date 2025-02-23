@@ -47,7 +47,7 @@ export default function UserProfile() {
       ) : user ? (
         <div className="profile-page-wrapper">
           <ProfileHeader />
-          <div className="feed-container"></div>
+          <div className="feed-container">{/* load post feed here */}</div>
         </div>
       ) : (
         <p>User not found</p>
