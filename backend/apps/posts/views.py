@@ -156,7 +156,7 @@ class PostListCreateView(ListAPIView):
 
         if not self.request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        elif self.request.user.author_profile.id == auth_id or self.request.user.author_profile.is_staff:
+        elif self.request.user.author_profile.id == auth_id or self.request.user.is_staff:
             context = {'auth_id': auth_id, 'request': request}
             serializer = PostSerializer(data=request.data, context=context)
             if serializer.is_valid():
@@ -285,12 +285,14 @@ class CommentsListView(ListAPIView):
             author = get_object_or_404(Author, id=author_serial)
             post = get_object_or_404(Post, author=author, id=post_serial)
             queryset = Comment.objects.filter(post=post)
+            # TODO: Validate if the current user can see these comments and filter the ones they cant
             return queryset
 
         post_fqid = self.kwargs.get('post_fqid')
         if post_fqid:
             post = get_object_or_404(Post, id_url=post_fqid)
             queryset = Comment.objects.filter(post=post)
+            # TODO: Validate if the current user can see these comments and filter the ones they cant
             return queryset
 
 # TODO: URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
@@ -314,6 +316,8 @@ class CommentedListCreateView(ListCreateAPIView):
         if 'author_fqid' in self.kwargs:
             return Response({"error": "POST is not allowed on this endpoint."},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        # TODO: Validate who can comment
         return super().post(request, *args, **kwargs)
 
 
