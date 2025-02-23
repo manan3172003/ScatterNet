@@ -1,4 +1,5 @@
 import ProfileHeader from "../components/ProfileHeader";
+import Feed from "../components/Feed";
 import "../assets/styles/profile-header.css";
 import "../assets/styles/user-profile.css";
 import { useParams } from "react-router-dom";
@@ -46,7 +47,9 @@ export default function UserProfile() {
       ) : user ? (
         <div className="profile-page-wrapper">
           <ProfileHeader />
-          <div className="feed-container">{/* load post feed here */}</div>
+          <div className="feed-container">
+            <Feed />
+          </div>
         </div>
       ) : (
         <p>User not found</p>
