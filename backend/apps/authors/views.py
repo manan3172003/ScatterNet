@@ -26,6 +26,10 @@ class AuthorLoginView(APIView):
     def get(self, request, *args, **kwargs):
         return Response({'detail': 'CSRF cookie set.'})
 
+    """
+    So for methods using a regular APIView inheritance or the decorator, they dont
+    utilize a serializer, so we need to auto enforce fields for swagger
+    """
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -74,8 +78,14 @@ class AuthorLoginView(APIView):
         else:
             return Response({'error': 'Incorrect Username or Password'}, status=status.HTTP_401_UNAUTHORIZED)
 
-class AuthorSignUpView(APIView):
 
+class AuthorSignUpView(APIView):
+    """
+    Primary endpoint to sign up users, by default this will create all users with a PENDING
+    state and the node admin needs to make a PUT call to change their state.
+
+    Permissions for that are enforced in the PUT endpoint
+    """
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -112,6 +122,9 @@ class AuthorSignUpView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AuthorsView(ListAPIView):
+    """
+    GET endpoint to return a collection of authors when requested.
+    """
     serializer_class = AuthorSerializer
     pagination_class = AuthorsPaginator
     def get_queryset(self):
@@ -132,6 +145,10 @@ class AuthorsView(ListAPIView):
         return queryset
 
 class CheckNodeAdminChangedState(BasePermission):
+    """
+    Helper permission class to assist with checking node admin permissions, only does state check
+    for now but we'll update that in the future to have more rigid perms
+    """
 
     # https://www.django-rest-framework.org/api-guide/permissions/#custom-permissions neat feature
     message = "Only Node Admins are Allowed to update an Author's state."
@@ -142,6 +159,10 @@ class CheckNodeAdminChangedState(BasePermission):
         return True
 
 class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
+    """
+    Generic listviews can handle multiple methods, this one is to list a single instance
+    or update a single instance
+    """
     queryset = Author.objects.all()
     http_method_names = ['get', 'put'] #explicitly only allows these two
     permission_classes = [CheckNodeAdminChangedState]
@@ -160,6 +181,9 @@ class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
 
 @api_view(['GET'])
 def get_author_fqid(request, id_url):
+    """
+    Does the same thing as the one above but instead of using a pk, it uses the FQID url indentifier
+    """
     decoded_url = unquote(id_url)
     try:
         author = Author.objects.get(id_url=decoded_url)
@@ -171,6 +195,10 @@ def get_author_fqid(request, id_url):
 
 @api_view(['GET'])
 def get_current_user(request):
+    """
+    Helper endpoint we built to help the frontend identify who is the current user logged in for that current session
+    we'll wrap this in permission handling in the future as well
+    """
     if request.user and request.user.is_authenticated:
         author = request.user.author_profile
         response = {
