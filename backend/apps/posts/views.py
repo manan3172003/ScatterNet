@@ -53,9 +53,9 @@ def get_post(request, url_id):
         return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 """
-http://{node}/api/authors/{AUTHER_SERIAL}/posts/{POST_SERIAL}
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
 
-GETs a post with id POST_SERIAL belonging to author with id AUTHER_SERIAL
+GETs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
 if the caller has permissions
 """
 
@@ -92,9 +92,9 @@ def get_author_post(request, auth_id, post_id):
 
 
 """
-http://{node}/api/authors/{AUTHER_SERIAL}/posts/{POST_SERIAL}
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
 
-PUTs a post with id POST_SERIAL belonging to author with id AUTHER_SERIAL
+PUTs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
 if the caller has permissions (Caller needs to be author AUTHOR_SERIAL or node admin)
 """
 
@@ -119,9 +119,9 @@ def put_author_post(request, auth_id, post_id):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 """
-http://{node}/api/authors/{AUTHER_SERIAL}/posts/{POST_SERIAL}
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
 
-DELETEs a post with id POST_SERIAL belonging to author with id AUTHER_SERIAL
+DELETEs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
 if the caller has permissions (Caller needs to be author AUTHOR_SERIAL or node admin)
 """
 
@@ -153,8 +153,8 @@ def author_post(request, auth_id, post_id):
         return delete_author_post(request, auth_id, post_id)
 
 """
-Helper function which returns the list of posts belonging to author with id AUTHER_SERIAL
-Shows the posts of author with id AUTHER_SERIAL to the caller if the caller has permissions
+Helper function which returns the list of posts belonging to author with id AUTHOR_SERIAL
+Shows the posts of author with id AUTHOR_SERIAL to the caller if the caller has permissions
 """
 def filter_author_post(request, auth_id):
     queryset = Post.objects.filter(author_id=auth_id)
@@ -177,10 +177,10 @@ def filter_author_post(request, auth_id):
             return queryset.filter(visibility='PUBLIC')
 
 """
-http://{node}/api/authors/{AUTHER_SERIAL}/posts
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts
 
 GET calls the above helper function
-POST creates a new post for author with id AUTHER_SERIAL if the caller has permissions
+POST creates a new post for author with id AUTHOR_SERIAL if the caller has permissions
 """
 class PostListCreateView(ListAPIView):
     serializer_class = PostSerializer
