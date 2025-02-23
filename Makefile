@@ -27,4 +27,4 @@ run-migrations-docker:
 
 run-tests:
 	docker compose build test
-	docker compose run test
+	docker compose run --rm test
