@@ -26,7 +26,7 @@ function App() {
             path="/home"
             element={<ProtectedRoute element={<HomePage />} />}
           />
-          <Route path="/authors/:authorid" element={<UserProfile />} />
+          <Route path="/authors/:authorId" element={<UserProfile />} />
         </Route>
 
         <Route

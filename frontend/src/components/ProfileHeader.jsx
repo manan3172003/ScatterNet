@@ -18,9 +18,9 @@ export default function ProfileHeader() {
         </div>
         <div class="info-wrapper">
           <div class="info-subwrapper">
-            <img id="profile-image" src={user.profilepic} />
+            <img id="profile-image" src={user.profileImageURL} />
             <div class="info-names-wrapper">
-              <p id="displayname">{user.displayname}</p>
+              <p id="displayname">{user.displayName}</p>
               <div class="info-names-subwrapper">
                 <p id="username">{user.username}</p>
                 <p>|</p>
