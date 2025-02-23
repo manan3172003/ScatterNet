@@ -18,6 +18,7 @@ urlpatterns = [
     path('/<int:author_id>/friends/<path:other_author_url>', follows_views.FriendDetailView.as_view(), name='friend-detail'),
     path('/<int:author_id>/friends', follows_views.FriendsListView.as_view(), name='friends-list'),
     path('/<int:author_id>/following', follows_views.FollowingListView.as_view(), name='following-list'),
+    path('/<int:author_id>/following/<path:foreign_id_url>',follows_views.FollowingDetailView.as_view(),name='following-detail'),
 
     # Likes endpoints with numeric converters
     path("/<int:author_serial>/posts/<int:post_serial>/comments/<path:comment_fqid>/likes", posts_views.LikesListView.as_view(), name="author-post-comment-likes"),
