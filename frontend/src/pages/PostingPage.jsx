@@ -114,9 +114,9 @@ export default function PostingPage(){
                                 <option value="">Select...</option>
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
-                                <option value="image/png;base64">Image (png)</option>
+                                {/* <option value="image/png;base64">Image (png)</option>
                                 <option value="image/jpeg;base64">Image (jpeg)</option>
-                                <option value="application/base64">Image </option>
+                                <option value="application/base64">Image </option> */}
 
                             </select>
                             {(formData.contentType === 'text/markdown') && (
