@@ -41,7 +41,6 @@ function App() {
         <Route path="/post" element={<PostingPage />} />
 
       </Routes>
-
    </Router>
 
   );
