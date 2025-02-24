@@ -35,7 +35,7 @@ export default function Post({post, onPostClick,onCommentClick}){
             return
         }
         const authorObject = await getAuthorObject(user)
-        const response = await fetch(`/like`,{
+        const response = await fetch(`http://localhost:8000/api/like`,{
             method: "POST",
             credentials: "include",
             headers : {
@@ -43,7 +43,7 @@ export default function Post({post, onPostClick,onCommentClick}){
             },
             
             body : JSON.stringify({
-                "author": `${user.author_id}`,
+                "author_id": `${user.author_id}`,
                 "object": `${post.id}`
             })
 

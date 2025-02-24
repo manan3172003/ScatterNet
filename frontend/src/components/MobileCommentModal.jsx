@@ -13,14 +13,14 @@ export default function MobileCommentModal({ post, onClose }) {
     console.log("The mobile comment got renedered")
 
     async function handleLike(commentId){
-        const response  = await fetch(`http://localhost:8000/api/authors/${user.author_id}/commented`,{
+        const response  = await fetch(`http://localhost:8000/api/like/`,{
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: {
                 "author_id": `${user.author_id}`,
-                "object":"string",
+                "object":`${commentId}`,
             },
             credentials: "include"})
         if (response.ok){
