@@ -274,6 +274,16 @@ class LikesListView(ListAPIView):
     """
     View to retrieve a collection of paginated likes
     the body is a likes object, with the src list containing a single like object
+
+    Methods:
+        GET
+    URL:
+        /api/authors/{author_serial: int}/posts/{post_serial: int}/comments/{comment_fqid: path}/likes
+        /api/authors/{author_serial: int}/posts/{post_serial: int}/likes
+        /api/authors/{author_serial: int}/liked
+        /api/authors/{author_fqid: path}/liked
+        /api/posts/{post_fqid: path}/likes
+
     """
     serializer_class = LikeSerializer
     pagination_class = LikesPaginator
@@ -317,6 +327,12 @@ class LikeRetrieveView(RetrieveAPIView):
     """
     View that only retrieves a single Like object based on either the api/liked/id_url path or
     api/author_serial/liked/like_serial
+
+    Method:
+        GET
+    URL:
+        /api/authors/{author_serial: int}/liked/{like_serial: int}
+        /api/liked/{like_fqid: path}
     """
     serializer_class = LikeSerializer
 
@@ -371,6 +387,12 @@ def create_or_delete_like(request):
     Internal endpoint that facilitates liking an object or deleting a liked object
 
     Delete hasn't been mentioned in the API spec yet so it might be removed in the future if required
+
+    Methods:
+        POST
+        DELETE
+    URL:
+        /api/like
     """
     author_id = request.data.get('author_id')
     object_url = request.data.get('object')
@@ -390,6 +412,13 @@ class CommentsListView(ListAPIView):
     """
     Similar stuff to likes above, this returns a Comments collection, with also a likes section that is paginated in
     the layer underneath
+
+    Methods:
+        GET
+    URL:
+        /api/authors/{author_serial: int}/posts/{post_serial: int}/comments
+        /api/posts/{post_fqid: path}/comments
+
     """
     serializer_class = CommentSerializer
     pagination_class = CommentsPaginator
@@ -417,6 +446,12 @@ class CommentsListView(ListAPIView):
 class CommentedListCreateView(ListCreateAPIView):
     """
     APIView to both, list a collection and create a comment on that endpoint
+    Method:
+        GET
+        POST
+    URL:
+        /api/authors/{author_serial: int}/commented
+        /api/authors/{author_fqid: path}/commented (GET ONLY)
     """
     pagination_class = CommentsPaginator
 
@@ -444,6 +479,12 @@ class CommentedListCreateView(ListCreateAPIView):
 class CommentRetrieveView(RetrieveAPIView):
     """
     This view to return a single comment object
+
+    Method:
+        GET
+    URL:
+        /api/authors/{author_serial: int}/commented/{comment_serial: int}
+        /api/commented/{comment_fqid: path}
     """
     serializer_class = CommentSerializer
 
