@@ -41,7 +41,7 @@ export default function UserProfile() {
         <div className="profile-page-wrapper">
           <ProfileHeader />
           <div className="feed-container">
-            <Feed />
+            <Feed author_id = {authorId}/>
           </div>
         </div>
       ) : (
