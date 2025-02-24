@@ -4,6 +4,7 @@ import { UserContext } from "../pages/UserProfile";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useParams } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function ProfileHeader() {
   const user = useContext(UserContext);
@@ -70,15 +71,16 @@ export default function ProfileHeader() {
   }
   async function followUser() {
     //TODO
+    console.log("follow user");
   }
   return (
     <div className="profile-header">
       <div class="cover-wrapper">
         <div class="cover-buttons-wrapper">
           {isOwner && (
-            <button id="edit-btn">
+            <Link to="/editProfile" id="edit-btn">
               <img src={editBtn} id="edit-btn-icon" />
-            </button>
+            </Link>
           )}
         </div>
         <div class="info-wrapper">
