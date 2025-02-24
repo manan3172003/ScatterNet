@@ -4,9 +4,10 @@ import MobileCommentModal from "../components/MobileCommentModal"
 import Post from "../components/Post"
 import InfiniteScroll from "react-infinite-scroll-component";
 import "../assets/styles/homepage.css"
+import getCookie from "../context/Cookie";
 export default function HomePage(){
     const [posts,setPosts] = useState([])
-    
+    const csrfToken = getCookie('csrftoken')
     const [selectedPost, setSelectedPost] = useState(null)
     const [showComments, setShowComments] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
@@ -33,7 +34,8 @@ export default function HomePage(){
                 headers: {
                     "Content-Type": "application/json",
                 },
-                credentials: "include"
+                credentials: "include",
+                "X-CSRFToken": csrfToken,
         })
         if (response.ok){
             const posts_object = await response.json()
@@ -43,13 +45,12 @@ export default function HomePage(){
     }
 
     function handleCommentClick(post,e){
-        console.log("This got called!")
+        
         e.stopPropagation()
-        if (isMobile){
-            
-            setSelectedPost(post)
-            setShowComments(true)
-        }
+       
+        setSelectedPost(post)
+        setShowComments(true)
+    
     }
     async function fetchMorePosts(){
         try {
