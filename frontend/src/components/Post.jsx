@@ -4,19 +4,22 @@ import {useState} from "react"
 import { AuthContext } from "../context/AuthContext";
 import ReactMarkdown from "react-markdown"
 import "../assets/styles/post.css"
-// import MediaComponent from "./MediaComponent"
+
 import {useContext,useEffect} from "react"
 import {Heart,MessageCircle,Share2} from "lucide-react"
-
+import getCookie from "../context/Cookie"
 
 export default function Post({post, onPostClick,onCommentClick}){
     const {user} = useContext(AuthContext)
+    const csrfToken = getCookie('csrftoken')
 
-   
+    const [likeCount,setLikeCount] = useState(post.likes.count)
+    const [commountCount,setCommentCount] = useState(post.comments.count)
         /*
     Each post has its own post object as state
-    
+
     */
+
 
     const [hasLiked, setLikes] = useState(false); // Default to false
 
@@ -28,24 +31,29 @@ export default function Post({post, onPostClick,onCommentClick}){
         if (user) {
             fetchLikeStatus();
         }
-    }, []);
+    }, [hasLiked]);
     async function handleLike() {
-        
+        if (user === null){
+            // Not logged in so do nothing
+            return
+        }
+
         const authorObject = await getAuthorObject(user)
-        const response = await fetch(`${post.author.id}/inbox`,{
+
+        const response = await fetch(`http://localhost:8000/api/like`,{
             method: "POST",
             credentials: "include",
+
             headers : {
-                "Content-Type":"application/json"
+                "Content-Type":"application/json",
+                "X-CSRFToken": csrfToken,
             },
-            
+
             body : JSON.stringify({
-                "type": "like",
-                "author": JSON.stringify(authorObject),
-                "published": new Date().toISOString(),
-                "id": `http://localhost:8000/api/authors/${user.author_id}/liked/${crypto.randomUUID()}`,
+                "author_id": `${user.author_id}`,
                 "object": `${post.id}`
-            })
+            }),
+
 
         })
         if (!response.ok) {
@@ -53,9 +61,11 @@ export default function Post({post, onPostClick,onCommentClick}){
         }
         else {
             setLikes(true)
+            setLikeCount(prevCount => prevCount + 1);
+
         }
 
-       
+
     }
     function handleShare(){
         if (navigator.clipboard) {
@@ -67,34 +77,34 @@ export default function Post({post, onPostClick,onCommentClick}){
     async function getAuthorObject(user) {
         try {
             console.log(user)
-            const response = await fetch(`http://localhost/api/authors/${user.author_id}`);
-    
+            const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}`);
+
             if (!response.ok) {
                 throw new Error(`Error fetching author: ${response.status}`);
             }
-    
-            const authorObject = await response.json(); 
-            return authorObject; 
+
+            const authorObject = await response.json();
+            return authorObject;
         } catch (error) {
             console.error("Failed to fetch author:", error);
             return null;
         }
     }
     async function getLikeStatus(user) {
-        
+
         const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/liked`)
         if (response.ok){
             const liked = await response.json()
             const targetObject = post.id
             const exists = liked.src.some(like => like.object === targetObject)
-          
+
             return exists;
         }
     }
     /* Comments can't be deleted */
 
     return (
-      
+
 
     <div className="post-container" onClick={onPostClick}>
         <div className="post-header">
@@ -108,26 +118,25 @@ export default function Post({post, onPostClick,onCommentClick}){
             <span className="post-author-name">{post.author.displayName}</span>
           </div>
         </div>
-  
-        <img
-        src={"https://i.imgur.com/k7XVwpB.jpeg"}
-        alt="Post"
-        className="post-image"
-      />
-  
+
+        <span>{post.description}</span>
+
         <div className="post-body">
+            <div className="post-caption">
+                    {<ReactMarkdown className="markdown">{post.content}</ReactMarkdown>}
+
+            </div>
           <div className="post-icons">
-           
+
             <Heart size={24} className={`${hasLiked ? "liked" : ""}`} onClick={handleLike}/>
             <MessageCircle size={24} onClick={onCommentClick}/>
             {post.visibility === "PUBLIC" ? <Share2 size={24} onClick={handleShare}/>: <></>}
-            
+
           </div>
-          {post.visibility === "PUBLIC" || post.visibility === "UNLISTED" ? <div className="likes">{post.likes.count} likes</div>:<></>}
-          <ReactMarkdown className="post-caption">
-            <span className="post-author-name">{post.author.displayName}</span> {post.description}
-          </ReactMarkdown>
-  
+          {post.visibility === "PUBLIC" || post.visibility === "UNLISTED" ? <div className="likes">{likeCount} likes</div>:<></>}
+
+
+
           <span className="view-comments" onClick={onCommentClick}>
             View all {post.comments.count} comments
           </span>

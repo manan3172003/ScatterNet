@@ -5,52 +5,61 @@
 p {
   margin: 0;
 }
+a {
+  color: #ffffff;
+}
 .cover-wrapper {
   background-color: var(--primaryBlue);
   margin: auto;
-  width: 1200px;
-  height: 400px;
-  z-index: 3;
-  position: relative;
+  padding: 10px;
 }
-#cover-image {
-  height: 200px;
-  width: 1200px;
-  object-fit: cover;
-  position: absolute;
-  z-index: -2;
-  border-bottom: 8px solid var(--secondaryBlue);
-}
+
 .cover-buttons-wrapper {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 20px;
 }
 .info-wrapper {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   margin: 0 20px;
+  justify-content: space-between;
+}
+.info-subwrapper {
+  display: flex;
+  gap: 10px;
 }
 #profile-image {
-  height: 200px;
-  width: 200px;
+  height: 100px;
+  width: 100px;
   border-radius: 50%;
   object-fit: cover;
   border: 8px solid var(--secondaryBlue);
+  margin: auto;
 }
+#edit-btn {
+  background-color: transparent;
+  border: none;
+}
+#edit-btn-icon {
+  height: 25px;
+  width: 25px;
+}
+
 .info-names-wrapper {
   margin-top: 25px;
 }
 #displayname {
   font-family: "Karantina";
-  font-size: 96px;
+  font-size: 64px;
   color: #ffffff;
   -webkit-text-stroke-color: var(--secondaryBlue);
   -webkit-text-stroke-width: 3px;
 }
 .info-names-subwrapper {
   color: #ffffff;
-  font-size: 32px;
+  font-size: 12px;
   font-family: "Inter";
   display: flex;
   flex-direction: row;
@@ -60,9 +69,8 @@ p {
   width: 200px;
   height: 50px;
   border-radius: 30px;
-  background-color: #ffffff;
-  margin-top: 100px;
-  margin-left: 150px;
+  background-color: white;
+  margin: auto;
   transition: all 0.5s ease-in-out;
 }
 .button > p {
@@ -76,4 +84,32 @@ p {
 .button:hover {
   background-color: rgb(57, 67, 108);
   transition: all 0.5s ease-in-out;
+}
+
+@media screen and (min-width: 768px) {
+  #profile-image {
+    height: 200px;
+    width: 200px;
+  }
+  #edit-btn-icon {
+    height: 50px;
+    width: 50px;
+  }
+
+  .info-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin: 0 20px;
+  }
+
+  #displayname {
+    font-size: 96px;
+  }
+  .info-names-subwrapper {
+    font-size: 24px;
+  }
+  .button {
+    margin: auto 0;
+  }
 }

@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
-import { useState, useContext } from "react";
-
+import { useState, useContext, useEffect } from "react";
+import getCookie from "../context/Cookie";
 import { X, Send, Heart } from "lucide-react";
 import "../assets/styles/mobile-comment-modal.css"
 import {motion} from "framer-motion"
@@ -10,19 +10,56 @@ export default function MobileCommentModal({ post, onClose }) {
     const [comments, setComments] = useState(post.comments.src);
    
     const {user} = useContext(AuthContext)
-    console.log("The mobile comment got renedered")
+    useEffect(() => {}, [comments]); 
+    
+    const csrfToken = getCookie('csrftoken')
+    async function handleLike(commentId){
+        const response  = await fetch(`http://localhost:8000/api/like/`,{
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({
+                "author_id": `${user.author_id}`,
+                "object":`${commentId}`,
+            }),
+            credentials: "include"
+        })
+        if (response.ok){
+            const newCommentsResponse = await fetch(`http://localhost:8000/api/posts/${post.id}`)
+            if (newCommentsResponse.ok){
+                let updatedComments = await newCommentsResponse.json()
+                setComments(updatedComments.comments.src)
+            }
 
-    const handleLike = async (commentId) => {
-        const updated = setComments.map((comment) => {
-          if (comment.id === commentId) {
-            return { ...comment, likes: { ...comment.likes, count: comment.likes.count + 1 } };
-          }
-          return comment;
-        });
+        }
     
     }
-    const handleAddComment = (e) => {
-        e.preventDefault();
+    async function handleAddComment(e){
+        e.preventDefault()
+        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/commented`
+            , {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    "post": `${post.id}`,
+                    "comment": `${newComment}`,
+                    "contentType": "text/plain",
+                }),
+                credentials: "include",
+        })
+        if (response.ok){
+            const newCommentsResponse = await fetch(`http://localhost:8000/api/posts/${post.id}`)
+            if (newCommentsResponse.ok){
+                let updatedComments = await newCommentsResponse.json()
+                setComments(updatedComments.comments.src)
+            }
+
+        }
       
         }
     
@@ -46,14 +83,14 @@ export default function MobileCommentModal({ post, onClose }) {
                         <div key={comment.id} className="comment-item">
                             <img 
                                 className="comment-pfp"
-                                src={comment.author.profileImage}
+                                src={comment.author.profileImageURL}
                                 alt={`${comment.author.displayName}'s profile`}
                             />
                             <div className="comment-content">
                                 <span className="comment-author">
                                     {comment.author.displayName}
                                 </span>
-                                <p>{comment.content}</p>
+                                <p>{comment.comment}</p>
                             </div>
                             <div className="comment-actions">
                                 <Heart size={16} className="like-icon" onClick={() => handleLike(comment.id)} />
