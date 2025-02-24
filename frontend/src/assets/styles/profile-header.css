@@ -13,7 +13,7 @@ p {
 
 .cover-buttons-wrapper {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 20px;
 }
 .info-wrapper {
@@ -36,14 +36,14 @@ p {
   margin: auto;
 }
 #edit-btn {
+  background-color: transparent;
+  border: none;
+}
+#edit-btn-icon {
   height: 25px;
   width: 25px;
 }
-#back-btn {
-  visibility: hidden;
-  height: 25px;
-  width: 20px;
-}
+
 .info-names-wrapper {
   margin-top: 25px;
 }
@@ -88,14 +88,11 @@ p {
     height: 200px;
     width: 200px;
   }
-  #edit-btn {
+  #edit-btn-icon {
     height: 50px;
     width: 50px;
   }
-  #back-btn {
-    height: 50px;
-    width: 40px;
-  }
+
   .info-wrapper {
     display: flex;
     flex-direction: row;

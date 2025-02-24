@@ -3,23 +3,16 @@ import Feed from "../components/Feed";
 import "../assets/styles/profile-header.css";
 import "../assets/styles/user-profile.css";
 import { useParams } from "react-router-dom";
-import { useState, createContext, useEffect } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export const UserContext = createContext();
 
 export default function UserProfile() {
   const { authorId } = useParams();
-  console.log(`id: ${authorId}`);
 
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState();
-  // Sample User for testing
-  //{
-  //   displayName: "John Doe",
-  //   username: "johnDoe",
-  //   github: "github/jdoe",
-  //   profileImageURL: profilePic,
-  // }
 
   useEffect(() => {
     async function fetchUser() {
