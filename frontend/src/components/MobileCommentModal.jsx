@@ -12,17 +12,47 @@ export default function MobileCommentModal({ post, onClose }) {
     const {user} = useContext(AuthContext)
     console.log("The mobile comment got renedered")
 
-    const handleLike = async (commentId) => {
-        const updated = setComments.map((comment) => {
-          if (comment.id === commentId) {
-            return { ...comment, likes: { ...comment.likes, count: comment.likes.count + 1 } };
-          }
-          return comment;
-        });
+    async function handleLike(commentId){
+        const response  = await fetch(`http://localhost:8000/api/authors/${user.author_id}/commented`,{
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: {
+                "author_id": `${user.author_id}`,
+                "object":"string",
+            },
+            credentials: "include"})
+        if (response.ok){
+            const newCommentsResponse = await fetch(`http://localhost:8000/api/posts/${post.id}`)
+            if (newCommentsResponse.ok){
+                let updatedComments = await newCommentsResponse.json()
+                setComments(updatedComments)
+            }
+
+        }
     
     }
-    const handleAddComment = (e) => {
-        e.preventDefault();
+    async function handleAddComment(e){
+        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/commented`
+            , {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: {
+                    "post": `${post.id}`,
+                    "comment": `${newComment}`,
+                    "contentType": "text/plain",
+                },
+                credentials: "include"
+        })
+        if (response.ok){
+            let newComments = comments
+            newComments.push(newComment)
+            setComments(newComments)
+        }
+
       
         }
     
