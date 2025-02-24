@@ -1,6 +1,7 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, { useState, useRef,useEffect } from "react";
+import {getCookie, fetchUserData} from "../utils/utils.js";
 export default function PostingPage(){
    
     const previewMethodsRef = useRef();
@@ -41,17 +42,22 @@ export default function PostingPage(){
           console.log(formData)
 
         try {
-            const response = await fetch(`localhost:8000/api/authors/${AUTHOR_SERIAL}/post`,{
+            let resp = await fetchUserData();
+            let AUTHOR_SERIAL = resp.user.author_id
+            let csrfToken = getCookie('csrftoken');
+
+            const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts`,{
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
                 },
                 body: JSON.stringify({
                     title: formData.title,
                     description: formData.description,
                     contentType: formData.contentType || null,
                     content: formData.content || null,
-                    visibility: "",
+                    visibility: formData.visibility,
                 }),
                 credentials: "include"
             })
