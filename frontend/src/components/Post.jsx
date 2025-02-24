@@ -17,9 +17,9 @@ export default function Post({post, onPostClick,onCommentClick}){
     const [commountCount,setCommentCount] = useState(post.comments.count)
         /*
     Each post has its own post object as state
-    
+
     */
-    
+
 
     const [hasLiked, setLikes] = useState(false); // Default to false
 
@@ -39,21 +39,21 @@ export default function Post({post, onPostClick,onCommentClick}){
         }
 
         const authorObject = await getAuthorObject(user)
-        
+
         const response = await fetch(`http://localhost:8000/api/like`,{
             method: "POST",
-            credentials: "include", 
+            credentials: "include",
 
             headers : {
                 "Content-Type":"application/json",
                 "X-CSRFToken": csrfToken,
             },
-            
+
             body : JSON.stringify({
                 "author_id": `${user.author_id}`,
                 "object": `${post.id}`
             }),
-            
+
 
         })
         if (!response.ok) {
@@ -62,10 +62,10 @@ export default function Post({post, onPostClick,onCommentClick}){
         else {
             setLikes(true)
             setLikeCount(prevCount => prevCount + 1);
-            
+
         }
 
-       
+
     }
     function handleShare(){
         if (navigator.clipboard) {
@@ -78,33 +78,33 @@ export default function Post({post, onPostClick,onCommentClick}){
         try {
             console.log(user)
             const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}`);
-    
+
             if (!response.ok) {
                 throw new Error(`Error fetching author: ${response.status}`);
             }
-    
-            const authorObject = await response.json(); 
-            return authorObject; 
+
+            const authorObject = await response.json();
+            return authorObject;
         } catch (error) {
             console.error("Failed to fetch author:", error);
             return null;
         }
     }
     async function getLikeStatus(user) {
-        
+
         const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/liked`)
         if (response.ok){
             const liked = await response.json()
             const targetObject = post.id
             const exists = liked.src.some(like => like.object === targetObject)
-          
+
             return exists;
         }
     }
     /* Comments can't be deleted */
 
     return (
-      
+
 
     <div className="post-container" onClick={onPostClick}>
         <div className="post-header">
@@ -120,23 +120,23 @@ export default function Post({post, onPostClick,onCommentClick}){
         </div>
 
         <span>{post.description}</span>
-        
+
         <div className="post-body">
             <div className="post-caption">
                     {<ReactMarkdown className="markdown">{post.content}</ReactMarkdown>}
-            
+
             </div>
           <div className="post-icons">
-           
+
             <Heart size={24} className={`${hasLiked ? "liked" : ""}`} onClick={handleLike}/>
             <MessageCircle size={24} onClick={onCommentClick}/>
             {post.visibility === "PUBLIC" ? <Share2 size={24} onClick={handleShare}/>: <></>}
-            
+
           </div>
           {post.visibility === "PUBLIC" || post.visibility === "UNLISTED" ? <div className="likes">{likeCount} likes</div>:<></>}
-          
-         
-  
+
+
+
           <span className="view-comments" onClick={onCommentClick}>
             View all {post.comments.count} comments
           </span>

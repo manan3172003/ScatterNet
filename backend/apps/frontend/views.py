@@ -8,3 +8,4 @@ from django.views.generic import TemplateView
 def home(request):
     template_name = 'index.html'
     return render(request, "index.html")
+
