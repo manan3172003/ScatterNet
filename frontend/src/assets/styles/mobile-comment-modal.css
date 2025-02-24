@@ -11,6 +11,7 @@
     display: flex;
     flex-direction: column;
     z-index: 1000;
+   
   }
   
   .modal-header {
@@ -112,4 +113,10 @@
   justify-content: right;
   display: flex;
   align-items: center;
+}
+@media screen and (min-width: 768px) {
+   
+  .comment-modal{
+    width: 30%;
+  }
 }

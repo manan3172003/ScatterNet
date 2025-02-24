@@ -28,13 +28,7 @@ export default function PublicPostPage() {
 
   return (
     <div className="post-page-container">
-      {loading ? (
-        <p>Loading...</p>
-      ) : post ? (
-        <Post post={post} />
-      ) : (
-        <p>Post not found</p>
-      )}
+      {loading ? <p>Loading...</p> : post ? <Post post={post} onCommentClick={null} onPostClick={null} /> : <p>Post not found</p>}
     </div>
   );
 }

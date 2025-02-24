@@ -14,12 +14,31 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIV
 
 from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
-from ..utils.helper import are_friends, follows
+from ..utils.helper import are_friends, follows, merge_sorted_post_lists
 
-
-# Create your views here.
+@swagger_auto_schema(
+    method='get',
+    manual_parameters=[
+        openapi.Parameter(
+            'url_id',
+            openapi.IN_PATH,
+            description="Encoded FQID of the post.",
+            type=openapi.TYPE_STRING
+        )
+    ],
+    responses={
+        200: openapi.Response('OK', PostSerializer),
+        403: 'Access forbidden to the post',
+        404: 'Post not found'
+    }
+)
 @api_view(["GET"])
 def get_post(request, url_id):
+    """
+    http://{node}/api/posts/{POST_FQID}
+
+    GETs a post with id_url POST_FQID if the caller has permissions
+    """
     context = {'request': request}
     decoded_url = unquote(url_id)
     try:
@@ -45,6 +64,13 @@ def get_post(request, url_id):
                         , status=status.HTTP_403_FORBIDDEN)
     else:
         return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+"""
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
+
+GETs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
+if the caller has permissions
+"""
 
 def get_author_post(request, auth_id, post_id):
     context = {'request': request}
@@ -78,6 +104,13 @@ def get_author_post(request, auth_id, post_id):
         return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
+"""
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
+
+PUTs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
+if the caller has permissions (Caller needs to be author AUTHOR_SERIAL or node admin)
+"""
+
 def put_author_post(request, auth_id, post_id):
     context = {'request': request}
     if not request.user.is_authenticated:
@@ -98,6 +131,13 @@ def put_author_post(request, auth_id, post_id):
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+"""
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
+
+DELETEs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
+if the caller has permissions (Caller needs to be author AUTHOR_SERIAL or node admin)
+"""
+
 def delete_author_post(request, auth_id, post_id):
     if not request.user.is_authenticated:
         return Response({'error': 'Need to be logged in to delete a post'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -116,6 +156,33 @@ def delete_author_post(request, auth_id, post_id):
 
     return Response({'message': 'Post deleted'}, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Response('OK', PostSerializer),
+        404: 'Post not found',
+        403: 'Access forbidden'
+    }
+)
+@swagger_auto_schema(
+    method='put',
+    request_body=PostSerializer,
+    responses={
+        200: openapi.Response('OK', PostSerializer),
+        400: 'Bad request due to validation errors',
+        401: 'Unauthorized',
+        404: 'Post not found'
+    }
+)
+@swagger_auto_schema(
+    method='delete',
+    responses={
+        200: 'Post deleted',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        404: 'Post not found'
+    }
+)
 @api_view(["GET", "PUT", "DELETE"])
 def author_post(request, auth_id, post_id):
     if request.method == 'GET':
@@ -125,32 +192,43 @@ def author_post(request, auth_id, post_id):
     elif request.method == 'DELETE':
         return delete_author_post(request, auth_id, post_id)
 
+"""
+Helper function which returns the list of posts belonging to author with id AUTHOR_SERIAL
+Shows the posts of author with id AUTHOR_SERIAL to the caller if the caller has permissions
+"""
+def filter_author_post(request, auth_id):
+    queryset = Post.objects.filter(author_id=auth_id)
+    queryset = queryset.exclude(visibility='DELETED')
+    queryset = queryset.order_by('-published')
 
+    if not request.user.is_authenticated:
+        return queryset.filter(visibility='PUBLIC')
+
+    elif request.user.author_profile.id == auth_id and not request.user.is_staff:
+        return queryset
+    elif request.user.is_staff:
+        return Post.objects.filter(author_id=auth_id).order_by('-published')
+    elif request.user.author_profile.id != auth_id:
+        if are_friends(request.user.author_profile.id, auth_id):
+            return queryset.filter(visibility='FRIENDS')
+        elif follows(request.user.author_profile.id, auth_id):
+            return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
+        else:
+            return queryset.filter(visibility='PUBLIC')
+
+"""
+http://{node}/api/authors/{AUTHOR_SERIAL}/posts
+
+GET calls the above helper function
+POST creates a new post for author with id AUTHOR_SERIAL if the caller has permissions
+"""
 class PostListCreateView(ListAPIView):
     serializer_class = PostSerializer
     pagination_class = PostsPaginator
 
     def get_queryset(self):
         auth_id = self.kwargs.get('auth_id')
-        queryset = Post.objects.filter(author_id=auth_id)
-        queryset = queryset.exclude(visibility='DELETED')
-        queryset = queryset.order_by('-published')
-
-        if not self.request.user.is_authenticated:
-            return  queryset.filter(visibility='PUBLIC')
-
-        elif self.request.user.author_profile.id == auth_id and not self.request.user.is_staff:
-            return queryset
-        elif self.request.user.is_staff:
-            return Post.objects.filter(author_id=auth_id).order_by('-published')
-        elif self.request.user.author_profile.id != auth_id:
-            if are_friends(self.request.user.author_profile.id, auth_id):
-                return queryset.filter(visibility='FRIENDS')
-            elif follows(self.request.user.author_profile.id, auth_id):
-                return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
-            else:
-                return queryset.filter(visibility='PUBLIC')
-
+        return filter_author_post(self.request, auth_id)
 
     def post(self, request, *args, **kwargs):
         auth_id = self.kwargs.get('auth_id')
@@ -168,8 +246,35 @@ class PostListCreateView(ListAPIView):
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+"""
+http://{node}/api/posts
+
+GET calls the above helper function on every ACTIVE author in DB
+so we can get a stream of posts in order of latest to earliest published date
+"""
+class StreamListView(ListAPIView):
+    serializer_class = PostSerializer
+    pagination_class = PostsPaginator
+
+    def get_queryset(self):
+        authors = Author.objects.filter(state="ACTIVE")
+        author_posts = []
+        for author in authors:
+            author_posts.append(list(filter_author_post(self.request, author.id)))
+
+        merged_posts = list(merge_sorted_post_lists(*author_posts))
+
+        paginator = self.pagination_class()
+        paginated_posts = paginator.paginate_queryset(merged_posts, self.request)
+
+        return paginated_posts
+
 
 class LikesListView(ListAPIView):
+    """
+    View to retrieve a collection of paginated likes
+    the body is a likes object, with the src list containing a single like object
+    """
     serializer_class = LikeSerializer
     pagination_class = LikesPaginator
 
@@ -209,18 +314,20 @@ class LikesListView(ListAPIView):
             return queryset
 
 class LikeRetrieveView(RetrieveAPIView):
+    """
+    View that only retrieves a single Like object based on either the api/liked/id_url path or
+    api/author_serial/liked/like_serial
+    """
     serializer_class = LikeSerializer
 
-    def get_queryset(self):
+    def get_object(self):
         like_fqid = self.kwargs.get('like_fqid')
         if like_fqid:
-            queryset = Like.objects.filter(id_url=like_fqid)
-            return queryset
+            return get_object_or_404(Like, id_url=like_fqid)
         else:
             author_serial = self.kwargs.get('author_serial')
             like_serial = self.kwargs.get('like_serial')
-            queryset = Like.objects.filter(author_id=author_serial, pk=like_serial)
-            return queryset
+            return get_object_or_404(Like, author_id=author_serial, pk=like_serial)
 
 
 def post_like(author_id, object_url):
@@ -252,7 +359,7 @@ def delete_like(author_id, object_url):
                 ),
                 'object': openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description="URL ID of the Object (Post/Comment) that was liked."
+                    description="FQID of the Object (Post/Comment) that was liked."
                 )
             }
         ),
@@ -260,6 +367,11 @@ def delete_like(author_id, object_url):
     )
 @api_view(['POST','DELETE'])
 def create_or_delete_like(request):
+    """
+    Internal endpoint that facilitates liking an object or deleting a liked object
+
+    Delete hasn't been mentioned in the API spec yet so it might be removed in the future if required
+    """
     author_id = request.data.get('author_id')
     object_url = request.data.get('object')
     if not author_id:
@@ -275,6 +387,10 @@ def create_or_delete_like(request):
 
 
 class CommentsListView(ListAPIView):
+    """
+    Similar stuff to likes above, this returns a Comments collection, with also a likes section that is paginated in
+    the layer underneath
+    """
     serializer_class = CommentSerializer
     pagination_class = CommentsPaginator
 
@@ -299,6 +415,9 @@ class CommentsListView(ListAPIView):
 # TODO: URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
 
 class CommentedListCreateView(ListCreateAPIView):
+    """
+    APIView to both, list a collection and create a comment on that endpoint
+    """
     pagination_class = CommentsPaginator
 
     def get_serializer_class(self):
@@ -323,6 +442,9 @@ class CommentedListCreateView(ListCreateAPIView):
 
 
 class CommentRetrieveView(RetrieveAPIView):
+    """
+    This view to return a single comment object
+    """
     serializer_class = CommentSerializer
 
     def get_object(self):

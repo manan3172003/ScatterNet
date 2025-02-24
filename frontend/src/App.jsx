@@ -30,8 +30,8 @@ function App() {
         </Route>
 
         <Route
-          path="/http://localhost:8000/authors/${}/posts/${}"
-          element={<PublicPostPage />}
+            path="/authors/:authorId/posts/:postId"
+            element={<PublicPostPage />}
         />
       </Routes>
     </Router>

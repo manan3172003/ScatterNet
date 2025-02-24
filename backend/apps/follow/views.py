@@ -4,10 +4,11 @@ from ..authors.models import Author
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import FollowSerializer
+from .serializers import FollowSerializer, FollowingListSerializer, FriendsListSerializer, FollowersListSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated, AllowAny
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from ..authors.serializers import AuthorSerializer
 
 # Create your views here.
@@ -68,6 +69,15 @@ class FollowersListView(APIView):
     """
     URL: authors/{author_id}/followers
     """
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="List of authors that are followers of the specified author or sent a follow request",
+                schema=FollowersListSerializer()
+            )
+        }
+    )
     def get(self, request, author_id):
         isPending = request.GET.get('isPending', "false").lower() == "true"
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
@@ -76,21 +86,21 @@ class FollowersListView(APIView):
             authors_followers = Follow.objects.filter(object=author, isPending=False).values_list('actor', flat=True)
             followers = Author.objects.filter(id__in=authors_followers, state="ACTIVE")
 
-            serializer = AuthorSerializer(followers, many=True)
-            return Response({
-                "type": 'followers',
-                "followers": serializer.data,
-            }, status=status.HTTP_200_OK)
+            serializer = FollowersListSerializer(instance={
+                "type": "followers",
+                "followers": followers
+            })
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         else:
             authors_follow_requests = Follow.objects.filter(object=author, isPending=True).values_list('actor', flat=True)
             follow_requests = Author.objects.filter(id__in=authors_follow_requests, state="ACTIVE")
 
-            serializer = FollowSerializer(follow_requests, many=True)
-            return Response({
-                "type": 'follow requests',
-                "follow requests": serializer.data,
-            }, status=status.HTTP_200_OK)
+            serializer = FollowersListSerializer(instance={
+                "type": "followers",
+                "followers": follow_requests
+            })
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 class FollowerDetailView(APIView):
     """
@@ -101,6 +111,15 @@ class FollowerDetailView(APIView):
             return [IsAuthenticated()]
         return [AllowAny()]
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="Returns author details if they are a follower",
+                schema=AuthorSerializer()
+            ),
+            404: openapi.Response(description="Author is not a follower")
+        }
+    )
     def get(self, request, author_id, foreign_id_url):
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
@@ -127,6 +146,15 @@ class FollowerDetailView(APIView):
         - if there is no request:
             - Error
     """
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(description="Follow request accepted"),
+            201: openapi.Response(description="Follow request successfully created"),
+            400: openapi.Response(description="Follow request already sent"),
+            409: openapi.Response(description="Follow relationship already exists and is accepted"),
+        }
+    )
     def put(self, request, author_id, foreign_id_url):
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
@@ -193,8 +221,14 @@ class FollowerDetailView(APIView):
             - Successful Unfollow
         - if AUTHOR_2 is logged in:
             - Cannot delete
-    
     """
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(description="Follow request rejected / Unfollowed successfully"),
+            401: openapi.Response(description="Unauthorized: Must be logged in as the correct user"),
+        }
+    )
     def delete(self, request, author_id, foreign_id_url):
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
@@ -234,16 +268,95 @@ class FollowingListView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="List of authors that the specified author is following or sent a follow request to",
+                schema=FollowingListSerializer()
+            )
+        }
+    )
     def get(self, request, author_id):
+        isPending = request.GET.get('isPending', "false").lower() == "true"
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
-        authors_following = Follow.objects.filter(actor=author, isPending=False).values_list('object', flat=True)
-        following = Author.objects.filter(id__in=authors_following, state='ACTIVE')
 
-        serializer = AuthorSerializer(following, many=True)
-        return Response({
-            "type": 'following',
-            "following": serializer.data,
-        }, status=status.HTTP_200_OK)
+        if not isPending:
+            authors_following = Follow.objects.filter(actor=author, isPending=False).values_list('object', flat=True)
+            following = Author.objects.filter(id__in=authors_following, state='ACTIVE')
+
+            serializer = FollowingListSerializer(instance={
+                "type": "following",
+                "following": following
+            })
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        else:
+            authors_following_requests = Follow.objects.filter(actor=author, isPending=True).values_list('object', flat=True)
+            following_requests = Author.objects.filter(id__in=authors_following_requests, state='ACTIVE')
+
+            serializer = FollowingListSerializer(instance={
+                "type": "following",
+                "following": following_requests
+            })
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FollowingDetailView(APIView):
+    """
+    URL: authors/{author_id}/following/{foreign_id_url}
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="Returns author details if the author is following the author specified in the foreign id",
+                schema=AuthorSerializer()
+            ),
+            404: openapi.Response(description="Author is not following the other author"),
+        }
+    )
+    def get(self, request, author_id, foreign_id_url):
+        decoded_url = unquote(foreign_id_url)
+        author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
+        foreign_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
+
+        is_following = Follow.objects.filter(actor=author, object=foreign_author, isPending=False).exists()
+        following_data = AuthorSerializer(foreign_author).data
+
+        if not is_following:
+            return Response({"error": "Not following"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(following_data, status=status.HTTP_200_OK)
+
+
+
+class FollowingDetailView(APIView):
+    """
+    URL: authors/{author_id}/following/{foreign_id_url}
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="Returns author details if the author is following the author specified in the foreign id",
+                schema=AuthorSerializer()
+            ),
+            404: openapi.Response(description="Author is not following the other author"),
+        }
+    )
+    def get(self, request, author_id, foreign_id_url):
+        decoded_url = unquote(foreign_id_url)
+        author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
+        foreign_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
+
+        is_following = Follow.objects.filter(actor=author, object=foreign_author, isPending=False).exists()
+        following_data = AuthorSerializer(foreign_author).data
+
+        if not is_following:
+            return Response({"error": "Not following"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(following_data, status=status.HTTP_200_OK)
+
+
 
 class FriendsListView(APIView):
     """
@@ -251,6 +364,14 @@ class FriendsListView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="List of authors that the specified author are friends with",
+                schema=FriendsListSerializer()
+            )
+        }
+    )
     def get(self, request, author_id):
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
 
@@ -260,11 +381,11 @@ class FriendsListView(APIView):
 
         friends = Author.objects.filter(id__in=authors_friends)
 
-        serializer = AuthorSerializer(friends, many=True)
-        return Response({
-            "type": 'friends',
-            "friends": serializer.data
-        }, status=status.HTTP_200_OK)
+        serializer = FriendsListSerializer(instance={
+            "type": "following",
+            "friends": friends
+        })
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class FriendDetailView(APIView):
     """
@@ -272,6 +393,15 @@ class FriendDetailView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="Returns author details if the two authors are friends",
+                schema=AuthorSerializer()
+            ),
+            404: openapi.Response(description="The two authors are not friends")
+        }
+    )
     def get(self, request, author_id, other_author_url):
         decoded_url = unquote(other_author_url)
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
@@ -281,7 +411,8 @@ class FriendDetailView(APIView):
         does_other_author_follow = Follow.objects.filter(object=other_author, actor=author, isPending=False).exists()
 
         if does_author_follow and does_other_author_follow:
-            return Response({"relationship": "Are friends"}, status=status.HTTP_200_OK)
+            friend_data = AuthorSerializer(author).data
+            return Response(friend_data, status=status.HTTP_200_OK)
 
         else:
-            return Response({"relationship": "Not friends"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Not friends"}, status=status.HTTP_404_NOT_FOUND)
