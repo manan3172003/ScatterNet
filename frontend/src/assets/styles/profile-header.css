@@ -5,6 +5,9 @@
 p {
   margin: 0;
 }
+a {
+  color: #ffffff;
+}
 .cover-wrapper {
   background-color: var(--primaryBlue);
   margin: auto;

@@ -87,9 +87,9 @@ export default function ProfileHeader() {
             <div class="info-names-wrapper">
               <p id="displayname">{user.displayName}</p>
               <div class="info-names-subwrapper">
-                <p id="username">{user.username}</p>
-                <p>|</p>
-                <p id="github">{user.github}</p>
+                <a id="github" href={user.github}>
+                  {user.github}
+                </a>
               </div>
             </div>
           </div>
