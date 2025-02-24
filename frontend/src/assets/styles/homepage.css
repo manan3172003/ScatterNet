@@ -1,0 +1,21 @@
+
+
+.feed-container {
+    padding-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    row-gap: 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: #111827;
+}
+  
+@media screen and (min-width: 768px) {
+   
+    .infinite-scroll-component {
+        min-width: 350px;
+    }
+    
+}

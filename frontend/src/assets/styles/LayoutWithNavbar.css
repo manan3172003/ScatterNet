@@ -1,0 +1,18 @@
+.layout{
+    display: flex; 
+    flex-direction: column; 
+    height: 100%;
+    color: #F3F4F6; 
+    background-color: #111827; 
+
+}
+@media screen and (min-width: 768px) {
+   
+    .layout {
+        flex-direction: row;
+        justify-content: space-around;
+    }
+    .other{
+        justify-self: center;
+    }
+}
