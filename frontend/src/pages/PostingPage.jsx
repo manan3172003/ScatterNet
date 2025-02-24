@@ -1,14 +1,12 @@
 import HeaderLogo from "../components/HeaderLogo"
-import {useContext, useState} from "react"
-import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/posting-page.css"
-import {useNavigate } from "react-router-dom"
-import {ImageUploading} from "react-images-uploading";
-
+import React, { useState, useRef,useEffect } from "react";
 export default function PostingPage(){
     // const {login} = useContext(AuthContext)
     // const navigate = useNavigate()
     // const [activeTab,setActiveTab] = useState("login")
+    const previewMethodsRef = useRef();
+
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -19,6 +17,13 @@ export default function PostingPage(){
     // const [, setErrorMessage] = useState("");  
     // const [, setSuccessMessage] = useState("");
     
+
+    function loadScript(src) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        document.body.appendChild(script);
+      }
 
     function handleChange(e){
       setFormData({
@@ -38,6 +43,8 @@ export default function PostingPage(){
             return;
           }
         
+          console.log(formData)
+
         // TODO: add correct api link??
         try {
             const response = await fetch("http://localhost:8000/api/post",{
@@ -73,18 +80,22 @@ export default function PostingPage(){
             alert("Something went wrong. Please try again.");
             console.log(error)
         }
-
-
     }
+    useEffect(() => {
+        loadScript('/markdown-editor.min.js'); // URL to the static JS file
+      }, []);
+
+
 
     return <div className="posting-container">
+        
             <header className="posting-header">
-                { <HeaderLogo/> }
+                {<HeaderLogo/> }
             </header>
             <main className="posting-main">
                 <div className="form-content" >
                         <form className="post-form" onSubmit={handlePost}>
-                            <label className="form-label">Post</label>
+                            <label className="form-label">Create Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
                                 <option value="">Select...</option>
@@ -108,11 +119,21 @@ export default function PostingPage(){
                                 <option value="application/base64">Image </option>
 
                             </select>
-                            {(formData.contentType === 'text/markdown' || formData.contentType === 'text/plain') && (
+                            {(formData.contentType === 'text/markdown') && (
                                 <>
                                 <label className="form-label">Content</label>
                             <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
-                            
+                            <button id= "markdown-button">Convert to Markdown</button>
+                            <div id="markdown-output"></div>
+                            <script src="{% static 'markdown-editor.min.js' %}"></script> 
+
+
+                                </>
+                            )}
+                              {(formData.contentType === 'text/plain') && (
+                                <>
+                                <label className="form-label">Content</label>
+                            <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
                                 </>
                             )}
 
@@ -121,12 +142,13 @@ export default function PostingPage(){
                                 formData.contentType === 'application/base64') && (
                                 <>
                                  <label className="form-label">Image</label>
-                            <input type="file" name="content" placeholder="An optional Image" onChange={handleChange} value={formData.content}/>
-                    
+                                    
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleChange} value={formData.content}/>
+                            
                                 </>
                             )}
                            
-                            <button>Post</button>
+                            <button id= "post-button">Post</button>
                         </form>
                 </div>
             </main>
