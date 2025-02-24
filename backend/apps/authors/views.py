@@ -20,6 +20,12 @@ class AuthorLoginView(APIView):
     This will be the path handling all login work
     We'll take the info from the frontend and authenticate a user n use django sessions
     to sustain it
+
+    Methods:
+        GET
+        POST
+    URL:
+        /api/authors/login
     """
 
     @method_decorator(ensure_csrf_cookie)
@@ -85,6 +91,11 @@ class AuthorSignUpView(APIView):
     state and the node admin needs to make a PUT call to change their state.
 
     Permissions for that are enforced in the PUT endpoint
+
+    Methods:
+        POST
+    URL:
+        /api/authors/signup
     """
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -124,6 +135,11 @@ class AuthorSignUpView(APIView):
 class AuthorsView(ListAPIView):
     """
     GET endpoint to return a collection of authors when requested.
+
+    Methods:
+        GET
+    URL:
+        /api/authors
     """
     serializer_class = AuthorSerializer
     pagination_class = AuthorsPaginator
@@ -162,6 +178,12 @@ class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
     """
     Generic listviews can handle multiple methods, this one is to list a single instance
     or update a single instance
+
+    Methods:
+        GET
+        PUT
+    URL:
+        /api/authors/{author_id : int}
     """
     queryset = Author.objects.all()
     http_method_names = ['get', 'put'] #explicitly only allows these two
@@ -183,6 +205,11 @@ class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
 def get_author_fqid(request, id_url):
     """
     Does the same thing as the one above but instead of using a pk, it uses the FQID url indentifier
+
+    Methods:
+        GET
+    URL:
+        /api/authors/{author_fqid : path}
     """
     decoded_url = unquote(id_url)
     try:
@@ -198,6 +225,11 @@ def get_current_user(request):
     """
     Helper endpoint we built to help the frontend identify who is the current user logged in for that current session
     we'll wrap this in permission handling in the future as well
+
+    Methods:
+        GET
+    URL:
+        /api/authors/current-user
     """
     if request.user and request.user.is_authenticated:
         author = request.user.author_profile

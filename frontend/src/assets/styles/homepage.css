@@ -1,4 +1,6 @@
-
+body {
+    background-color: #111827;
+}
 
 .feed-container {
     padding-top: 2rem;
@@ -15,7 +17,7 @@
 @media screen and (min-width: 768px) {
    
     .infinite-scroll-component {
-        min-width: 350px;
+        width: 500px;
     }
     
 }

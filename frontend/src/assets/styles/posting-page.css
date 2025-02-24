@@ -83,3 +83,11 @@
   .form-label {
     font-size: 1rem;
   }
+
+  @media screen and (min-width: 768px) {
+
+    .posting-main {
+        width: 700px;
+    }
+
+}
