@@ -16,16 +16,16 @@ export default function MobileCommentModal({ post, onClose }) {
     async function handleLike(commentId){
         const response  = await fetch(`http://localhost:8000/api/like/`,{
             method: "POST",
-            "X-CSRFToken": csrfToken,
-
             headers: {
                 "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
             },
-            body: {
+            body: JSON.stringify({
                 "author_id": `${user.author_id}`,
                 "object":`${commentId}`,
-            },
-            credentials: "include",})
+            }),
+            credentials: "include"
+        })
         if (response.ok){
             const newCommentsResponse = await fetch(`http://localhost:8000/api/posts/${post.id}`)
             if (newCommentsResponse.ok){
@@ -43,6 +43,7 @@ export default function MobileCommentModal({ post, onClose }) {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
                 },
                 body: JSON.stringify({
                     "post": `${post.id}`,
@@ -50,7 +51,6 @@ export default function MobileCommentModal({ post, onClose }) {
                     "contentType": "text/plain",
                 }),
                 credentials: "include",
-                "X-CSRFToken": csrfToken
         })
         if (response.ok){
             const newCommentsResponse = await fetch(`http://localhost:8000/api/posts/${post.id}`)
@@ -83,14 +83,14 @@ export default function MobileCommentModal({ post, onClose }) {
                         <div key={comment.id} className="comment-item">
                             <img 
                                 className="comment-pfp"
-                                src={comment.author.profileImage}
+                                src={comment.author.profileImageURL}
                                 alt={`${comment.author.displayName}'s profile`}
                             />
                             <div className="comment-content">
                                 <span className="comment-author">
                                     {comment.author.displayName}
                                 </span>
-                                <p>{comment.content}</p>
+                                <p>{comment.comment}</p>
                             </div>
                             <div className="comment-actions">
                                 <Heart size={16} className="like-icon" onClick={() => handleLike(comment.id)} />

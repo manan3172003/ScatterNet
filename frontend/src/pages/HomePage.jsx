@@ -21,10 +21,7 @@ export default function HomePage(){
       }, [])
 
     function handlePostClick(post){
-        if(!isMobile){
-            selectedPost(post)
-        }
-
+        selectedPost(post)
     }
 
     async function fetchUserPosts(){

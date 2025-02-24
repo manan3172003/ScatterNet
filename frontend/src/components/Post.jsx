@@ -43,9 +43,10 @@ export default function Post({post, onPostClick,onCommentClick}){
         const response = await fetch(`http://localhost:8000/api/like`,{
             method: "POST",
             credentials: "include", 
-            "X-CSRFToken": csrfToken,
+
             headers : {
-                "Content-Type":"application/json"
+                "Content-Type":"application/json",
+                "X-CSRFToken": csrfToken,
             },
             
             body : JSON.stringify({
