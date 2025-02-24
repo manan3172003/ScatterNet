@@ -14,7 +14,7 @@ export default function MobileCommentModal({ post, onClose }) {
     
     const csrfToken = getCookie('csrftoken')
     async function handleLike(commentId){
-        const response  = await fetch(`http://localhost:8000/api/like/`,{
+        const response  = await fetch(`http://localhost:8000/api/like`,{
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
