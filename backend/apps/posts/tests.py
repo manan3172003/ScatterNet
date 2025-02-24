@@ -79,6 +79,129 @@ def create_like():
 
     return _create_like
 
+# Posts API Tests
+@pytest.mark.django_db
+def test_create_post_success(api_client, create_author):
+    user, author = create_author("author1", "password", "Author 1")
+
+    url = f"/api/authors/{author.id}/posts"
+    data = {
+        "title": "Test Post Title",
+        "description": "This is a test post",
+        "contentType": "text/plain",
+        "content": "This is some content for the test post.",
+        "visibility": "PUBLIC"
+    }
+    api_client.force_authenticate(user=user)
+    response = api_client.post(url, data, format="json")
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.data["title"] == "Test Post Title"
+    assert response.data["description"] == "This is a test post"
+    assert response.data["content"] == "This is some content for the test post."
+    assert response.data["visibility"] == "PUBLIC"
+
+@pytest.mark.django_db
+def test_create_post_missing_fields(api_client, create_author):
+    user, author = create_author("author2", "password", "Author 2")
+
+    url = f"/api/authors/{author.id}/posts"
+    data = {
+        "title": "Test Post Title",  # Missing contentType and content
+        "description": "Missing required fields"
+    }
+    api_client.force_authenticate(user=user)
+    response = api_client.post(url, data, format="json")
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "contentType" in response.data
+    assert "content" in response.data
+
+@pytest.mark.django_db
+def test_get_all_posts(api_client, create_author, create_post):
+    user, author = create_author("author3", "password", "Author 3")
+    create_post(author, title="Post 1")
+    create_post(author, title="Post 2")
+
+    url = f"/api/authors/{author.id}/posts"
+    response = api_client.get(url)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert "count" in response.data
+    assert response.data["count"] == 2
+    assert len(response.data["src"]) == 2
+
+@pytest.mark.django_db
+def test_get_single_post(api_client, create_author, create_post):
+    user, author = create_author("author4", "password", "Author 4")
+    post = create_post(author, title="Single Post")
+
+    url = f"/api/authors/{author.id}/posts/{post.id}"
+    response = api_client.get(url)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["type"] == "post"
+    assert response.data["title"] == "Single Post"
+
+@pytest.mark.django_db
+def test_update_post_success(api_client, create_author, create_post):
+    user, author = create_author("author5", "password", "Author 5")
+    post = create_post(author, title="Original Title")
+
+    url = f"/api/authors/{author.id}/posts/{post.id}"
+    updated_data = {
+        "title": "Updated Title",
+        "description": "Updated Description",
+        "contentType": "text/plain",
+        "content": "Updated content",
+        "visibility": "FRIENDS"
+    }
+    api_client.force_authenticate(user=user)
+    response = api_client.put(url, updated_data, format="json")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["title"] == "Updated Title"
+    assert response.data["visibility"] == "FRIENDS"
+    assert response.data["content"] == "Updated content"
+
+@pytest.mark.django_db
+def test_delete_post_success(api_client, create_author, create_post):
+    user, author = create_author("author6", "password", "Author 6")
+    post = create_post(author, title="Post to be deleted")
+
+    url = f"/api/authors/{author.id}/posts/{post.id}"
+    api_client.force_authenticate(user=user)
+    response = api_client.delete(url)
+
+    assert response.status_code == status.HTTP_200_OK
+
+@pytest.mark.django_db
+def test_unauthorized_create_post(api_client, create_author):
+    user, author = create_author("author7", "password", "Author 7")
+
+    url = f"/api/authors/{author.id}/posts"
+    data = {
+        "title": "Unauthorized Post",
+        "description": "Unauthorized creation attempt",
+        "contentType": "text/plain",
+        "content": "This should fail",
+        "visibility": "PUBLIC"
+    }
+    response = api_client.post(url, data, format="json")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+@pytest.mark.django_db
+def test_post_not_found(api_client, create_author):
+    user, author = create_author("author8", "password", "Author 8")
+
+    # Trying to access a post that does not exist
+    url = f"/api/authors/{author.id}/posts/999999"  # Non-existent post ID
+    response = api_client.get(url)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 @pytest.mark.django_db
 def test_get_comments_list(api_client, create_author, create_post, create_comment):
     user, author = create_author("testuser", "password", "Test User")

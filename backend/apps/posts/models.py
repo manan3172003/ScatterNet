@@ -1,6 +1,5 @@
 from django.db import models
 from ..authors.models import Author
-from datetime import datetime
 
 
 # Create your models here.
