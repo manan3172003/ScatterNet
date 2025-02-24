@@ -10,6 +10,7 @@ import { useContext } from 'react';
 import {Navigate} from "react-router-dom"
 import PublicPostPage from './pages/PublicPostPage';
 import UserProfile from "./pages/UserProfile";
+import PostingPage from "./pages/PostingPage";
 function App() {
   
   const {user} = useContext(AuthContext)
@@ -30,6 +31,8 @@ function App() {
             element={<PublicPostPage />}
         />
         <Route path="/userProfile/" element={<UserProfile />} />
+        <Route path="/post" element={<PostingPage />} />
+
       </Routes>
 
    </Router>

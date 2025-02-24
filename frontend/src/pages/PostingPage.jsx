@@ -2,9 +2,7 @@ import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, { useState, useRef,useEffect } from "react";
 export default function PostingPage(){
-    // const {login} = useContext(AuthContext)
-    // const navigate = useNavigate()
-    // const [activeTab,setActiveTab] = useState("login")
+   
     const previewMethodsRef = useRef();
 
     const [formData, setFormData] = useState({
@@ -14,10 +12,7 @@ export default function PostingPage(){
         content: "", //deets
         visibility: "",
     })
-    // const [, setErrorMessage] = useState("");  
-    // const [, setSuccessMessage] = useState("");
-    
-
+   
     function loadScript(src) {
         const script = document.createElement('script');
         script.src = src;
@@ -45,9 +40,8 @@ export default function PostingPage(){
         
           console.log(formData)
 
-        // TODO: add correct api link??
         try {
-            const response = await fetch("http://localhost:8000/api/post",{
+            const response = await fetch(`localhost:8000/api/authors/${AUTHOR_SERIAL}/post`,{
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -119,7 +113,7 @@ export default function PostingPage(){
                                 <option value="application/base64">Image </option> */}
 
                             </select>
-                            {(formData.contentType === 'text/markdown') && (
+                            {/* {(formData.contentType === 'text/markdown') && (
                                 <>
                                 <label className="form-label">Content</label>
                             <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
@@ -129,8 +123,8 @@ export default function PostingPage(){
 
 
                                 </>
-                            )}
-                              {(formData.contentType === 'text/plain') && (
+                            )} */}
+                              {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
                                 <>
                                 <label className="form-label">Content</label>
                             <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
