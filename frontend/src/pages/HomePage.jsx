@@ -36,11 +36,10 @@ export default function HomePage(){
                 credentials: "include"
         })
         if (response.ok){
-            const posts = await response.json()
+            const posts_object = await response.json()
+            const posts = posts_object.src
             setPosts(posts)
-
         }
-
     }
 
     function handleCommentClick(post,e){

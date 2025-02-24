@@ -108,12 +108,15 @@ export default function Post({post, onPostClick,onCommentClick}){
             <span className="post-author-name">{post.author.displayName}</span>
           </div>
         </div>
-  
-        <img
-        src={"https://i.imgur.com/k7XVwpB.jpeg"}
-        alt="Post"
-        className="post-image"
-      />
+
+        {/*{*/}
+        {/*    (post.contentType !== "text/plain" || post.contentType !== "text/markdown") &&*/}
+        {/*    <img*/}
+        {/*    src={"https://i.imgur.com/k7XVwpB.jpeg"}*/}
+        {/*    alt="Post"*/}
+        {/*    className="post-image"*/}
+        {/*    />*/}
+        {/*}*/}
   
         <div className="post-body">
           <div className="post-icons">
@@ -125,7 +128,7 @@ export default function Post({post, onPostClick,onCommentClick}){
           </div>
           {post.visibility === "PUBLIC" || post.visibility === "UNLISTED" ? <div className="likes">{post.likes.count} likes</div>:<></>}
           <ReactMarkdown className="post-caption">
-            <span className="post-author-name">{post.author.displayName}</span> {post.description}
+            <span className="post-author-name">{post.author.displayName}</span> {post.content}
           </ReactMarkdown>
   
           <span className="view-comments" onClick={onCommentClick}>
