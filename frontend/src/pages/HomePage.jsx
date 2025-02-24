@@ -13,7 +13,6 @@ export default function HomePage(){
     const [isMobile, setIsMobile] = useState(false)
     useEffect(() => {
         fetchUserPosts()
-
         const checkMobile = () => setIsMobile(window.innerWidth < 768)
         checkMobile()
         window.addEventListener("resize", checkMobile)
