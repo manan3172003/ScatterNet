@@ -1,0 +1,157 @@
+import HeaderLogo from "../components/HeaderLogo"
+import "../assets/styles/posting-page.css"
+import React, { useState, useRef,useEffect } from "react";
+import {getCookie, fetchUserData} from "../utils/utils.js";
+export default function PostingPage(){
+   
+    const previewMethodsRef = useRef();
+
+    const [formData, setFormData] = useState({
+        title: "",
+        description: "",
+        contentType: "", //markdown, plain,img
+        content: "", //deets
+        visibility: "",
+    })
+   
+    function loadScript(src) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        document.body.appendChild(script);
+      }
+
+    function handleChange(e){
+      setFormData({
+        ...formData,
+        [e.target.name]:e.target.value
+        
+      })
+      console.log(formData)
+
+    }
+    
+    async function handlePost(e){
+        e.preventDefault()
+        // forces visibiity to be choses
+        if ((e.visibility === "")||(e.contentType==="")) {
+            alert("Please select a valid option!");
+            return;
+          }
+        
+          console.log(formData)
+
+        try {
+            let resp = await fetchUserData();
+            let AUTHOR_SERIAL = resp.user.author_id
+            let csrfToken = getCookie('csrftoken');
+
+            const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts`,{
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    title: formData.title,
+                    description: formData.description,
+                    contentType: formData.contentType || null,
+                    content: formData.content || null,
+                    visibility: formData.visibility,
+                }),
+                credentials: "include"
+            })
+
+            const data = await response.json()
+            console.log(data)
+            if (response.ok){
+                alert("Uploaded Post!")
+                setFormData({
+                    title: "",
+                    description: "",
+                    contentType: "",
+                    content: "",
+                    visibility: "",
+                })
+            }
+
+        }
+        catch (error){
+            alert("Something went wrong. Please try again.");
+            console.log(error)
+        }
+    }
+    useEffect(() => {
+        loadScript('/markdown-editor.min.js'); // URL to the static JS file
+      }, []);
+
+
+
+    return <div className="posting-container">
+        
+            <header className="posting-header">
+                {<HeaderLogo/> }
+            </header>
+            <main className="posting-main">
+                <div className="form-content" >
+                        <form className="post-form" onSubmit={handlePost}>
+                            <label className="form-label">Create Post</label>
+                            <label className="form-label">Visibility</label>
+                            <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
+                                <option value="">Select...</option>
+                                <option value="PUBLIC">Public</option>
+                                <option value="FRIENDS">Friends-Only</option>
+                                <option value="UNLISTED">Unlisted</option>
+                            </select>
+                            <label className="form-label">Title</label>
+                            <input type="text" name="title" placeholder="Enter a title for your post" required onChange={handleChange} value={formData.title}/>
+
+                            <label className="form-label">Description</label>
+                            <textarea name="description" placeholder="Enter the description of your post" required onChange={handleChange} value={formData.description}/>
+                            
+                            <label className="form-label">Content Type</label>
+                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleChange}>
+                                <option value="">Select...</option>
+                                <option value="text/markdown">Markdown</option>
+                                <option value="text/plain">Plain</option>
+                                {/* <option value="image/png;base64">Image (png)</option>
+                                <option value="image/jpeg;base64">Image (jpeg)</option>
+                                <option value="application/base64">Image </option> */}
+
+                            </select>
+                            {/* {(formData.contentType === 'text/markdown') && (
+                                <>
+                                <label className="form-label">Content</label>
+                            <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
+                            <button id= "markdown-button">Convert to Markdown</button>
+                            <div id="markdown-output"></div>
+                            <script src="{% static 'markdown-editor.min.js' %}"></script> 
+
+
+                                </>
+                            )} */}
+                              {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
+                                <>
+                                <label className="form-label">Content</label>
+                            <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
+                                </>
+                            )}
+
+                            {(formData.contentType === 'image/png;base64' ||
+                                formData.contentType === 'image/jpeg;base64' ||
+                                formData.contentType === 'application/base64') && (
+                                <>
+                                 <label className="form-label">Image</label>
+                                    
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleChange} value={formData.content}/>
+                            
+                                </>
+                            )}
+                           
+                            <button id= "post-button">Post</button>
+                        </form>
+                </div>
+            </main>
+    </div>
+
+}
