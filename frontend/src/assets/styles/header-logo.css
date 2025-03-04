@@ -1,14 +1,13 @@
 .logo {
-    font-family: 'Karantina', cursive;
+    font-family: "Montserrat", sans-serif; /* Modern, clean font */
     margin: 0;
-    padding:0;
-    color: #FFFFFF;
+    padding: 0;
+    color: #ffffff;
     font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
     line-height: 150%;
-    -webkit-text-stroke-color: #C57284;
-    -webkit-text-stroke-width: 3px;
-    text-shadow:
-        2px 2px 0px #C57284,
-        4px 4px 0px #A0526F;
-
-}
+    text-shadow: 0 0 10px rgba(66, 153, 225, 0.6), /* Subtle blue glow */ 0 0 20px rgba(26, 32, 44, 0.8);
+  }
+  
+  
