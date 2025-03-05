@@ -45,7 +45,7 @@ export default function LandingPage(){
         ...formData,
         [e.target.name]:e.target.value
       })
-      console.log(formData)
+      
 
     }
     async function handleSignUp(e){
@@ -78,7 +78,7 @@ export default function LandingPage(){
             })
 
             const data = await response.json()
-            console.log(data)
+            
             if (response.ok){
                 showNotification("warning", "Account Created", "Your account has been created! Please wait to be approved by the node admin.")
                 setFormData({
@@ -90,6 +90,12 @@ export default function LandingPage(){
                     profileImageURL: null,
                     displayName: "",
                 })
+            } else if (response.status === 400 && data.username) {
+                showNotification(
+                  "error",
+                  "Username Taken",
+                  "An author with this username already exists. Please log in or pick a different username."
+                )
             } else {
                 showNotification("error", "Sign Up Failed", data.message || "Something went wrong. Please try again.")
             }
@@ -97,7 +103,7 @@ export default function LandingPage(){
         }
         catch (error){
             showNotification("error", "Sign Up Failed", error || "Something went wrong. Please try again.")
-            console.log(error)
+            
         }
 
 
@@ -107,7 +113,7 @@ export default function LandingPage(){
     async function handleSubmit(e){
       e.preventDefault()
       if (activeTab == "login"){
-        console.log("made it here")
+        
         let response = await login(formData.username, formData.password)
 
         if (!response.success) {

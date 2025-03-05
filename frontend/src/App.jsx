@@ -19,26 +19,24 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route
-          path="/"
-          element={user ? <Navigate to="/home" replace /> : <LandingPage />}
-        />
+
+        <Route path="/"element={user ? <Navigate to="/home" replace /> : <LandingPage />}/>
 
         <Route element={<LayoutWithNavbar />}>
-          <Route
-            path="/home"
-            element={<ProtectedRoute element={<HomePage />} />}
-          />
-          <Route path="/authors/:authorId" element={<UserProfile />} />
+          {/* Routes nested in here have the Navbar */}
 
+          <Route path="/home" element={<ProtectedRoute element={<HomePage />} />}/>
+          <Route path="/profile" element={<ProtectedRoute element={<UserProfile />} />}/>
+
+          <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
+
+          <Route path="/authors/:authorId" element={<ProtectedRoute element={<UserProfile />} />}/> # 
         </Route>
 
-        <Route
-            path="/authors/:authorId/posts/:postId"
-            element={<PublicPostPage />}
-        />
-        <Route path="/userProfile/" element={<UserProfile />} />
-        <Route path="/post" element={<PostingPage />} />
+        {/* Public Routes Go Here */}
+        <Route path="/authors/:authorId/posts/:postId" element={<PublicPostPage />}/>
+        
+        <Route path="/authors/:authorId" element={<UserProfile/>} />
 
       </Routes>
    </Router>
