@@ -9,7 +9,7 @@ from ..utils.paginators import LikesPaginator, CommentsPaginator
 class PostSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField(read_only=True)
     page = serializers.URLField(read_only=True)
-    type = serializers.CharField(read_only=True, default='post')
+    type = serializers.SerializerMethodField(read_only=True)
     author = AuthorSerializer(read_only=True)
     comments = serializers.SerializerMethodField(read_only=True)
     likes = serializers.SerializerMethodField(read_only=True)
@@ -46,6 +46,9 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_id(self, obj):
         return obj.id_url
+
+    def get_type(self, obj):
+        return "post"
 
     def get_comments(self, obj):
         request = self.context.get('request')

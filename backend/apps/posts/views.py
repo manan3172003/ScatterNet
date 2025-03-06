@@ -228,7 +228,7 @@ class PostListCreateView(ListAPIView):
 
     def get_queryset(self):
         auth_id = self.kwargs.get('auth_id')
-        return filter_author_post(self.request, auth_id)
+        return filter_author_post(self.request, auth_id).filter(contentType__in=['text/markdown', 'text/plain'])
 
     def post(self, request, *args, **kwargs):
         auth_id = self.kwargs.get('auth_id')
@@ -260,7 +260,7 @@ class StreamListView(ListAPIView):
         authors = Author.objects.filter(state="ACTIVE")
         author_posts = []
         for author in authors:
-            author_posts.append(list(filter_author_post(self.request, author.id)))
+            author_posts.append(list(filter_author_post(self.request, author.id).filter(contentType__in=['text/markdown', 'text/plain'])))
 
         merged_posts = list(merge_sorted_post_lists(*author_posts))
 
@@ -269,6 +269,29 @@ class StreamListView(ListAPIView):
 
         return paginated_posts
 
+"""
+http://{node}/api/posts/{post_fqid}/image
+GETs an image post
+"""
+class ImagePostsView(RetrieveAPIView):
+    serializer_class = PostSerializer
+
+    def get_object(self):
+        if 'post_fqid' in self.kwargs:
+            post_fqid = self.kwargs['post_fqid']
+            imagepost = get_object_or_404(Post, url_id=post_fqid)
+            queryset = filter_author_post(self.request, imagepost.author_id)
+            try:
+                content_types = ['application/base64', 'image/png;base64', 'image/jpeg;base64']
+                imagepost = queryset.get(url_id=post_fqid, contentType__in=content_types)
+            except Post.DoesNotExist:
+                return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+            return imagepost
+
+        # elif 'author_fqid' in self.kwargs and 'post_serial' in self.kwargs:
+        #     author_fqid = self.kwargs['author_fqid']
+        #     post_serial = self.kwargs['post_serial']
+        #
 
 class LikesListView(ListAPIView):
     """
