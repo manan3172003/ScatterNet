@@ -4,12 +4,12 @@
 import { useState,useEffect } from "react";
 import PropTypes from "prop-types";
 import { AuthContext } from "./AuthContext";
-
+import getCookie from "../context/Cookie";
 export const AuthProvider = ({ children }) => {
     AuthProvider.propTypes = {
         children: PropTypes.node.isRequired, // Ensures 'children' is required
       };  
-      
+    const csrfToken = getCookie('csrftoken')
     const [user, setUser] = useState(null);
     const fetchUserData = async () => {
         try {
@@ -18,8 +18,10 @@ export const AuthProvider = ({ children }) => {
                 credentials: "include", 
                 headers: {
                     "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
                 },
             });
+            
 
             if (response.ok) {
                 const data = await response.json();
@@ -44,6 +46,7 @@ export const AuthProvider = ({ children }) => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
                 },
                 credentials: "include",
                 body : JSON.stringify({
@@ -61,7 +64,9 @@ export const AuthProvider = ({ children }) => {
                 setUser(null);
                 throw new Error(response.status); // Throw an error with the response status
             }
-            return { success: true };
+            
+            return { success: true }
+
         } catch (error) {
             return { success: false, status: error.message}
         }

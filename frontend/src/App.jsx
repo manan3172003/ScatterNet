@@ -15,7 +15,7 @@ import PostingPage from "./pages/PostingPage";
 
 function App() {
   const { user } = useContext(AuthContext);
-
+  console.log(user)
   return (
     <Router>
       <Routes>

@@ -38,7 +38,7 @@ export default function Notification({
       case "warning":
         return "⚠";
       case "error":
-        return "✕";
+        return "error";
       default:
         return "ℹ";
     }

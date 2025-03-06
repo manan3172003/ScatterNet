@@ -8,39 +8,32 @@ import getCookie from "../context/Cookie";
 export default function HomePage() {
     const [posts, setPosts] = useState([]);
     const csrfToken = getCookie('csrftoken');
-    const [selectedPost, setSelectedPost] = useState(null);
-    const [showComments, setShowComments] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+    const [selectedPost, setSelectedPost] = useState(null)
+    const [showComments, setShowComments] = useState(false)
     
+
+    const [hasMore, setHasMore] = useState(true) // State used to keep track if wether or not there are more posts to get
+    const [pageInfo, setPageInfo] = useState({
+        next: null,
+        count: 0,
+        currentPage: 1
+    }) // State to keep track of current pageInfo like how many posts are displayed, what p
+
+    const [loading, setLoading] = useState(false) // State to prevent multiple simultaneous API calls
+    // Initial Fetch
     useEffect(() => {
         fetchUserPosts();
-        const checkMobile = () => setIsMobile(window.innerWidth < 768);
-        checkMobile();
-        window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
+        // const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        // checkMobile();
+        // window.addEventListener("resize", checkMobile);
+        // return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
     function handlePostClick(post) {
         setSelectedPost(post);
     }
 
-    async function fetchUserPosts() {
-        const response = await fetch("http://localhost:8000/api/posts",
-            {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                credentials: "include"
-            });
-            
-        if (response.ok) {
-            const posts_object = await response.json();
-            const posts = posts_object.src;
-            setPosts(posts);
-        }
-    }
+    
 
     function handleCommentClick(post, e) {
         e.stopPropagation();
@@ -48,14 +41,32 @@ export default function HomePage() {
         setShowComments(true);
     }
     
-    async function fetchMorePosts() {
+    async function fetchUserPosts() {
+        if (loading) return
+
+        setLoading(true) // Let the whole component know that we are currently trying to load some posts
+
         try {
-            const response = await fetch(`http://localhost:8000/api/posts?page=${1}`);
-            const data = await response.json();
-            console.log(data);
-            
-        } catch (error) {
-            console.error("Error fetching posts:", error);
+            const response = await fetch("http://localhost:8000/api/posts", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            credentials:"include"
+            })
+            if (response.ok){
+                const data = await response.json()
+                setPosts(data.results || [])
+
+
+            }
+                
+
+        } catch(error){
+            console.error("Error fetching more posts", error)
+        } finally {
+            setLoading(false) // Regardless of what happens set loading to false as we are no longer trying to load new posts.
         }
     }
 
@@ -63,7 +74,7 @@ export default function HomePage() {
         <div className="home-page-wrapper">
             <InfiniteScroll
                 dataLength={posts.length}
-                next={fetchMorePosts}
+                next={fetchUserPosts}
                 hasMore={false} 
                 loader={<p className="loader-message">Loading more posts...</p>}
                 endMessage={<p className="end-message">No more posts to show.</p>}
