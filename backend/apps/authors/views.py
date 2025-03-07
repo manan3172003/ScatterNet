@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -221,6 +221,7 @@ def get_author_fqid(request, id_url):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
+@csrf_protect # https://docs.djangoproject.com/en/5.1/howto/csrf/
 def get_current_user(request):
     """
     Helper endpoint we built to help the frontend identify who is the current user logged in for that current session

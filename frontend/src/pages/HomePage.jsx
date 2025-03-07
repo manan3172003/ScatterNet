@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import MobileCommentModal from "../components/MobileCommentModal";
 import Post from "../components/Post";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -11,13 +11,13 @@ export default function HomePage() {
     const [selectedPost, setSelectedPost] = useState(null)
     const [showComments, setShowComments] = useState(false)
     
-
+    const POSTS_PER_PAGE = 10
     const [hasMore, setHasMore] = useState(true) // State used to keep track if wether or not there are more posts to get
-    const [pageInfo, setPageInfo] = useState({
+    const [pagination, setPagination] = useState({
         next: null,
-        count: 0,
+        previous: null,
         currentPage: 1
-    }) // State to keep track of current pageInfo like how many posts are displayed, what p
+      })
 
     const [loading, setLoading] = useState(false) // State to prevent multiple simultaneous API calls
     // Initial Fetch
@@ -47,7 +47,7 @@ export default function HomePage() {
         setLoading(true) // Let the whole component know that we are currently trying to load some posts
 
         try {
-            const response = await fetch("http://localhost:8000/api/posts", {
+            const response = await fetch(`http://localhost:8000/api/posts?page=1&size=${POSTS_PER_PAGE}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -58,7 +58,12 @@ export default function HomePage() {
             if (response.ok){
                 const data = await response.json()
                 setPosts(data.results || [])
-
+                setPagination({
+                    next: data.next,
+                    previous: data.previous,
+                    currentPage: 1
+                })
+                setHasMore(!!data.next) // Double exclamation mark to cast truthy/falsy value to bool
 
             }
                 
@@ -69,6 +74,26 @@ export default function HomePage() {
             setLoading(false) // Regardless of what happens set loading to false as we are no longer trying to load new posts.
         }
     }
+    // Using useCallback for performance. Memoizing the function to prevent it from being re-created every render and is only recreated when the dependency list changes
+    const fetchMorePosts = useCallback(async () => {
+        
+        if (loading || !hasMore) return // Early return since we are already trying to fetch results or there isn't even any more posts to get.
+        try {
+            let url
+
+            if (pagination.next) {
+                url = pagination.next
+            } else {
+                const nextPage = pagination.currentPage + 1
+                url = `http://localhost:8000/api/posts?page=${nextPage}&size=${POSTS_PER_PAGE}`
+            }
+
+
+        }
+        catch(error){
+            console.log(error)
+        }
+    },[loading, hasMore, pagination, csrfToken])
 
     return (
         <div className="home-page-wrapper">
