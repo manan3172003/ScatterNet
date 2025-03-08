@@ -7,7 +7,7 @@ import { AuthContext } from "./AuthContext";
 import getCookie from "../context/Cookie";
 export const AuthProvider = ({ children }) => {
     AuthProvider.propTypes = {
-        children: PropTypes.node.isRequired, // Ensures 'children' is required
+        children: PropTypes.node.isRequired, 
       };  
     const csrfToken = getCookie('csrftoken')
     const [user, setUser] = useState(null);
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
                 setUser(data.user);
             } else {
                 setUser(null);
-                throw new Error(response.status); // Throw an error with the response status
+                throw new Error(response.status); 
             }
             
             return { success: true }

@@ -18,7 +18,7 @@ export default function Notification({
     if (show && duration) {
       const timer = setTimeout(() => {
         setVisible(false);
-        if (onClose) setTimeout(onClose, 500); // Call onClose after animation completes
+        if (onClose) setTimeout(onClose, 500); 
       }, duration);
       
       return () => clearTimeout(timer);
@@ -30,7 +30,7 @@ export default function Notification({
     if (onClose) setTimeout(onClose, 500);
   };
 
-  // Icon based on notification type
+  // Icon is based on notification type TODO: change the error icon to something better 
   const getIcon = () => {
     switch (type) {
       case "success":

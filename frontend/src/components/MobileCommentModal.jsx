@@ -15,12 +15,12 @@ export default function MobileCommentModal({ post, onClose }) {
     
     const { user } = useContext(AuthContext);
     
-    // Fetch comments when the component is initially rendered
+   
     useEffect(() => {
         fetchComments();
     }, []);
     
-    // Scroll to bottom when new comments are added
+    // Scrolling to bottom when new comments are added 
     useEffect(() => {
         if (commentListRef.current) {
             commentListRef.current.scrollTop = commentListRef.current.scrollHeight;

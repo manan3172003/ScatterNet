@@ -1,5 +1,5 @@
 .logo {
-    font-family: "Montserrat", sans-serif; /* Modern, clean font */
+    font-family: "Montserrat", sans-serif; /* Modern, clean font for the header logo  https://fonts.google.com/specimen/Montserrat*/
     margin: 0;
     padding: 0;
     color: #ffffff;
@@ -7,7 +7,7 @@
     font-weight: 700;
     letter-spacing: 1px;
     line-height: 150%;
-    text-shadow: 0 0 10px rgba(66, 153, 225, 0.6), /* Subtle blue glow */ 0 0 20px rgba(26, 32, 44, 0.8);
+    text-shadow: 0 0 10px rgba(66, 153, 225, 0.6), 0 0 20px rgba(26, 32, 44, 0.8);
   }
   
   

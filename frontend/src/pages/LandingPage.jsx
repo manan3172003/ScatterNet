@@ -136,7 +136,7 @@ export default function LandingPage(){
                 "Login Successful",
                 "Redirecting to your dashboard..."
             )
-            setTimeout(() => {navigate("/home")}, 1500) // Navigate after notification is shown for a moment
+            setTimeout(() => {navigate("/home")}, 1500) 
         }
       }
       else {
