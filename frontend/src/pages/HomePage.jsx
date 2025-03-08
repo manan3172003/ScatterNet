@@ -1,40 +1,57 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import MobileCommentModal from "../components/MobileCommentModal";
 import Post from "../components/Post";
 import InfiniteScroll from "react-infinite-scroll-component";
 import "../assets/styles/homepage.css";
 import getCookie from "../context/Cookie";
-
+import DesktopCommentModal from "../components/DesktopCommentModal";
 export default function HomePage() {
     const [posts, setPosts] = useState([]);
     const csrfToken = getCookie('csrftoken');
-    const [selectedPost, setSelectedPost] = useState(null)
-    const [showComments, setShowComments] = useState(false)
-    
-    const POSTS_PER_PAGE = 10
-    const [hasMore, setHasMore] = useState(true) // State used to keep track if wether or not there are more posts to get
+    const [selectedPost, setSelectedPost] = useState(null);
+    const [showComments, setShowComments] = useState(false);
+    const scrollPositionRef = useRef(0);
+    const [isMobile, setIsMobile] = useState(false)
+    const POSTS_PER_PAGE = 5; 
+    const [hasMore, setHasMore] = useState(true);
     const [pagination, setPagination] = useState({
         next: null,
         previous: null,
         currentPage: 1
-      })
-
-    const [loading, setLoading] = useState(false) // State to prevent multiple simultaneous API calls
-    // Initial Fetch
+    });
+    const [loading, setLoading] = useState(false);
+    
+    // Save scroll position when opening comments
     useEffect(() => {
-        fetchUserPosts();
-        // const checkMobile = () => setIsMobile(window.innerWidth < 768);
-        // checkMobile();
-        // window.addEventListener("resize", checkMobile);
-        // return () => window.removeEventListener("resize", checkMobile);
-    }, []);
-
+        if (showComments) {
+            scrollPositionRef.current = window.scrollY;
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+            // Restore scroll position when closing comments
+            setTimeout(() => {
+                window.scrollTo(0, scrollPositionRef.current);
+            }, 100);
+        }
+        
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [showComments]);
+    
+    // Initial Fetch
+     useEffect(() => {
+        fetchUserPosts()
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        window.addEventListener("resize", checkMobile)
+        return () => window.removeEventListener("resize", checkMobile)
+      }, [])
+    
     function handlePostClick(post) {
         setSelectedPost(post);
     }
-
     
-
     function handleCommentClick(post, e) {
         e.stopPropagation();
         setSelectedPost(post);
@@ -42,67 +59,93 @@ export default function HomePage() {
     }
     
     async function fetchUserPosts() {
-        if (loading) return
-
-        setLoading(true) // Let the whole component know that we are currently trying to load some posts
-
+        if (loading) return;
+        
+        setLoading(true);
+        
         try {
             const response = await fetch(`http://localhost:8000/api/posts?page=1&size=${POSTS_PER_PAGE}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken
-            },
-            credentials:"include"
-            })
-            if (response.ok){
-                const data = await response.json()
-                setPosts(data.results || [])
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                credentials: "include"
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setPosts(data.src || []);
                 setPagination({
                     next: data.next,
                     previous: data.previous,
                     currentPage: 1
-                })
-                setHasMore(!!data.next) // Double exclamation mark to cast truthy/falsy value to bool
-
+                });
+                setHasMore(!!data.next);
             }
-                
-
-        } catch(error){
-            console.error("Error fetching more posts", error)
+        } catch (error) {
+            console.error("Error fetching posts:", error);
         } finally {
-            setLoading(false) // Regardless of what happens set loading to false as we are no longer trying to load new posts.
+            setLoading(false);
         }
     }
-    // Using useCallback for performance. Memoizing the function to prevent it from being re-created every render and is only recreated when the dependency list changes
+    
     const fetchMorePosts = useCallback(async () => {
+        if (loading || !hasMore) return;
         
-        if (loading || !hasMore) return // Early return since we are already trying to fetch results or there isn't even any more posts to get.
+        setLoading(true);
+        
         try {
-            let url
-
-            if (pagination.next) {
-                url = pagination.next
-            } else {
-                const nextPage = pagination.currentPage + 1
-                url = `http://localhost:8000/api/posts?page=${nextPage}&size=${POSTS_PER_PAGE}`
+            let url = pagination.next;
+            
+            if (!url) {
+                const nextPage = pagination.currentPage + 1;
+                url = `http://localhost:8000/api/posts?page=${nextPage}&size=${POSTS_PER_PAGE}`;
             }
-
-
+            
+            const response = await fetch(url, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                credentials: "include"
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Avoid duplicate posts
+                const newPosts = data.src || [];
+                const existingIds = new Set(posts.map(post => post.id));
+                const uniqueNewPosts = newPosts.filter(post => !existingIds.has(post.id));
+                
+                setPosts(prevPosts => [...prevPosts, ...uniqueNewPosts]);
+                
+                setPagination(prev => ({
+                    next: data.next,
+                    previous: data.previous,
+                    currentPage: prev.currentPage + 1
+                }));
+                
+                setHasMore(!!data.next);
+            }
+        } catch (error) {
+            console.error("Error fetching more posts:", error);
+        } finally {
+            setLoading(false);
         }
-        catch(error){
-            console.log(error)
-        }
-    },[loading, hasMore, pagination, csrfToken])
-
+    }, [loading, hasMore, pagination, posts, csrfToken]);
+    
     return (
         <div className="home-page-wrapper">
             <InfiniteScroll
                 dataLength={posts.length}
-                next={fetchUserPosts}
-                hasMore={false} 
-                loader={<p className="loader-message">Loading more posts...</p>}
+                next={fetchMorePosts}
+                hasMore={hasMore}
+                loader={<div className="loader-message">Loading more posts...</div>}
                 endMessage={<p className="end-message">No more posts to show.</p>}
+                scrollThreshold={0.8}
+                className="infinite-scroll-container"
             >
                 <main className="feed-container">
                     {posts.length > 0 ? (
@@ -115,12 +158,26 @@ export default function HomePage() {
                             />
                         ))
                     ) : (
-                        <p className="end-message">No posts available. Follow users to see content.</p>
+                        !loading && (
+                            <p className="end-message">No posts available. Create a post or follow users to see content.</p>
+                        )
                     )}
                 </main>
             </InfiniteScroll>
-
-            {showComments && <MobileCommentModal post={selectedPost} onClose={() => setShowComments(false)} />}
+            
+            {showComments && (
+            isMobile ? (
+                <MobileCommentModal 
+                    post={selectedPost} 
+                    onClose={() => setShowComments(false)} 
+                />
+            ) : (
+                <DesktopCommentModal 
+                    post={selectedPost} 
+                    onClose={() => setShowComments(false)} 
+                />
+            )
+        )}
         </div>
     );
 }
