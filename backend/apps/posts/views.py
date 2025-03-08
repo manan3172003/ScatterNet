@@ -4,6 +4,7 @@ from urllib.parse import unquote
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -276,22 +277,35 @@ GETs an image post
 class ImagePostsView(RetrieveAPIView):
     serializer_class = PostSerializer
 
+    def helper_filter(self, post):
+        # Check if the post belongs to the author and is of image content type
+        content_types = ['application/base64', 'image/png;base64', 'image/jpeg;base64']
+        if post.contentType in content_types:
+            # Verify the user has access to this post
+            queryset = filter_author_post(self.request, post.author_id)
+            if queryset.filter(id_url=post.id_url).exists():
+                return post
+            else:
+                raise PermissionDenied({'error': 'You do not have permission to view this post.'})
+        else:
+            raise NotFound({'error': 'This post is not an image post.'})
+
     def get_object(self):
         if 'post_fqid' in self.kwargs:
             post_fqid = self.kwargs['post_fqid']
-            imagepost = get_object_or_404(Post, url_id=post_fqid)
-            queryset = filter_author_post(self.request, imagepost.author_id)
-            try:
-                content_types = ['application/base64', 'image/png;base64', 'image/jpeg;base64']
-                imagepost = queryset.get(url_id=post_fqid, contentType__in=content_types)
-            except Post.DoesNotExist:
-                return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
-            return imagepost
+            # Get the post or return a 404 if it doesn't exist
+            post = get_object_or_404(Post, id_url=post_fqid)
+            print(post)
+            return self.helper_filter(post)
 
-        # elif 'author_fqid' in self.kwargs and 'post_serial' in self.kwargs:
-        #     author_fqid = self.kwargs['author_fqid']
-        #     post_serial = self.kwargs['post_serial']
-        #
+
+        elif 'author_serial' in self.kwargs and 'post_serial' in self.kwargs:
+            author_fqid = self.kwargs['author_serial']
+            post_serial = self.kwargs['post_serial']
+            post = get_object_or_404(Post, id=post_serial)
+            print(post)
+            return self.helper_filter(post)
+
 
 class LikesListView(ListAPIView):
     """
