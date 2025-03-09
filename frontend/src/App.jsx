@@ -12,6 +12,8 @@ import { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import PublicPostPage from "./pages/PublicPostPage";
 import PostingPage from "./pages/PostingPage";
+import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -30,13 +32,15 @@ function App() {
 
           <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
 
+            {/* Admin Routes only accessible to admins */}
+          <Route path="/admin" element={<AdminProtectedRoute element={<AdminPage />} />} />
 
+          <Route path="/authors/:authorId" element={<UserProfile/>} />
         </Route>
 
         {/* Public Routes Go Here */}
         <Route path="/authors/:authorId/posts/:postId" element={<PublicPostPage />}/>
-        
-        <Route path="/authors/:authorId" element={<UserProfile/>} />
+
 
       </Routes>
    </Router>
