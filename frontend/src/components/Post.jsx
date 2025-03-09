@@ -86,7 +86,7 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
     }
     const hasLongContent = post.content && post.content.length > 300
     const displayContent = !expanded && hasLongContent 
-      ? post.content.subsstring(0,300) + "....."
+      ? post.content.substring(0,300) + "....."
       : post.content
 
       return (
