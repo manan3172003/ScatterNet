@@ -30,7 +30,7 @@ function App() {
 
           <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
 
-          <Route path="/authors/:authorId" element={<ProtectedRoute element={<UserProfile />} />}/> # 
+
         </Route>
 
         {/* Public Routes Go Here */}
