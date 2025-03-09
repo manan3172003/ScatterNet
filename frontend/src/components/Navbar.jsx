@@ -1,4 +1,5 @@
 import { Home, User, SquarePlus } from "lucide-react";
+import { AiOutlineNotification } from "react-icons/ai";
 import { useState, useEffect, useContext } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router";
@@ -7,6 +8,7 @@ const navItems = [
   { icon: Home, label: "Home", path: "/home" },
   { icon: SquarePlus, label: "Post", path: "/post" },
   { icon: User, label: "Profile", path: "/profile" },
+  { icon: AiOutlineNotification, label: "Requests", path: "/requests "}
 ];
 
 export default function Navbar() {

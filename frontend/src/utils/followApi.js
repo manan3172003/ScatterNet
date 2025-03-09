@@ -1,4 +1,4 @@
-import {getCookie, fetchUserData, getAuthorObject} from "./utils.js";
+import {fetchUserData, getAuthorObject, getCookie} from "./utils.js";
 
 export async function getAuthorRelationship(otherAuthor){
     let {user: user} = await fetchUserData();
@@ -70,4 +70,53 @@ export async function handleFollowRequest(user, otherAuthor, authorsRelationship
             console.error("Error in handleFollow:", error);
             return null;
         }
+}
+
+export async function getFollowRequests(user) {
+    try {
+        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/followers?isPending=true`)
+        if (response.ok) {
+            return await response.json()
+        }
+    }
+    catch (error) {
+        console.error("Error fetching follow requests", error);
+        return null;
+    }
+}
+
+export async function getFollowing(user) {
+    try {
+        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/following`)
+        if (response.ok) {
+            return await response.json()
+        }
+    }
+    catch (error) {
+        console.error("Error fetching following list", error);
+        return null;
+    }
+}
+
+export async function handleRespondingToFollowRequest(user, otherAuthor, authorResponse) {
+    try {
+        let method = authorResponse === "Accept" ? "PUT" : "DELETE";
+
+        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/followers/${otherAuthor.id}`, {
+            method,
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+        });
+        if (!response.ok) {
+            console.error(`Error responding to follow request (${method}):`, response.status);
+        }
+    }
+    catch (error) {
+            console.error("Error in handling follow request:", error);
+            return null;
+        }
+
 }

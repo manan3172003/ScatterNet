@@ -12,6 +12,7 @@ import { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import PublicPostPage from "./pages/PublicPostPage";
 import PostingPage from "./pages/PostingPage";
+import AuthorsList from "./components/AuthorsList.jsx";
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -27,8 +28,10 @@ function App() {
 
           <Route path="/home" element={<ProtectedRoute element={<HomePage />} />}/>
           <Route path="/profile" element={<ProtectedRoute element={<UserProfile />} />}/>
-
+          <Route path="/requests" element={<ProtectedRoute element={<AuthorsList />} />}/>
           <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
+
+
 
 
         </Route>
