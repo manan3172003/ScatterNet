@@ -84,10 +84,12 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
             return exists;
         }
     }
+    // TODO: FIX LONG CONTENT STUFF PLEASE
     const hasLongContent = post.content && post.content.length > 300
-    const displayContent = !expanded && hasLongContent 
-      ? post.content.substring(0,300) + "....."
-      : post.content
+    // const displayContent = !expanded && hasLongContent
+    //   ? post.content.substring(0,300) + "....."
+    //   : post.content
+    const displayContent = post.content
 
       return (
         <div className="post-container"  onClick={onPostClick}>

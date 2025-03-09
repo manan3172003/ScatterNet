@@ -32,7 +32,7 @@ export default function ContentRenderer({contentType, content}) {
         }
         return (
             <img
-                src={`data:${imgMimeType};base64,${content}`}
+                src={`data:${imgMimeType}, ${content}`}
                 className="post-image"
                 onError={handleImageError}
             />
