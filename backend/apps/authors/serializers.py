@@ -45,10 +45,12 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
 class AuthorSerializer(serializers.ModelSerializer):
     id = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField(read_only=True)
+    state = serializers.CharField(read_only=True)
+    username = serializers.CharField(read_only=True)
 
     class Meta:
         model = Author
-        fields = ('type', 'id', 'host', 'displayName', 'github', 'profileImageURL', 'page')
+        fields = ('type', 'id', 'host', 'displayName', 'github', 'profileImageURL', 'page', 'state', 'username')
 
     def get_id(self, obj):
         return obj.id_url
@@ -56,10 +58,21 @@ class AuthorSerializer(serializers.ModelSerializer):
     def get_type(self, obj):
         return "author"
 
+    #overrides conditional representation, we remove the state if it isnt a node admin requesting it
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request', None)
+        # if no request or user is not node admin, remove the state field
+        if not request or request.user.is_staff == False:
+            representation.pop('state', None)
+            representation.pop('username', None)
+        return representation
+
 class AuthorUpdateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     id = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
+    page = serializers.URLField(read_only=True)
 
     class Meta:
         model = Author
