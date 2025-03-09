@@ -85,6 +85,20 @@ class AuthorLoginView(APIView):
             return Response({'error': 'Incorrect Username or Password'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class AuthorLogoutView(APIView):
+    """
+    This endpoint logs out a user, will be successful only if a user is logged in otherwise will complain.
+
+    Methods:
+        POST
+    URL:
+        /api/authors/logout
+    """
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={}
+        )
+    )
     def post(self, request, *args, **kwargs):
         if request.user and request.user.is_authenticated:
             logout(request)
