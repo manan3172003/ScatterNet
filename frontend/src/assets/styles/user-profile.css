@@ -5,8 +5,8 @@
   box-sizing: border-box;
 }
 
-@media screen and (min-width: 768px) {
+/* @media screen and (min-width: 768px) {
   .profile-page-wrapper {
     padding-left: 225px;
   }
-}
+} */

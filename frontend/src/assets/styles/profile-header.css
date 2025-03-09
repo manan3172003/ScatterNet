@@ -14,7 +14,7 @@ a {
   padding: 10px;
   display: flex;
   flex-direction: row-reverse;
-  justify-content: center;
+  justify-content: space-evenly;
 }
 
 .cover-buttons-wrapper {
@@ -25,13 +25,15 @@ a {
 .info-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 30px;
   margin: 0 20px;
   justify-content: space-between;
 }
 .info-subwrapper {
   display: flex;
   gap: 10px;
+  border-bottom: solid #ffffff;
+  padding: 1rem;
 }
 #profile-image {
   height: 100px;
