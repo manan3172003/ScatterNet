@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework import status
@@ -83,6 +83,14 @@ class AuthorLoginView(APIView):
             return Response(response, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Incorrect Username or Password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class AuthorLogoutView(APIView):
+    def post(self, request, *args, **kwargs):
+        if request.user and request.user.is_authenticated:
+            logout(request)
+            return Response({'message': 'User logged out successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'No user is logged in.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class AuthorSignUpView(APIView):
