@@ -33,7 +33,6 @@ function App() {
           <Route
             path="/profile"
             element={<ProtectedRoute element={<ProfileRedirect />} />}
-            user={user}
           />
 
           <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
