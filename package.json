@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "convert-base64-to-image": "^0.0.16"
+  }
+}
