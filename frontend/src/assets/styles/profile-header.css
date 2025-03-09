@@ -12,6 +12,9 @@ a {
   background-color: var(--primaryBlue);
   margin: auto;
   padding: 10px;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
 }
 
 .cover-buttons-wrapper {
@@ -36,7 +39,6 @@ a {
   border-radius: 50%;
   object-fit: cover;
   border: 8px solid var(--secondaryBlue);
-  margin: auto;
 }
 #edit-btn {
   background-color: transparent;
