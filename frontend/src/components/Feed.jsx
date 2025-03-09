@@ -73,6 +73,7 @@ export default function Feed(values) {
             post={post}
             onPostClick={() => handlePostClick(post)}
             onCommentClick={(e) => handleCommentClick(post, e)}
+            hideFollowButton={true}
           />
         ))}
       </main>

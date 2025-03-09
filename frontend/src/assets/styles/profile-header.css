@@ -68,6 +68,7 @@ a {
 .button {
   width: 200px;
   height: 50px;
+  border: none;
   border-radius: 30px;
   background-color: white;
   margin: auto;
@@ -81,9 +82,14 @@ a {
   -webkit-text-stroke-color: var(--primaryBlue);
   -webkit-text-stroke-width: 3px;
 }
-.button:hover {
+.button:hover:enabled {
   background-color: rgb(57, 67, 108);
   transition: all 0.5s ease-in-out;
+}
+
+.button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 @media screen and (min-width: 768px) {
