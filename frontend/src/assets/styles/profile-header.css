@@ -5,7 +5,10 @@
 p {
   margin: 0;
 }
-a {
+#github {
+  color: rgb(139, 138, 148);
+}
+#github:link {
   color: #ffffff;
 }
 .cover-wrapper {
@@ -42,14 +45,6 @@ a {
   object-fit: cover;
   border: 8px solid var(--secondaryBlue);
 }
-#edit-btn {
-  background-color: transparent;
-  border: none;
-}
-#edit-btn-icon {
-  height: 25px;
-  width: 25px;
-}
 
 .info-names-wrapper {
   margin-top: 25px;
@@ -84,10 +79,18 @@ a {
   color: var(--secondaryBlue);
   -webkit-text-stroke-color: var(--primaryBlue);
   -webkit-text-stroke-width: 3px;
+  border: none;
 }
 .button:hover {
   background-color: rgb(57, 67, 108);
   transition: all 0.5s ease-in-out;
+}
+#edit-btn {
+  text-decoration: none;
+}
+.buttons-wrapper {
+  display: flex;
+  justify-content: center;
 }
 
 @media screen and (min-width: 768px) {
@@ -102,7 +105,6 @@ a {
 
   .info-wrapper {
     display: flex;
-    flex-direction: row;
     gap: 10px;
     margin: 0 20px;
   }
