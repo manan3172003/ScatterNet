@@ -26,6 +26,7 @@ urlpatterns = [
     path("/<int:author_serial>/commented/<int:comment_serial>", posts_views.CommentRetrieveView.as_view(), name="author-single-comment"),
     path("/<int:author_serial>/posts/<int:post_serial>/likes", posts_views.LikesListView.as_view(), name="author-post-likes"),
     path("/<int:author_serial>/posts/<int:post_serial>/comments", posts_views.CommentsListView.as_view(), name="author-post-comments"),
+    path("/<int:author_serial>/posts/<int:post_serial>/image", posts_views.ImagePostsView.as_view(), name="author-post-image"),
     path("/<int:author_serial>/liked", posts_views.LikesListView.as_view(), name="author-liked"),
     path("/<int:author_serial>/commented", posts_views.CommentedListCreateView.as_view(), name="author-commented"),
 
