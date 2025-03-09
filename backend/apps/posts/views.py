@@ -229,7 +229,7 @@ class PostListCreateView(ListAPIView):
 
     def get_queryset(self):
         auth_id = self.kwargs.get('auth_id')
-        return filter_author_post(self.request, auth_id).filter(contentType__in=['text/markdown', 'text/plain'])
+        return filter_author_post(self.request, auth_id)
 
     def post(self, request, *args, **kwargs):
         auth_id = self.kwargs.get('auth_id')
@@ -261,7 +261,7 @@ class StreamListView(ListAPIView):
         authors = Author.objects.filter(state="ACTIVE")
         author_posts = []
         for author in authors:
-            author_posts.append(list(filter_author_post(self.request, author.id).filter(contentType__in=['text/markdown', 'text/plain'])))
+            author_posts.append(list(filter_author_post(self.request, author.id)))
 
         merged_posts = list(merge_sorted_post_lists(*author_posts))
 
