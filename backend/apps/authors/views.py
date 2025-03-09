@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework import status
@@ -84,6 +84,28 @@ class AuthorLoginView(APIView):
         else:
             return Response({'error': 'Incorrect Username or Password'}, status=status.HTTP_401_UNAUTHORIZED)
 
+class AuthorLogoutView(APIView):
+    """
+    This endpoint logs out a user, will be successful only if a user is logged in otherwise will complain.
+
+    Methods:
+        POST
+    URL:
+        /api/authors/logout
+    """
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={}
+        )
+    )
+    def post(self, request, *args, **kwargs):
+        if request.user and request.user.is_authenticated:
+            logout(request)
+            return Response({'message': 'User logged out successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'No user is logged in.'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 class AuthorSignUpView(APIView):
     """
@@ -144,11 +166,16 @@ class AuthorsView(ListAPIView):
     serializer_class = AuthorSerializer
     pagination_class = AuthorsPaginator
     def get_queryset(self):
+        queryset = Author.objects.all()
+        user = self.request.user
+
+        #filters to it such that only node admins can see all the users and everyone else just gets the active list
+        if not (user and user.is_authenticated and user.is_staff):
+            queryset = queryset.filter(state='ACTIVE')
+
         state = self.request.query_params.get('state')
         if state:
             queryset = Author.objects.filter(state=state)
-        else:
-            queryset = Author.objects.all()
 
         username = self.request.query_params.get('username')
         host = self.request.query_params.get('host')
@@ -174,6 +201,24 @@ class CheckNodeAdminChangedState(BasePermission):
             return request.user.is_authenticated and request.user.is_staff
         return True
 
+class IsNodeAdminOrSelf(BasePermission):
+    """
+    Allows editing an author only if the user is a node admin or the author themselves.
+    """
+    message = "Editing this author can only be done by the node admin or the author itself."
+
+    def has_object_permission(self, request, view, obj):
+        # only check if we are updating an author
+        if request.method == 'PUT':
+            # check whether its node admin
+            if request.user and request.user.is_authenticated and request.user.is_staff:
+                return True
+            #check whether its own author
+            if request.user and request.user.is_authenticated and request.user.author_profile == obj:
+                return True
+            return False
+        return True
+
 class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
     """
     Generic listviews can handle multiple methods, this one is to list a single instance
@@ -187,11 +232,10 @@ class AuthorRetrieveUpdateView(RetrieveUpdateAPIView):
     """
     queryset = Author.objects.all()
     http_method_names = ['get', 'put'] #explicitly only allows these two
-    permission_classes = [CheckNodeAdminChangedState]
+    permission_classes = [CheckNodeAdminChangedState, IsNodeAdminOrSelf]
 
     def retrieve(self, request, *args, **kwargs):
         response = super(AuthorRetrieveUpdateView, self).retrieve(request, args, kwargs)
-        # response.data['type'] = 'author'
         return response
 
     #since we need the same endpoint, just change serializer being used based on what task we're doing

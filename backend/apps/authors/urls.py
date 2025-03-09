@@ -7,6 +7,7 @@ app_name = "authors"
 urlpatterns = [
     # Author fixed endpoints
     path('/login', authors_views.AuthorLoginView.as_view(), name='author-login'),
+    path('/logout', authors_views.AuthorLogoutView.as_view(), name='author-logout'),
     path('/signup', authors_views.AuthorSignUpView.as_view(), name='author-signup'),
     path('/current-user', authors_views.get_current_user, name='author-current-user'),
     path('', authors_views.AuthorsView.as_view(), name='authors-list'),
