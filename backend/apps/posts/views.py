@@ -1,9 +1,10 @@
 # TODO: Cleanup this file for example make validations cleaner and replace try excepts with get_object_or_404
 from urllib.parse import unquote
-
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -269,6 +270,42 @@ class StreamListView(ListAPIView):
 
         return paginated_posts
 
+"""
+http://{node}/api/posts/{post_fqid}/image
+GETs an image post
+"""
+class ImagePostsView(RetrieveAPIView):
+    serializer_class = PostSerializer
+
+    def helper_filter(self, post):
+        # Check if the post belongs to the author and is of image content type
+        content_types = ['application/base64', 'image/png;base64', 'image/jpeg;base64']
+        if post.contentType in content_types:
+            # Verify the user has access to this post
+            queryset = filter_author_post(self.request, post.author_id)
+            if queryset.filter(id_url=post.id_url).exists():
+                return post
+            else:
+                raise PermissionDenied({'error': 'You do not have permission to view this post.'})
+        else:
+            raise NotFound({'error': 'This post is not an image post.'})
+
+    def get_object(self):
+        if 'post_fqid' in self.kwargs:
+            post_fqid = self.kwargs['post_fqid']
+            # Get the post or return a 404 if it doesn't exist
+            post = get_object_or_404(Post, id_url=post_fqid)
+            print(post)
+            return self.helper_filter(post)
+
+
+        elif 'author_serial' in self.kwargs and 'post_serial' in self.kwargs:
+            author_fqid = self.kwargs['author_serial']
+            post_serial = self.kwargs['post_serial']
+            post = get_object_or_404(Post, id=post_serial)
+            print(post)
+            return self.helper_filter(post)
+
 
 class LikesListView(ListAPIView):
     """
@@ -348,10 +385,12 @@ class LikeRetrieveView(RetrieveAPIView):
 
 def post_like(author_id, object_url):
     author = get_object_or_404(Author, id=author_id)
-    created_like = Like.objects.create(
-        author=author,
-        object=object_url,
-    )
+
+    created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
+
+    if not created_success:
+        return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
     created_like.id_url = "http://localhost:8000/authors/{}/liked/{}".format(author.id, created_like.id)
     created_like.save()
 
@@ -408,6 +447,29 @@ def create_or_delete_like(request):
         return delete_like(author_id, object_url)
 
 
+def can_access_comment(comment, request):
+    """
+    checks:
+      - if the post is public or unlisted, anyone can see the comment.
+      - if the user is authenticated:
+            - node admin can access any comment.
+            - if deleted post, then the comment is not accessible to anyone.
+            - if the user is the comment’s author or is friends with the comment’s author, allow access.
+      - Otherwise, access is denied.
+    """
+    post_visibility = comment.post.visibility
+    if post_visibility in ["PUBLIC", "UNLISTED"]:
+        return True
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            return True
+        elif post_visibility == "DELETED":
+            return False
+        elif request.user.author_profile.id == comment.author.id or are_friends(request.user.author_profile.id, comment.author.id):
+            return True
+    return False
+
+
 class CommentsListView(ListAPIView):
     """
     Similar stuff to likes above, this returns a Comments collection, with also a likes section that is paginated in
@@ -423,23 +485,24 @@ class CommentsListView(ListAPIView):
     serializer_class = CommentSerializer
     pagination_class = CommentsPaginator
 
+    def get_post(self):
+        if 'author_serial' in self.kwargs and 'post_serial' in self.kwargs:
+            author = get_object_or_404(Author, id=self.kwargs.get('author_serial'))
+            return get_object_or_404(Post, author=author, id=self.kwargs.get('post_serial'))
+        elif 'post_fqid' in self.kwargs:
+            return get_object_or_404(Post, id_url=self.kwargs.get('post_fqid'))
+        else:
+            raise Http404("Post not found.")
+
     def get_queryset(self):
-        author_serial = self.kwargs.get('author_serial')
-        post_serial = self.kwargs.get('post_serial')
-
-        if author_serial and post_serial:
-            author = get_object_or_404(Author, id=author_serial)
-            post = get_object_or_404(Post, author=author, id=post_serial)
-            queryset = Comment.objects.filter(post=post)
-            # TODO: Validate if the current user can see these comments and filter the ones they cant
-            return queryset
-
-        post_fqid = self.kwargs.get('post_fqid')
-        if post_fqid:
-            post = get_object_or_404(Post, id_url=post_fqid)
-            queryset = Comment.objects.filter(post=post)
-            # TODO: Validate if the current user can see these comments and filter the ones they cant
-            return queryset
+        post = self.get_post()
+        if post.visibility in ["PUBLIC", "UNLISTED"]:
+            return Comment.objects.filter(post=post)
+        if self.request.user.is_authenticated:
+            if (self.request.user.is_staff or self.request.user.author_profile.id == post.author.id or
+                    are_friends(self.request.user.author_profile.id, post.author.id)):
+                return Comment.objects.filter(post=post)
+        raise Http404("Post not found.")
 
 # TODO: URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
 
@@ -472,7 +535,30 @@ class CommentedListCreateView(ListCreateAPIView):
             return Response({"error": "POST is not allowed on this endpoint."},
                             status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        # TODO: Validate who can comment
+
+        #validate to check whether user can comment on this post
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required to post a comment."},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+        post_id_url = request.data.get('post')
+        post = get_object_or_404(Post, id_url=post_id_url)
+
+        if request.user.is_authenticated:
+            if request.user.is_staff or post.visibility in ["PUBLIC", "UNLISTED"]:
+                return super().post(request, *args, **kwargs)
+            elif post.visibility == "DELETED":
+                return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+            elif (request.user.author_profile.id == post.author.id or
+                  are_friends(request.user.author_profile.id, post.author.id)):
+                return super().post(request, *args, **kwargs)
+            else:
+                return Response({'error': 'You are not allowed to comment on this post.'},
+                                status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({'error': 'You are not logged in to comment.'},
+                            status=status.HTTP_403_FORBIDDEN)
+
         return super().post(request, *args, **kwargs)
 
 
@@ -493,8 +579,15 @@ class CommentRetrieveView(RetrieveAPIView):
             author_serial = self.kwargs.get('author_serial')
             comment_serial = self.kwargs.get('comment_serial')
             author = get_object_or_404(Author, pk=author_serial)
-            return get_object_or_404(Comment, author=author, pk=comment_serial)
+            comment = get_object_or_404(Comment, author=author, pk=comment_serial)
 
         elif 'comment_fqid' in self.kwargs:
             comment_fqid = self.kwargs.get('comment_fqid')
-            return get_object_or_404(Comment, id_url=comment_fqid)
+            comment = get_object_or_404(Comment, id_url=comment_fqid)
+
+        if comment.post.visibility == 'DELETED':
+            raise Http404("Comment not found.")
+
+        if can_access_comment(comment, self.request):
+            return comment
+        raise Http404("Comment not found.")
