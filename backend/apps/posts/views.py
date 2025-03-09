@@ -348,10 +348,12 @@ class LikeRetrieveView(RetrieveAPIView):
 
 def post_like(author_id, object_url):
     author = get_object_or_404(Author, id=author_id)
-    created_like = Like.objects.create(
-        author=author,
-        object=object_url,
-    )
+
+    created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
+
+    if not created_success:
+        return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
     created_like.id_url = "http://localhost:8000/authors/{}/liked/{}".format(author.id, created_like.id)
     created_like.save()
 

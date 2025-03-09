@@ -38,3 +38,6 @@ class Like(models.Model):
     published = models.DateTimeField(auto_now_add=True)
     id_url = models.URLField(unique=True)
     object = models.URLField() #this is the id_url of the thing that was liked, post/comment
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['author', 'object'], name='unique_like')]
