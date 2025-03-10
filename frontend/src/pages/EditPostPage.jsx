@@ -1,16 +1,18 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
-import React, { useState, useRef } from "react";
+import React, {useState, useRef, useEffect} from "react";
 import {getCookie, fetchUserData} from "../utils/utils.js";
-import { useLocation } from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
+import Notification from "../components/Notification.jsx";
 export default function EditPostPage(){
 
     const [base64Data, setBase64] = useState(""); 
-    const [fileName, setFileName] = useState(""); 
-
-   
+    const [fileName, setFileName] = useState("");
+    const [post, setPost] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const csrfToken = getCookie('csrftoken');
+    const navigate = useNavigate();
     const previewMethodsRef = useRef();
-
     const location = useLocation();
     const initialData = location.state?.formData || {
         title: "",
@@ -19,16 +21,33 @@ export default function EditPostPage(){
         content: "", 
         visibility: "",
     };
+    const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
 
-    ;
+    // Helper to show notifications
+  const showNotification = (type, title, message) => {
+    setNotification({
+      show: true,
+      type,
+      title,
+      message,
+    });
+  };
+  // Helper to hide notifications
+  const hideNotification = () => {
+    setNotification((prev) => ({ ...prev, show: false }));
+  };
+
     const postId = location.state?.postId
-
     const [formData, setFormData] = useState(initialData)
 
     async function handleFile(e) {
         const selectedFile = e.target.files[0];
 
-    
         if (!selectedFile) {
             console.error("No file selected!");
             return;
@@ -107,9 +126,8 @@ export default function EditPostPage(){
               console.log(base64Data)
 
             let resp = await fetchUserData();
-            let AUTHOR_SERIAL = resp.user.author_id
-            let csrfToken = getCookie('csrftoken');
-            let POST_URL_ID = postId
+            let AUTHOR_SERIAL = resp.user.author_id;
+            let POST_URL_ID = post.serial;
 
             const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts/${POST_URL_ID}`,{
                 method: "PUT",
@@ -130,16 +148,16 @@ export default function EditPostPage(){
             const data = await response.json()
             console.log(data)
             if (response.ok){
-                alert("Edited Post!")
-                setFormData({
-                    title: "",
-                    description: "",
-                    contentType: "",
-                    content: "",
-                    visibility: "",
-                })
+                showNotification(
+                    "Success",
+                    "Edited Post!",
+                    "Redirecting to your profile..."
+                    )
+                setTimeout(() => {navigate(`/authors/${AUTHOR_SERIAL}`)}, 1500);
+            } else {
+                console.error("Error updating post");
+                showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
             }
-
         }
         catch (error){
             alert("Something went wrong. Please try again.");
@@ -147,9 +165,52 @@ export default function EditPostPage(){
         }
     }
 
+  useEffect(() => {
+    fetchPost();
+  }, []);
+
+  const fetchPost = async () => {
+    setLoading(true);
+    let resp = await fetchUserData();
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/posts/${postId}`, {
+        headers: {
+          "X-CSRFToken": csrfToken
+        },
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch post");
+      }
+      const data = await response.json();
+      setPost(data);
+      setFormData({
+        title: data.title,
+        description: data.description,
+        contentType: data.contentType,
+        content: ['text/plain', 'text/markdown'].includes(data.contentType) ? data.content : null,
+        visibility: data.visibility,
+    })
+    } catch (err) {
+      console.error("Error fetching authors:", err);
+      showNotification("error", "Load Error", "Failed to load author");
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <div>Loading author...</div>
+  }
 
     return <div className="posting-container">
-        
+        <Notification
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={hideNotification}
+      />
             <header className="posting-header">
                 {<HeaderLogo/> }
             </header>
