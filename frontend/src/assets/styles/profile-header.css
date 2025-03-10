@@ -17,7 +17,6 @@ p {
 .cover-wrapper {
   background-color: var(--primaryBlue);
   margin: auto;
-  padding: 10px;
   display: flex;
   flex-direction: row-reverse;
   justify-content: space-evenly;
@@ -29,10 +28,10 @@ p {
   padding: 20px;
 }
 .info-wrapper {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  margin: 0 20px;
   justify-content: space-between;
 }
 .info-subwrapper {
@@ -54,15 +53,13 @@ p {
 }
 #displayname {
   font-family: "Karantina";
-  font-size: 2rem;
+  font-size: 3rem;
   color: #ffffff;
-  -webkit-text-stroke-color: var(--secondaryBlue);
-  -webkit-text-stroke-width: 3px;
   word-break: break-all;
 }
 .info-names-subwrapper {
   color: #ffffff;
-  font-size: 12px;
+  font-size: 1rem;
   font-family: "Inter";
   display: flex;
   flex-direction: row;
@@ -96,6 +93,7 @@ p {
 .buttons-wrapper {
   display: flex;
   justify-content: center;
+  margin-bottom: 0.5rem;
 }
 
 @media screen and (min-width: 768px) {
