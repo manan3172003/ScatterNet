@@ -124,18 +124,39 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
     try {
       let USER_ID = user.author_id
       let POST_URL_ID = post.id
+      let post_object = null;
 
-      const response = await fetch(`http://localhost:8000/api/authors/${USER_ID}/posts/${POST_URL_ID}`, {
+      const get_post_response = await fetch(`http://localhost:8000/api/posts/${POST_URL_ID}`, {
+            headers: {
+              "X-CSRFToken": csrfToken
+            },
+            credentials: "include",
+          }
+      )
+
+      if (get_post_response.ok) {
+        post_object = await get_post_response.json();
+      } else {
+        throw new Error("Failed to delete post");
+      }
+
+      const response = await fetch(`http://localhost:8000/api/authors/${USER_ID}/posts/${post_object.serial}`, {
         method: "DELETE",
+        headers: {
+          "X-CSRFToken": csrfToken
+        },
+        credentials: "include"
       })
 
       if (response.ok) {
         alert("Deleted Post! If you'd like to undelete your post, please contact a node admin for assistance.")
+      } else {
+        throw new Error("Failed to delete post");
       }
     }
     catch (error) {
       alert("Something went wrong. Please try again.");
-      console.log(error)
+      console.log(error);
     }
   }
   async function getLikeStatus(user) {
