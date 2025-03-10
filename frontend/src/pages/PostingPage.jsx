@@ -5,6 +5,8 @@ import {getCookie, fetchUserData} from "../utils/utils.js";
 export default function PostingPage(){
    
     const previewMethodsRef = useRef();
+    const [base64Data, setBase64] = useState(""); 
+    const [fileName, setFileName] = useState(""); 
 
     const [formData, setFormData] = useState({
         title: "",
@@ -13,13 +15,46 @@ export default function PostingPage(){
         content: "", //deets
         visibility: "",
     })
-   
-    function loadScript(src) {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        document.body.appendChild(script);
-      }
+
+    async function handleFile(e) {
+        const selectedFile = e.target.files[0];
+
+    
+        if (!selectedFile) {
+            console.error("No file selected!");
+            return;
+        }
+        console.log('File being processed:', selectedFile);
+    
+        try {
+            setFileName(selectedFile.name);
+            const base64string = await convertToBase64(selectedFile);
+            setBase64(base64string .split(",")[1]);
+            console.log('Base64 String: ', base64string);
+    
+        } catch (error) {
+            console.error('Error converting file to Base64: ', error);
+        }
+    }
+
+    function convertToBase64(selectedFile) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            console.log('File being processed:', selectedFile);
+            console.log('Reader result at load:', reader.result);
+    
+            reader.onload = function() {
+                console.log('called: ', reader);
+                resolve(reader.result); 
+            };
+    
+            reader.onerror = function(error) {
+                reject(error); 
+            };
+    
+            reader.readAsDataURL(selectedFile);
+        });
+    }
 
     function handleChange(e){
       setFormData({
@@ -38,10 +73,18 @@ export default function PostingPage(){
             alert("Please select a valid option!");
             return;
           }
-        
-          console.log(formData)
-
         try {
+            let content = "";
+
+            if (formData.contentType.includes("base64")) {
+                content = base64Data; 
+            } else {
+                content = formData.content;
+            }
+            
+              console.log(formData)
+              console.log(base64Data)
+
             let resp = await fetchUserData();
             let AUTHOR_SERIAL = resp.user.author_id
             let csrfToken = getCookie('csrftoken');
@@ -56,7 +99,7 @@ export default function PostingPage(){
                     title: formData.title,
                     description: formData.description,
                     contentType: formData.contentType || null,
-                    content: formData.content || null,
+                    content: content || null,
                     visibility: formData.visibility,
                 }),
                 credentials: "include"
@@ -109,9 +152,9 @@ export default function PostingPage(){
                                 {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
-                                {/* <option value="image/png;base64">Image (png)</option>
+                                 <option value="image/png;base64">Image (png)</option>
                                 <option value="image/jpeg;base64">Image (jpeg)</option>
-                                <option value="application/base64">Image </option> */}
+                                <option value="application/base64">Image </option> 
 
                             </select>
                               {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
@@ -127,8 +170,8 @@ export default function PostingPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleChange} value={formData.content}/>
-                            
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleFile} value={formData.content}/>
+                                 {fileName && <p>Selected File: {fileName}</p>} 
                                 </>
                             )}
                            
