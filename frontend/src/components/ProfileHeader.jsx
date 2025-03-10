@@ -77,7 +77,7 @@ export default function ProfileHeader() {
       <div class="cover-wrapper">
         <div class="info-wrapper">
           <div class="info-subwrapper">
-            <img id="profile-image" src={user.profileImageURL} />
+            <img id="profile-image" src={user.profileImageURL || `https://robohash.org/${user.displayName}.png`} />
             <div class="info-names-wrapper">
               <p id="displayname">{user.displayName}</p>
               <div class="info-names-subwrapper">
