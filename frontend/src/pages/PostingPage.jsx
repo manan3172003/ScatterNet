@@ -5,7 +5,7 @@ import {getCookie, fetchUserData} from "../utils/utils.js";
 export default function PostingPage(){
    
     const previewMethodsRef = useRef();
-    let base64string= "";
+    const [base64Data, setBase64] = useState(""); // Add a state variable
     const [fileName, setFileName] = useState(""); // Track the filename
 
     const [formData, setFormData] = useState({
@@ -30,7 +30,8 @@ export default function PostingPage(){
             setFileName(selectedFile.name);
 
             // Convert the file to a Base64 string
-            base64string = await convertToBase64(selectedFile);
+            const base64string = await convertToBase64(selectedFile);
+            setBase64(base64string); // Update the state
             console.log('Base64 String: ', base64string);
     
         } catch (error) {
@@ -75,17 +76,24 @@ export default function PostingPage(){
             return;
           }
         try {
-            let contentData ="";
-            if ((formData.contentType === 'image/png;base64' ||
-                formData.contentType === 'image/jpeg;base64' ||
-                formData.contentType === 'application/base64')) {
-                contentData = base64string;
-              }else{
-                contentData = formData.content;
-              }
+            // let contentData ="";
+            // if ((formData.contentType === 'image/png;base64' ||
+            //     formData.contentType === 'image/jpeg;base64' ||
+            //     formData.contentType === 'application/base64')) {
+            //     contentData = base64string;
+            //   }else{
+            //     contentData = formData.content;
+            //   }
+            let content = "";
+
+            if (formData.contentType.includes("base64")) {
+                content = base64Data; // Use the state variable
+            } else {
+                content = formData.content; // Text content
+            }
             
               console.log(formData)
-              console.log(contentData)
+              console.log(base64Data)
 
             let resp = await fetchUserData();
             let AUTHOR_SERIAL = resp.user.author_id
@@ -101,7 +109,7 @@ export default function PostingPage(){
                     title: formData.title,
                     description: formData.description,
                     contentType: formData.contentType || null,
-                    content: contentData || null,
+                    content: content || null,
                     visibility: formData.visibility,
                 }),
                 credentials: "include"
