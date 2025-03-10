@@ -7,5 +7,8 @@
 .error-text {
   text-align: center;
 }
+.content-area {
+  padding: 0 !important;
+}
 @media screen and (min-width: 768px) {
 }

@@ -37,7 +37,7 @@ p {
 }
 .info-subwrapper {
   display: flex;
-  gap: 10px;
+  gap: 1rem;
   border-bottom: solid #ffffff;
   padding: 1rem;
 }
@@ -112,6 +112,7 @@ p {
     display: flex;
     gap: 10px;
     margin: 0 20px;
+    width: 70%;
   }
 
   #displayname {
