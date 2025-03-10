@@ -81,7 +81,7 @@ export default function PostingPage(){
             console.log(error)
         }
     }
-   
+
     return <div className="posting-container">
         
             <header className="posting-header">

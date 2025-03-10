@@ -16,6 +16,7 @@
   color: white;
 }
 
+
 .table-content {
   padding: 1.5rem;
 }
@@ -65,6 +66,7 @@
   height: 1rem;
   margin-right: 0.5rem;
 }
+
 
 .table-scroll {
   overflow-x: auto;
@@ -116,6 +118,7 @@ td {
   color: var(--color-positive);
   margin-right: 1rem;
 }
+
 
 .btn-accept:hover {
   color: var(--color-positive-hover);

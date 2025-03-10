@@ -1,4 +1,4 @@
- import {getCookie, fetchUserData, getAuthorObject} from "./utils.js";
+import {getCookie, fetchUserData, getAuthorObject} from "./utils.js";
 
 export async function getAuthorRelationship(otherAuthor){
     let {user: user} = await fetchUserData();
@@ -71,6 +71,7 @@ export async function handleFollowRequest(user, otherAuthor, authorsRelationship
             return null;
         }
 
+
     }
 
 export async function getFollowRequests(user) {
@@ -119,4 +120,5 @@ export async function handleRespondingToFollowRequest(user, otherAuthor, authorR
             console.error("Error in handling follow request:", error);
             return null;
         }
+
 }

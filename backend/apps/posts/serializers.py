@@ -9,17 +9,19 @@ from ..authors.serializers import AuthorSerializer
 from ..utils.paginators import LikesPaginator, CommentsPaginator
 
 class PostSerializer(serializers.ModelSerializer):
+    serial = serializers.SerializerMethodField(read_only=True)
     id = serializers.SerializerMethodField(read_only=True)
     page = serializers.URLField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
-    author = AuthorSerializer(read_only=True)
+    author = serializers.SerializerMethodField(read_only=True)
+    # author = AuthorSerializer(read_only=True)
     comments = serializers.SerializerMethodField(read_only=True)
     likes = serializers.SerializerMethodField(read_only=True)
     published = serializers.DateTimeField(read_only=True, default=None)
 
     class Meta:
         model = Post
-        fields = ['type', 'title', 'id', 'page', 'description', 'contentType', 'content', 'author', 'comments', 'likes', 'published', 'visibility']
+        fields = ['serial', 'type', 'title', 'id', 'page', 'description', 'contentType', 'content', 'author', 'comments', 'likes', 'published', 'visibility']
 
     def create(self, validated_data):
         author_id = self.context['auth_id']
@@ -45,6 +47,12 @@ class PostSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+    def get_author(self, obj):
+        return AuthorSerializer(obj.author).data
+
+    def get_serial(self, obj):
+        return obj.id
 
     def get_id(self, obj):
         return obj.id_url
