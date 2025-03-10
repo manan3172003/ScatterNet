@@ -1,3 +1,5 @@
+from copy import copy
+
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -52,10 +54,14 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_comments(self, obj):
         request = self.context.get('request')
-
         queryset = Comment.objects.filter(post__id=obj.id)
 
         paginator = CommentsPaginator()
+        request = copy(request)
+        request.query_params._mutable = True
+        request.query_params[paginator.page_size_query_param] = '5'
+        request.query_params['page'] = '1'
+
         paginated_comments = paginator.paginate_queryset(queryset, request)
 
         serializer = CommentSerializer(paginated_comments, many=True, context=self.context)
@@ -63,11 +69,16 @@ class PostSerializer(serializers.ModelSerializer):
 
 
     def get_likes(self, obj):
+        #can pass context to serializer if needed for future permissions.
         request = self.context.get('request')
-
         queryset = Like.objects.filter(object=obj.id_url)
 
+        request = copy(request)
+        request.query_params._mutable = True
         paginator = LikesPaginator()
+        request.query_params[paginator.page_size_query_param] = '5'
+        request.query_params['page'] = '1'
+
         paginated_likes = paginator.paginate_queryset(queryset, request)
 
         serializer = LikeSerializer(paginated_likes, many=True, context=self.context)
@@ -118,7 +129,12 @@ class CommentSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         queryset = Like.objects.filter(object=obj.id_url)
 
+        request = copy(request)
+        request.query_params._mutable = True
         paginator = LikesPaginator()
+        request.query_params[paginator.page_size_query_param] = '5'
+        request.query_params['page'] = '1'
+
         paginated_likes = paginator.paginate_queryset(queryset, request)
 
         serializer = LikeSerializer(paginated_likes, many=True, context=self.context)
