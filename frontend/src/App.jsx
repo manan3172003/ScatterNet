@@ -14,7 +14,7 @@ import PostingPage from "./pages/PostingPage";
 import ProfileRedirect from "./components/ProfileRedirect";
 import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
-
+import EditProfilePage from "./pages/EditProfilePage";
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -32,6 +32,7 @@ function App() {
           <Route path="/home" element={<ProtectedRoute element={<HomePage />} />}/>
           <Route path="/profile" element={<ProtectedRoute element={<ProfileRedirect />} />}/>
           <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
+          <Route path="/editProfile" element={<ProtectedRoute element={<EditProfilePage />} />}/>
           <Route path="/authors/:authorId" element={<UserProfile/>} />
           <Route path="/authors/:authorId/posts/:postId" element={<PublicPostPage />}/>
 
