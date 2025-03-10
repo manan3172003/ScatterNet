@@ -14,7 +14,7 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
     const [likeCount,setLikeCount] = useState(post.likes.count)
     const [commentCount,setCommentCount] = useState(post.comments.count)
     const [hasLiked, setLikes] = useState(false) // Default to false
-    const [authorsRelationship, setAuthorsRelationship] = useState("Following");
+    const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
 
     // This state is going keep track of whether or not the post has been expanded since by default we truncate excess text 
     const [expanded, setExpanded] = useState(false) 
@@ -29,7 +29,7 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
     useEffect(() => {
         async function fetchLikeAndFollowStatus() {
             const liked = await getLikeStatus(user);
-            const relationship = await isAuthorFollowed(user);
+            const relationship = await getAuthorRelationship(user);
             setLikes(liked);
             setAuthorsRelationship(relationship);
         }
@@ -125,7 +125,11 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
           }
     }
 
-    async function isAuthorFollowed(user){
+    async function getAuthorRelationship(user){
+        if (user.displayName === post.author.displayName) {
+            return "Same Author";
+        }
+
         try {
             // Check if post author is in following list of user
             const followerResponse = await fetch(`http://localhost:8000/api/authors/${user.author_id}/following?isPending=false`);
@@ -214,13 +218,14 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
                   <span className="post-date">{formattedDate}</span>
                 </div>
               </div>
-                <button
-                    className="post-follow-button"
-                    onClick={handleFollow}
-                    disabled={authorsRelationship === "Requested"}
-                  >
-                        {getButtonLabel(authorsRelationship)}
-                  </button>
+                {authorsRelationship !== "Same Author" &&
+                  (<button
+                      className="post-follow-button"
+                      onClick={handleFollow}
+                      disabled={authorsRelationship === "Requested"}
+                      >
+                    {getButtonLabel(authorsRelationship)}
+                  </button>)}
             </div>
             {post.description && (
               <p className="post-description">{post.description}</p>
