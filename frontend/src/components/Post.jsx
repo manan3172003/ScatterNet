@@ -109,7 +109,7 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
             
             <div className="post-author">
               <img
-                src={post.author.profileImage} 
+                src={post.author.profileImage || `https://robohash.org/${post.author.displayName}.png`}
                 alt={post.author.displayName}
                 className="post-avatar"
                 onError={(e) => {
