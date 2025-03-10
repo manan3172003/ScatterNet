@@ -211,7 +211,7 @@ def filter_author_post(request, auth_id):
         return Post.objects.filter(author_id=auth_id).order_by('-published')
     elif request.user.author_profile.id != auth_id:
         if are_friends(request.user.author_profile.id, auth_id):
-            return queryset.filter(visibility='FRIENDS')
+            return queryset
         elif follows(request.user.author_profile.id, auth_id):
             return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
         else:
