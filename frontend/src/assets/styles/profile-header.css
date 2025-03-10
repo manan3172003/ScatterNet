@@ -5,6 +5,9 @@
 p {
   margin: 0;
 }
+.content-area {
+  padding: 0 !important;
+}
 #github {
   color: rgb(139, 138, 148);
 }
@@ -47,14 +50,15 @@ p {
 }
 
 .info-names-wrapper {
-  margin-top: 25px;
+  margin-top: 2rem;
 }
 #displayname {
   font-family: "Karantina";
-  font-size: 64px;
+  font-size: 2rem;
   color: #ffffff;
   -webkit-text-stroke-color: var(--secondaryBlue);
   -webkit-text-stroke-width: 3px;
+  word-break: break-all;
 }
 .info-names-subwrapper {
   color: #ffffff;
@@ -65,8 +69,8 @@ p {
   gap: 10px;
 }
 .button {
-  width: 150;
-  height: 40px;
+  width: 10rem;
+  height: 2rem;
   border-radius: 30px;
   display: flex;
   justify-content: center;
