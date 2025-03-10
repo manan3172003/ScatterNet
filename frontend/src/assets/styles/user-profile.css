@@ -2,12 +2,13 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  box-sizing: border-box;
 }
 .error-text {
   text-align: center;
 }
+.content-area {
+  padding: 0 !important;
+}
 @media screen and (min-width: 768px) {
-  .profile-page-wrapper {
-    padding-left: 225px;
-  }
 }
