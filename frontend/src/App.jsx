@@ -12,6 +12,9 @@ import { Navigate } from "react-router-dom";
 import PublicPostPage from "./pages/PublicPostPage";
 import PostingPage from "./pages/PostingPage";
 import ProfileRedirect from "./components/ProfileRedirect";
+import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
+
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -26,28 +29,15 @@ function App() {
 
         <Route element={<LayoutWithNavbar />}>
           {/* Routes nested in here have the Navbar */}
+          <Route path="/home" element={<ProtectedRoute element={<HomePage />} />}/>
+          <Route path="/profile" element={<ProtectedRoute element={<ProfileRedirect />} />}/>
+          <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
+          <Route path="/authors/:authorId" element={<UserProfile/>} />
+          <Route path="/authors/:authorId/posts/:postId" element={<PublicPostPage />}/>
 
-          <Route
-            path="/home"
-            element={<ProtectedRoute element={<HomePage />} />}
-          />
-          <Route
-            path="/profile"
-            element={<ProtectedRoute element={<ProfileRedirect />} />}
-          />
-
-          <Route
-            path="/post"
-            element={<ProtectedRoute element={<PostingPage />} />}
-          />
-          <Route path="/authors/:authorId" element={<UserProfile />} />
+          {/* Admin Routes only accessible to admins */}
+          <Route path="/admin" element={<AdminProtectedRoute element={<AdminPage />} />} />
         </Route>
-
-        {/* Public Routes Go Here */}
-        <Route
-          path="/authors/:authorId/posts/:postId"
-          element={<PublicPostPage />}
-        />
       </Routes>
     </Router>
   );
