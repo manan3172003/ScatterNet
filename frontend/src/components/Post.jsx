@@ -100,11 +100,39 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
         content: post.content, 
         visibility: post.visibility} 
         ,
-        id_url: post.id_url 
+        postId: post.id
       }
      });
     }
-    
+
+    function handleDelete(){
+      const userConfirmed = window.confirm("Are you sure you want to delete this post?");
+      if (userConfirmed) {
+              deletePost();
+        console.log("User confirmed!");
+      } else {
+        console.log("User canceled.");
+      }
+    }
+
+    async function deletePost(){
+      try {
+          let USER_ID = user.author_id
+          let POST_URL_ID = post.id
+
+          const response = await fetch(`http://localhost:8000/api/authors/${USER_ID}/posts/${POST_URL_ID}`,{
+              method: "DELETE",
+          })
+
+          if (response.ok){
+              alert("Deleted Post! If you'd like to undelete your post, please contact a node admin for assistance.")
+          }
+      }
+      catch (error){
+          alert("Something went wrong. Please try again.");
+          console.log(error)
+      }
+  }
     async function getLikeStatus(user) {
 
         const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/liked`)
@@ -168,9 +196,14 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
                   (<button
                       className="edit-post-button"
                       onClick={handleEdit}
-                      disabled={authorsRelationship === "Requested"}
                       >
                         Edit Post
+                  </button>)}
+                  {authorsRelationship == "Same Author" &&
+                  (<button
+                      className="delete-post-button"
+                      onClick={handleDelete}                      >
+                        Delete Post
                   </button>)}
             </div>
             

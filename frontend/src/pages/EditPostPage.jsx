@@ -8,13 +8,16 @@ export default function EditPostPage(){
     const previewMethodsRef = useRef();
 
     const location = useLocation();
-    const { initialData, url_id }  = location.state?.formData || {
+    const initialData = location.state?.formData || {
         title: "",
         description: "",
         contentType: "", 
         content: "", 
         visibility: "",
     };
+
+    ;
+    const postId = location.state?.postId
 
     const [formData, setFormData] = useState(initialData)
 
@@ -43,7 +46,7 @@ export default function EditPostPage(){
             let resp = await fetchUserData();
             let AUTHOR_SERIAL = resp.user.author_id
             let csrfToken = getCookie('csrftoken');
-            let POST_URL_ID = url_id
+            let POST_URL_ID = postId
 
             const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts/${POST_URL_ID}`,{
                 method: "PUT",
