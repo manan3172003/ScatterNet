@@ -1,25 +1,19 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
-import React, { useState, useRef,useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {getCookie, fetchUserData} from "../utils/utils.js";
-export default function PostingPage(){
+export default function EditPostPage(){
    
     const previewMethodsRef = useRef();
 
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        contentType: "", //markdown, plain,img
-        content: "", //deets
+        contentType: "", 
+        content: "", 
         visibility: "",
     })
-   
-    function loadScript(src) {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        document.body.appendChild(script);
-      }
+
 
     function handleChange(e){
       setFormData({
@@ -65,7 +59,7 @@ export default function PostingPage(){
             const data = await response.json()
             console.log(data)
             if (response.ok){
-                alert("Uploaded Post!")
+                alert("Edited Post!")
                 setFormData({
                     title: "",
                     description: "",
@@ -81,6 +75,7 @@ export default function PostingPage(){
             console.log(error)
         }
     }
+
 
     return <div className="posting-container">
         
@@ -114,17 +109,6 @@ export default function PostingPage(){
                                 <option value="application/base64">Image </option> */}
 
                             </select>
-                            {/* {(formData.contentType === 'text/markdown') && (
-                                <>
-                                <label className="form-label">Content</label>
-                            <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
-                            <button id= "markdown-button">Convert to Markdown</button>
-                            <div id="markdown-output"></div>
-                            <script src="{% static 'markdown-editor.min.js' %}"></script> 
-
-
-                                </>
-                            )} */}
                               {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
                                 <>
                                 <label className="form-label">Content</label>
