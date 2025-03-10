@@ -10,7 +10,7 @@ import getCookie from "../context/Cookie"
 import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
 import {getAuthorObject} from "../utils/utils.js";
 
-export default function Post({post, onPostClick,onCommentClick, hideCommentsButton = false, hideFollowButton = false}){
+export default function Post({post, onPostClick,onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh}){
     const {user} = useContext(AuthContext)
     const csrfToken = getCookie('csrftoken')
     const [likeCount,setLikeCount] = useState(post.likes.count)
@@ -79,6 +79,10 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
 
         const newRelationship = await handleFollowRequest(userAuthor, postAuthorId, authorsRelationship);
         setAuthorsRelationship(newRelationship);
+
+        if (onRefresh) {
+            onRefresh();
+        }
     }
     
     function handleShare(){

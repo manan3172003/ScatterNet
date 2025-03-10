@@ -14,6 +14,7 @@ export default function HomePage() {
     const [isMobile, setIsMobile] = useState(false)
     const POSTS_PER_PAGE = 5; 
     const [hasMore, setHasMore] = useState(true);
+    const [refreshFlag, setRefreshFlag] = useState(1);
     const [pagination, setPagination] = useState({
         next: null,
         previous: null,
@@ -135,6 +136,16 @@ export default function HomePage() {
             setLoading(false);
         }
     }, [loading, hasMore, pagination, posts, csrfToken]);
+
+    // Re-renders all posts if user follows an author on one of the post, so user won't be able
+    // to follow them in different post objects after they do in one
+     function refreshFeed() {
+         const currentScroll = window.scrollY;
+         setRefreshFlag(prev => prev * -1);
+         fetchUserPosts().then(() => {
+             window.scrollTo(0, currentScroll);
+         });
+    }
     
     return (
         <div className="home-page-wrapper">
@@ -147,7 +158,7 @@ export default function HomePage() {
                 scrollThreshold={0.8}
                 className="infinite-scroll-container"
             >
-                <main className="feed-container">
+                <main key={refreshFlag} className="feed-container">
                     {posts.length > 0 ? (
                         posts.map((post) => (
                             <Post
@@ -155,6 +166,7 @@ export default function HomePage() {
                                 post={post}
                                 onPostClick={() => handlePostClick(post)}
                                 onCommentClick={(e) => handleCommentClick(post, e)}
+                                onRefresh={refreshFeed}
                             />
                         ))
                     ) : (
