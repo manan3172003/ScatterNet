@@ -32,10 +32,10 @@ export default function MobileCommentModal({ post, onClose }) {
     
     async function fetchComments() {
         try {
-            const response = await fetch(`http://localhost:8000/api/posts/${post.id}`);
+            const response = await fetch(`http://localhost:8000/api/posts/${post.id}/comments`);
             if (response.ok) {
                 const data = await response.json();
-                setComments(data.comments.src || []);
+                setComments(data.src || []);
             }
         } catch (error) {
             console.error("Something went wrong:", error);

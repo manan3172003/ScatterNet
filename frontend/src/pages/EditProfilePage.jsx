@@ -1,5 +1,5 @@
 import HeaderLogo from "../components/HeaderLogo";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { getCookie, fetchUserData } from "../utils/utils.js";
 import "../assets/styles/edit-profile.css";
 import { AuthContext } from "../context/AuthContext";
@@ -16,6 +16,12 @@ export default function EditProfilePage() {
       [e.target.name]: e.target.value,
     });
     console.log(formData);
+  }
+  async function handleEdit(e) {
+    e.preventDefault();
+    let resp = await fetchUserData();
+    let AUTHOR_SERIAL = resp.user.author_id;
+    let csrfToken = getCookie("csrftoken");
   }
   return (
     <div className="edit-profile-container">
