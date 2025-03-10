@@ -21,6 +21,21 @@ const fetchUserData = async () => {
         }
 };
 
+async function getAuthorObject(user) {
+        try {
+            const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}`);
+
+            if (!response.ok) {
+                throw new Error(`Error fetching author: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Failed to fetch author:", error);
+            return null;
+        }
+};
+
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -36,4 +51,4 @@ function getCookie(name) {
   return cookieValue;
 }
 
-export {getCookie, fetchUserData}
+export {getCookie, fetchUserData, getAuthorObject}

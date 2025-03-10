@@ -7,13 +7,16 @@ import ContentRenderer from "../components/ContentRenderer"
 import {useContext,useEffect} from "react"
 import {Heart,MessageCircle,Share2, Globe, Lock, Calendar, Link} from "lucide-react"
 import getCookie from "../context/Cookie"
+import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
+import {getAuthorObject} from "../utils/utils.js";
 
-export default function Post({post, onPostClick,onCommentClick, hideCommentsButton = false}){
+export default function Post({post, onPostClick,onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh}){
     const {user} = useContext(AuthContext)
     const csrfToken = getCookie('csrftoken')
     const [likeCount,setLikeCount] = useState(post.likes.count)
     const [commentCount,setCommentCount] = useState(post.comments.count)
     const [hasLiked, setLikes] = useState(false) // Default to false
+    const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
 
     // This state is going keep track of whether or not the post has been expanded since by default we truncate excess text 
     const [expanded, setExpanded] = useState(false) 
@@ -26,12 +29,14 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
     })
 
     useEffect(() => {
-        async function fetchLikeStatus() {
+        async function fetchLikeAndFollowStatus() {
             const liked = await getLikeStatus(user);
+            const relationship = await getAuthorRelationship(post.author);
             setLikes(liked);
+            setAuthorsRelationship(relationship);
         }
         if (user) {
-            fetchLikeStatus();
+            fetchLikeAndFollowStatus();
         }
     }, []);
     async function handleLike() {
@@ -63,7 +68,22 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
           }
     }
 
+    // WE DONT HAVE A WAY TO CANCEL FOLLOW REQS, not in spec either
+    async function handleFollow() {
 
+        // TODO: REMOVE THIS BEABADOBEE NEXT SPLIT, ONLY WORKS LOCALLY, LETS THINK OF SMT
+        const parts = post.author.id.split("/");
+        const postAuthorId = parts[parts.length - 1];
+
+        const userAuthor =  await getAuthorObject(user);
+
+        const newRelationship = await handleFollowRequest(userAuthor, postAuthorId, authorsRelationship);
+        setAuthorsRelationship(newRelationship);
+
+        if (onRefresh) {
+            onRefresh();
+        }
+    }
     
     function handleShare(){
         if (navigator.clipboard) {
@@ -123,11 +143,19 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
                   <span className="post-date">{formattedDate}</span>
                 </div>
               </div>
+                {authorsRelationship !== "Same Author" && !hideFollowButton &&
+                  (<button
+                      className="post-follow-button"
+                      onClick={handleFollow}
+                      disabled={authorsRelationship === "Requested"}
+                      >
+                    {authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}
+                  </button>)}
             </div>
-            
             {post.description && (
               <p className="post-description">{post.description}</p>
             )}
+
           </div>
     
           <div className="post-content" onClick={onPostClick}>
