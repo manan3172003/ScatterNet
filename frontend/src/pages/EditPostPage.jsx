@@ -1,25 +1,53 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
-import React, { useState, useRef,useEffect } from "react";
+import React, {useState, useRef, useEffect} from "react";
 import {getCookie, fetchUserData} from "../utils/utils.js";
-export default function PostingPage(){
-   
-    const previewMethodsRef = useRef();
-    const [base64Data, setBase64] = useState(""); 
-    const [fileName, setFileName] = useState(""); 
+import {useLocation, useNavigate} from 'react-router-dom';
+import Notification from "../components/Notification.jsx";
+export default function EditPostPage(){
 
-    const [formData, setFormData] = useState({
+    const [base64Data, setBase64] = useState(""); 
+    const [fileName, setFileName] = useState("");
+    const [post, setPost] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const csrfToken = getCookie('csrftoken');
+    const navigate = useNavigate();
+    const previewMethodsRef = useRef();
+    const location = useLocation();
+    const initialData = location.state?.formData || {
         title: "",
         description: "",
-        contentType: "", //markdown, plain,img
-        content: "", //deets
+        contentType: "", 
+        content: "", 
         visibility: "",
-    })
+    };
+    const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
+    // Helper to show notifications
+  const showNotification = (type, title, message) => {
+    setNotification({
+      show: true,
+      type,
+      title,
+      message,
+    });
+  };
+  // Helper to hide notifications
+  const hideNotification = () => {
+    setNotification((prev) => ({ ...prev, show: false }));
+  };
+
+    const postId = location.state?.postId
+    const [formData, setFormData] = useState(initialData)
 
     async function handleFile(e) {
         const selectedFile = e.target.files[0];
 
-    
         if (!selectedFile) {
             console.error("No file selected!");
             return;
@@ -56,6 +84,7 @@ export default function PostingPage(){
         });
     }
 
+
     function handleChange(e){
       setFormData({
         ...formData,
@@ -65,15 +94,26 @@ export default function PostingPage(){
       console.log(formData)
 
     }
+    function handleDropdownChange(e){
+        setFormData({
+          ...formData,
+          [e.target.name]:e.target.value,
+          content:""
+          
+        })
+        console.log(formData)
+  
+      }
     
-    async function handlePost(e){
+    async function handleEdit(e){
         e.preventDefault()
         // forces visibiity to be choses
         if ((e.visibility === "")||(e.contentType==="")) {
             alert("Please select a valid option!");
             return;
           }
-        try {
+
+          try {
             let content = "";
 
             if (formData.contentType.includes("base64")) {
@@ -86,11 +126,11 @@ export default function PostingPage(){
               console.log(base64Data)
 
             let resp = await fetchUserData();
-            let AUTHOR_SERIAL = resp.user.author_id
-            let csrfToken = getCookie('csrftoken');
+            let AUTHOR_SERIAL = resp.user.author_id;
+            let POST_URL_ID = post.serial;
 
-            const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts`,{
-                method: "POST",
+            const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts/${POST_URL_ID}`,{
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRFToken": csrfToken
@@ -108,16 +148,16 @@ export default function PostingPage(){
             const data = await response.json()
             console.log(data)
             if (response.ok){
-                alert("Uploaded Post!")
-                setFormData({
-                    title: "",
-                    description: "",
-                    contentType: "",
-                    content: "",
-                    visibility: "",
-                })
+                showNotification(
+                    "Success",
+                    "Edited Post!",
+                    "Redirecting to your profile..."
+                    )
+                setTimeout(() => {navigate(`/authors/${AUTHOR_SERIAL}`)}, 1500);
+            } else {
+                console.error("Error updating post");
+                showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
             }
-
         }
         catch (error){
             alert("Something went wrong. Please try again.");
@@ -125,18 +165,62 @@ export default function PostingPage(){
         }
     }
 
+  useEffect(() => {
+    fetchPost();
+  }, []);
+
+  const fetchPost = async () => {
+    setLoading(true);
+    let resp = await fetchUserData();
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/posts/${postId}`, {
+        headers: {
+          "X-CSRFToken": csrfToken
+        },
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch post");
+      }
+      const data = await response.json();
+      setPost(data);
+      setFormData({
+        title: data.title,
+        description: data.description,
+        contentType: data.contentType,
+        content: ['text/plain', 'text/markdown'].includes(data.contentType) ? data.content : null,
+        visibility: data.visibility,
+    })
+    } catch (err) {
+      console.error("Error fetching authors:", err);
+      showNotification("error", "Load Error", "Failed to load author");
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <div>Loading author...</div>
+  }
+
     return <div className="posting-container">
-        
+        <Notification
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={hideNotification}
+      />
             <header className="posting-header">
                 {<HeaderLogo/> }
             </header>
             <main className="posting-main">
                 <div className="form-content" >
-                        <form className="post-form" onSubmit={handlePost}>
+                        <form className="post-form" onSubmit={handleEdit}>
                             <label className="form-label">Create Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
-                                <option value="">Select...</option> 
+                                <option value="">Select...</option>
                                 <option value="PUBLIC">Public</option>
                                 <option value="FRIENDS">Friends-Only</option>
                                 <option value="UNLISTED">Unlisted</option>
@@ -148,11 +232,11 @@ export default function PostingPage(){
                             <textarea name="description" placeholder="Enter the description of your post" required onChange={handleChange} value={formData.description}/>
                             
                             <label className="form-label">Content Type</label>
-                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleChange}>
+                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
                                 {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
-                                 <option value="image/png;base64">Image (png)</option>
+                                <option value="image/png;base64">Image (png)</option>
                                 <option value="image/jpeg;base64">Image (jpeg)</option>
                                 <option value="application/base64">Image </option> 
 
@@ -172,10 +256,11 @@ export default function PostingPage(){
                                     
                                  <input type="file" name="content" placeholder="An optional Image" onChange={handleFile} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
+
                                 </>
                             )}
                            
-                            <button id= "post-button">Post</button>
+                            <button id= "post-button">Edit</button>
                         </form>
                 </div>
             </main>

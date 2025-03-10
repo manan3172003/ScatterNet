@@ -47,6 +47,13 @@
     border: none;
     background: #1e293b;
     color: white;
+    resize: none; 
+    height: 3em;
+
+  }
+
+  input[type='file'] {
+    color:  #1e293b
   }
   
  select {

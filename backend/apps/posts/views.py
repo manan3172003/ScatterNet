@@ -211,7 +211,7 @@ def filter_author_post(request, auth_id):
         return Post.objects.filter(author_id=auth_id).order_by('-published')
     elif request.user.author_profile.id != auth_id:
         if are_friends(request.user.author_profile.id, auth_id):
-            return queryset.filter(visibility='FRIENDS')
+            return queryset
         elif follows(request.user.author_profile.id, auth_id):
             return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
         else:
@@ -264,11 +264,7 @@ class StreamListView(ListAPIView):
             author_posts.append(list(filter_author_post(self.request, author.id)))
 
         merged_posts = list(merge_sorted_post_lists(*author_posts))
-
-        paginator = self.pagination_class()
-        paginated_posts = paginator.paginate_queryset(merged_posts, self.request)
-
-        return paginated_posts
+        return merged_posts
 
 """
 http://{node}/api/posts/{post_fqid}/image
@@ -295,7 +291,6 @@ class ImagePostsView(RetrieveAPIView):
             post_fqid = self.kwargs['post_fqid']
             # Get the post or return a 404 if it doesn't exist
             post = get_object_or_404(Post, id_url=post_fqid)
-            print(post)
             return self.helper_filter(post)
 
 
@@ -303,7 +298,6 @@ class ImagePostsView(RetrieveAPIView):
             author_fqid = self.kwargs['author_serial']
             post_serial = self.kwargs['post_serial']
             post = get_object_or_404(Post, id=post_serial)
-            print(post)
             return self.helper_filter(post)
 
 

@@ -29,10 +29,10 @@ export default function DesktopCommentModal({ post, onClose }) {
     
     async function fetchComments() {
         try {
-            const response = await fetch(`http://localhost:8000/api/posts/${post.id}`);
+            const response = await fetch(`http://localhost:8000/api/posts/${post.id}/comments`);
             if (response.ok) {
                 const data = await response.json();
-                setComments(data.comments.src || []);
+                setComments(data.src || []);
             }
         } catch (error) {
             console.error("Error fetching comments:", error);
@@ -125,7 +125,7 @@ export default function DesktopCommentModal({ post, onClose }) {
                                     <div key={comment.id} className="desktop-comment-item">
                                         <img
                                             className="desktop-comment-avatar"
-                                            src={comment.author.profileImageURL}
+                                            src={comment.author.profileImageURL || `https://robohash.org/${comment.author.displayName}.png`}
                                             
                                         />
                                         <div className="desktop-comment-content">
