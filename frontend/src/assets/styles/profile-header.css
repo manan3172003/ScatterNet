@@ -69,6 +69,7 @@ p {
   width: 10rem;
   height: 2rem;
   border-radius: 30px;
+  border: none;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -83,9 +84,13 @@ p {
   -webkit-text-stroke-width: 1px;
   border: none;
 }
-.button:hover {
+.button:hover:enabled {
   background-color: rgb(57, 67, 108);
   transition: all 0.5s ease-in-out;
+}
+.button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 #edit-btn {
   text-decoration: none;
@@ -94,6 +99,11 @@ p {
   display: flex;
   justify-content: center;
   margin-bottom: 0.5rem;
+}
+
+.button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 @media screen and (min-width: 768px) {

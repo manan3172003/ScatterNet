@@ -4,11 +4,14 @@ import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useParams } from "react-router-dom";
 import { Link } from "react-router";
+import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
+import {getAuthorObject} from "../utils/utils.js";
 
 export default function ProfileHeader() {
   const user = useContext(UserContext);
   const [currentUser, setCurrentUser] = useState();
   const [isOwner, setIsOwner] = useState(null);
+  const [authorsRelationship, setAuthorsRelationship] = useState("Same Author");
   const { authorId } = useParams();
   //const { currentUser } = useContext(AuthContext);
   const fetchUserData = async () => {
@@ -39,19 +42,23 @@ export default function ProfileHeader() {
       setIsOwner(false);
     }
   };
-  useEffect(() => {
-    fetchUserData();
-  }, [user]);
+
+  const fetchFollowStatus = async () => {
+    // TODO: otherAuthor is just the author id atm, will need tweaks eventually?
+    const relationship = await getAuthorRelationship(authorId);
+    setAuthorsRelationship(relationship);
+  }
 
   useEffect(() => {
-    console.log(
-      `cur: ${
-        currentUser?.author_id
-      }  viewing: ${authorId}   owner?${isOwner},${
-        currentUser?.author_id === authorId
-      }`
-    );
-  }, [currentUser]); // Re-run when currentUser updates
+    fetchUserData();
+    fetchFollowStatus();
+  }, []);
+
+  async function handleFollow() {
+    const currAuthor = await getAuthorObject(currentUser);
+    const newRelationship = await handleFollowRequest(currAuthor, authorId, authorsRelationship);
+    setAuthorsRelationship(newRelationship);
+  }
 
   // useEffect(() => {
   //   //determine if user is owner of page
@@ -60,24 +67,12 @@ export default function ProfileHeader() {
   //   }
   // }, [currentUser, authorId]);
 
-  async function getRelationship() {
-    //check if current user is following profile page's user
-    const response = await fetch(
-      `http://localhost:8000/api/authors/${currentUser.id}/following/${user.id}`
-    );
-
-    return !!response.ok;
-  }
-  async function followUser() {
-    //TODO
-    console.log("follow user");
-  }
   return (
     <div className="profile-header">
       <div class="cover-wrapper">
         <div class="info-wrapper">
           <div class="info-subwrapper">
-            <img id="profile-image" src={user.profileImageURL} />
+            <img id="profile-image" src={user.profileImageURL || `https://robohash.org/${user.displayName}.png`} />
             <div class="info-names-wrapper">
               <p id="displayname">{user.displayName}</p>
               <div class="info-names-subwrapper">
@@ -89,9 +84,14 @@ export default function ProfileHeader() {
           </div>
           <div class="buttons-wrapper">
             {!isOwner && (
-              <div class="button" id="follow-btn" onClick={() => followUser()}>
-                <p>follow</p>
-              </div>
+              <button
+                  className="button"
+                  id="follow-btn"
+                  onClick={handleFollow}
+                  disabled={authorsRelationship === "Requested"
+              }>
+                <p>{authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}</p>
+              </button>
             )}
             {isOwner && (
               <Link to="/editProfile" id="edit-btn">

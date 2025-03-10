@@ -1,11 +1,11 @@
+
 import { Home, User, SquarePlus, Shield } from "lucide-react";
+import { AiOutlineNotification } from "react-icons/ai";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router";
 import "../assets/styles/navbar.css";
 import {getCookie} from "../utils/utils.js";
-
-
 
 export default function Navbar() {
   const [onMobile, setOnMobile] = useState(window.innerWidth < 768);
@@ -15,6 +15,7 @@ export default function Navbar() {
     { icon: Home, label: "Home", path: "/home" },
     { icon: SquarePlus, label: "Post", path: "/post" },
     { icon: User, label: "Profile", path: "/profile" },
+    { icon: AiOutlineNotification, label: "Requests", path: "/requests "},
     ...(isAdminFromCookie ? [{ icon: Shield, label: "Admin", path: "/admin" }] : []),
   ];
   // hook that runs when component is mounted
