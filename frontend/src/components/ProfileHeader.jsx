@@ -1,4 +1,3 @@
-import backBtn from "../assets/icons/back.png";
 import editBtn from "../assets/icons/edit.png";
 import { UserContext } from "../pages/UserProfile";
 import { useContext, useState, useEffect } from "react";
@@ -71,26 +70,20 @@ export default function ProfileHeader() {
   return (
     <div className="profile-header">
       <div class="cover-wrapper">
-        <div class="cover-buttons-wrapper">
-          {isOwner && (
-            <Link to="/editProfile" id="edit-btn">
-              <img src={editBtn} id="edit-btn-icon" />
-            </Link>
-          )}
-        </div>
         <div class="info-wrapper">
           <div class="info-subwrapper">
-            <img id="profile-image" src={user.profileImageURL} />
+            <img id="profile-image" src={user.profileImageURL || `https://robohash.org/${user.displayName}.png`} />
             <div class="info-names-wrapper">
               <p id="displayname">{user.displayName}</p>
               <div class="info-names-subwrapper">
                 <a id="github" href={user.github}>
-                  {user.github}
+                  Github
                 </a>
               </div>
             </div>
           </div>
-          {!isOwner && (
+          <div class="buttons-wrapper">
+            {!isOwner && (
               <button
                   className="button"
                   id="follow-btn"
@@ -99,7 +92,15 @@ export default function ProfileHeader() {
               }>
                 <p>{authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}</p>
               </button>
-          )}
+            )}
+            {isOwner && (
+              <Link to="/editProfile" id="edit-btn">
+                <div class="button" id="edit-btn">
+                  <p>edit profile</p>
+                </div>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

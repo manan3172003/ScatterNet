@@ -47,6 +47,9 @@
     border: none;
     background: #1e293b;
     color: white;
+    resize: none; 
+    height: 3em;
+
   }
   
  select {

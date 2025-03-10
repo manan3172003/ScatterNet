@@ -59,6 +59,11 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
             
             if (response.ok) {
+                if (data.user.is_node_admin) {
+                     document.cookie = "isAdmin=true; path=/;";
+                } else {
+                    document.cookie = "isAdmin=false; path=/;";
+                }
                 setUser(data.user);
             } else {
                 setUser(null);

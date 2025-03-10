@@ -8,27 +8,44 @@ import { useNavigate } from 'react-router-dom';
 import { useContext, useEffect } from "react"
 import { Heart, MessageCircle, Share2, Globe, Lock, Calendar, Link } from "lucide-react"
 import getCookie from "../context/Cookie"
-import { getAuthorRelationship, handleFollowRequest } from "../utils/followApi.js";
-import { getAuthorObject } from "../utils/utils.js";
+import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
+import {getAuthorObject} from "../utils/utils.js";
 
-export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false }) {
-  const { user } = useContext(AuthContext)
-  const csrfToken = getCookie('csrftoken')
-  const [likeCount, setLikeCount] = useState(post.likes.count)
-  const [commentCount, setCommentCount] = useState(post.comments.count)
-  const [hasLiked, setLikes] = useState(false) // Default to false
-  const [authorsRelationship, setAuthorsRelationship] = useState("Same Author");
+export default function Post({post, onPostClick,onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh}){
+    const {user} = useContext(AuthContext)
+    const csrfToken = getCookie('csrftoken')
+    const [likeCount,setLikeCount] = useState(post.likes.count)
+    const [commentCount,setCommentCount] = useState(post.comments.count)
+    const [hasLiked, setLikes] = useState(false) // Default to false
+    const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
+    const navigate = useNavigate();
 
-  // This state is going keep track of whether or not the post has been expanded since by default we truncate excess text 
-  const [expanded, setExpanded] = useState(false)
-  const navigate = useNavigate();
+    // This state is going keep track of whether or not the post has been expanded since by default we truncate excess text 
+    const [expanded, setExpanded] = useState(false) 
 
-  console.log(hasLiked)
-  const formattedDate = new Date(post.published).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  })
+    console.log(hasLiked)
+    const formattedDate = new Date(post.published).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+    })
+
+    useEffect(() => {
+        async function fetchLikeAndFollowStatus() {
+            const liked = await getLikeStatus(user);
+            const relationship = await getAuthorRelationship(post.author);
+            setLikes(liked);
+            setAuthorsRelationship(relationship);
+        }
+        if (user) {
+            fetchLikeAndFollowStatus();
+        }
+    }, []);
+    async function handleLike() {
+        if (user === null){
+            // Not logged in so do nothing
+            return
+        }
 
   useEffect(() => {
     async function fetchLikeAndFollowStatus() {
@@ -41,32 +58,30 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
       fetchLikeAndFollowStatus();
     }
   }, []);
-  async function handleLike() {
-    if (user === null) {
-      // Not logged in so do nothing
-      return
+  
+    // WE DONT HAVE A WAY TO CANCEL FOLLOW REQS, not in spec either
+    async function handleFollow() {
+
+        // TODO: REMOVE THIS BEABADOBEE NEXT SPLIT, ONLY WORKS LOCALLY, LETS THINK OF SMT
+        const parts = post.author.id.split("/");
+        const postAuthorId = parts[parts.length - 1];
+
+        const userAuthor =  await getAuthorObject(user);
+
+        const newRelationship = await handleFollowRequest(userAuthor, postAuthorId, authorsRelationship);
+        setAuthorsRelationship(newRelationship);
+
+        if (onRefresh) {
+            onRefresh();
+        }
     }
-
-    try {
-      const response = await fetch(`http://localhost:8000/api/like`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken,
-        },
-        body: JSON.stringify({
-          "author_id": `${user.author_id}`,
-          "object": `${post.id}`
-        }),
-      })
-
-      if (response.ok) {
-        setLikes(true)
-        setLikeCount(prevCount => prevCount + 1)
-      }
-    } catch (error) {
-      console.error("Error liking post:", error)
+    
+    function handleShare(){
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(post.page)
+                .then(() => alert("Post URL copied to clipboard!"))
+                .catch(err => console.error("Failed to copy URL", err));
+          }
     }
   }
 
@@ -145,26 +160,57 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
       return exists;
     }
   }
-  // TODO: FIX LONG CONTENT STUFF PLEASE
-  const hasLongContent = post.content && post.content.length > 300
-  // const displayContent = !expanded && hasLongContent
-  //   ? post.content.substring(0,300) + "....."
-  //   : post.content
-  const displayContent = post.content
+    // TODO: FIX LONG CONTENT STUFF PLEASE
+    const hasLongContent = post.content && post.content.length > 300
+    // const displayContent = !expanded && hasLongContent
+    //   ? post.content.substring(0,300) + "....."
+    //   : post.content
+    const displayContent = post.content
 
-  return (
-    <div className="post-container" onClick={onPostClick}>
-      <div className="post-header">
-        <div className="post-header-top">
-          <h2 className="post-title">{post.title}</h2>
-          <div className="post-visibility">
-            {/* Displays different icons for public, private, and unlisted posts */}
-            {post.visibility === "PUBLIC" ? (
-              <Globe size={16} className="visibility-icon public" title="Public" />
-            ) : post.visibility === "FRIENDS" ? (
-              <Lock size={16} className="visibility-icon private" title="Private" />
-            ) : (
-              <Link size={16} className="visibility-icon unlisted" title="Unlisted" />)}
+      return (
+        <div className="post-container"  onClick={onPostClick}>
+          <div className="post-header">
+            <div className="post-header-top">
+              <h2 className="post-title">{post.title}</h2>
+              <div className="post-visibility">
+                {/* Displays different icons for public, private, and unlisted posts */}
+                {post.visibility === "PUBLIC" ? (
+                  <Globe size={16} className="visibility-icon public" title="Public" />
+                ) : post.visibility === "FRIENDS" ? (
+                  <Lock size={16} className="visibility-icon private" title="Private" />
+                ) : (
+                  <Link size={16} className="visibility-icon unlisted" title="Unlisted" /> )}
+              </div>
+            </div>
+            
+            <div className="post-author">
+              <img
+                src={post.author.profileImageURL || `https://robohash.org/${post.author.displayName}.png`}
+                alt={post.author.displayName}
+                className="post-avatar"
+                onError={(e) => {
+                  e.target.src = `${post.author.profileImageURL}`;
+                }}
+              />
+              <div className="author-info">
+                <span className="post-author-name">{post.author.displayName}</span>
+                <div className="post-meta">
+                  <Calendar size={14} className="meta-icon" />
+                  <span className="post-date">{formattedDate}</span>
+                </div>
+              </div>
+                {authorsRelationship !== "Same Author" && !hideFollowButton &&
+                  (<button
+                      className="post-follow-button"
+                      onClick={handleFollow}
+                      disabled={authorsRelationship === "Requested"}
+                      >
+                    {authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}
+                  </button>)}
+            </div>
+            {post.description && (
+              <p className="post-description">{post.description}</p>
+            )}
           </div>
         </div>
 

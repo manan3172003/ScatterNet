@@ -93,7 +93,7 @@ export default function PostingPage(){
                             <label className="form-label">Create Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
-                                <option value="">Select...</option>
+                                <option value="">Select...</option> 
                                 <option value="PUBLIC">Public</option>
                                 <option value="FRIENDS">Friends-Only</option>
                                 <option value="UNLISTED">Unlisted</option>
@@ -106,7 +106,7 @@ export default function PostingPage(){
                             
                             <label className="form-label">Content Type</label>
                             <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleChange}>
-                                <option value="">Select...</option>
+                                {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
                                 {/* <option value="image/png;base64">Image (png)</option>
@@ -114,17 +114,6 @@ export default function PostingPage(){
                                 <option value="application/base64">Image </option> */}
 
                             </select>
-                            {/* {(formData.contentType === 'text/markdown') && (
-                                <>
-                                <label className="form-label">Content</label>
-                            <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
-                            <button id= "markdown-button">Convert to Markdown</button>
-                            <div id="markdown-output"></div>
-                            <script src="{% static 'markdown-editor.min.js' %}"></script> 
-
-
-                                </>
-                            )} */}
                               {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
                                 <>
                                 <label className="form-label">Content</label>

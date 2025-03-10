@@ -1,0 +1,74 @@
+.posting-header {
+  background-color: #57659e;
+  text-align: center;
+}
+.editing-main {
+  margin: 1em auto;
+  width: 80%;
+  padding: 20px;
+  border-radius: 10px;
+  background: #1a202c;
+}
+.form-content {
+  text-align: left;
+}
+.edit-profile-form {
+  display: flex;
+  flex-direction: column;
+}
+.edit-profile-form label {
+  color: white;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+.edit-profile-form input {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: none;
+  background: #1e293b;
+  color: white;
+}
+.edit-profile-form textarea {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: none;
+  background: #1e293b;
+  color: white;
+}
+select {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: none;
+  background: #1e293b;
+  color: white;
+}
+.edit-profile-form input::placeholder {
+  color: #94a3b8;
+}
+.edit-profile-form textarea::placeholder {
+  color: #94a3b8;
+}
+.edit-profile-form button {
+  background: white;
+  color: black;
+  font-weight: bold;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.edit-profile-form button:hover {
+  background: #d1d5db;
+}
+.form-label {
+  font-size: 1rem;
+}
+@media screen and (min-width: 768px) {
+  .editing-main {
+    width: 700px;
+  }
+}

@@ -4,7 +4,6 @@ import "../assets/styles/profile-header.css";
 import "../assets/styles/user-profile.css";
 import { useParams } from "react-router-dom";
 import { useState, createContext, useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
 
 export const UserContext = createContext();
 
@@ -36,16 +35,16 @@ export default function UserProfile() {
   return (
     <UserContext.Provider value={user}>
       {loading ? (
-        <p>loading...</p>
+        <p className="error-text">loading...</p>
       ) : user ? (
         <div className="profile-page-wrapper">
           <ProfileHeader />
           <div className="feed-container">
-            <Feed author_id = {authorId}/>
+            <Feed author_id={authorId} />
           </div>
         </div>
       ) : (
-        <p>User not found</p>
+        <p className="error-text">User not found</p>
       )}
     </UserContext.Provider>
   );
