@@ -282,3 +282,18 @@
   color: black;
   cursor: not-allowed;
 }
+
+.edit-post-button {
+  margin-left: auto;
+  border: none;
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.edit-post-button:hover {
+  background-color: #0056b3;
+}

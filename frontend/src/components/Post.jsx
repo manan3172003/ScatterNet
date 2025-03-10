@@ -4,6 +4,7 @@ import {useState} from "react"
 import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/post.css"
 import ContentRenderer from "../components/ContentRenderer"
+import { useNavigate } from 'react-router-dom';
 import {useContext,useEffect} from "react"
 import {Heart,MessageCircle,Share2, Globe, Lock, Calendar, Link} from "lucide-react"
 import getCookie from "../context/Cookie"
@@ -20,6 +21,7 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
 
     // This state is going keep track of whether or not the post has been expanded since by default we truncate excess text 
     const [expanded, setExpanded] = useState(false) 
+    const navigate = useNavigate();
 
     console.log(hasLiked)
     const formattedDate = new Date(post.published).toLocaleDateString("en-US", {
@@ -88,6 +90,14 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
                 .catch(err => console.error("Failed to copy URL", err));
           }
     }
+    function handleEdit(){
+      navigate('/editPost', { state: { formData: { 
+        title: post.title,
+        description: post.description,
+        contentType: post.contentType, 
+        content: post.content, 
+        visibility: post.visibility} } });
+    }
     
     async function getLikeStatus(user) {
 
@@ -146,6 +156,15 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
                       disabled={authorsRelationship === "Requested"}
                       >
                     {authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}
+                  </button>)}
+                  {/* edit and delete post button */}
+                  {authorsRelationship == "Same Author" &&
+                  (<button
+                      className="edit-post-button"
+                      onClick={handleEdit}
+                      disabled={authorsRelationship === "Requested"}
+                      >
+                        Edit Post
                   </button>)}
             </div>
             

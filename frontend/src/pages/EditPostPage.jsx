@@ -2,17 +2,21 @@ import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, { useState, useRef } from "react";
 import {getCookie, fetchUserData} from "../utils/utils.js";
+import { useLocation } from 'react-router-dom';
 export default function EditPostPage(){
    
     const previewMethodsRef = useRef();
 
-    const [formData, setFormData] = useState({
+    const location = useLocation();
+    const initialData = location.state?.formData || {
         title: "",
         description: "",
         contentType: "", 
         content: "", 
         visibility: "",
-    })
+    };
+
+    const [formData, setFormData] = useState(initialData)
 
 
     function handleChange(e){
@@ -25,7 +29,7 @@ export default function EditPostPage(){
 
     }
     
-    async function handlePost(e){
+    async function handleEdit(e){
         e.preventDefault()
         // forces visibiity to be choses
         if ((e.visibility === "")||(e.contentType==="")) {
@@ -41,7 +45,7 @@ export default function EditPostPage(){
             let csrfToken = getCookie('csrftoken');
 
             const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts`,{
-                method: "POST",
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRFToken": csrfToken
@@ -84,7 +88,7 @@ export default function EditPostPage(){
             </header>
             <main className="posting-main">
                 <div className="form-content" >
-                        <form className="post-form" onSubmit={handlePost}>
+                        <form className="post-form" onSubmit={handleEdit}>
                             <label className="form-label">Create Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
@@ -127,7 +131,7 @@ export default function EditPostPage(){
                                 </>
                             )}
                            
-                            <button id= "post-button">Post</button>
+                            <button id= "post-button">Edit</button>
                         </form>
                 </div>
             </main>
