@@ -91,12 +91,18 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
           }
     }
     function handleEdit(){
-      navigate('/editPost', { state: { formData: { 
+      navigate('/editPost', { 
+        state: { 
+          formData: { 
         title: post.title,
         description: post.description,
         contentType: post.contentType, 
         content: post.content, 
-        visibility: post.visibility} } });
+        visibility: post.visibility} 
+        ,
+        id_url: post.id_url 
+      }
+     });
     }
     
     async function getLikeStatus(user) {
