@@ -5,8 +5,8 @@ import {getCookie, fetchUserData} from "../utils/utils.js";
 export default function PostingPage(){
    
     const previewMethodsRef = useRef();
-    const [base64Data, setBase64] = useState(""); // Add a state variable
-    const [fileName, setFileName] = useState(""); // Track the filename
+    const [base64Data, setBase64] = useState(""); 
+    const [fileName, setFileName] = useState(""); 
 
     const [formData, setFormData] = useState({
         title: "",
@@ -28,10 +28,8 @@ export default function PostingPage(){
     
         try {
             setFileName(selectedFile.name);
-
-            // Convert the file to a Base64 string
             const base64string = await convertToBase64(selectedFile);
-            setBase64(base64string); // Update the state
+            setBase64(base64string .split(",")[1]);
             console.log('Base64 String: ', base64string);
     
         } catch (error) {
@@ -76,20 +74,12 @@ export default function PostingPage(){
             return;
           }
         try {
-            // let contentData ="";
-            // if ((formData.contentType === 'image/png;base64' ||
-            //     formData.contentType === 'image/jpeg;base64' ||
-            //     formData.contentType === 'application/base64')) {
-            //     contentData = base64string;
-            //   }else{
-            //     contentData = formData.content;
-            //   }
             let content = "";
 
             if (formData.contentType.includes("base64")) {
-                content = base64Data; // Use the state variable
+                content = base64Data; 
             } else {
-                content = formData.content; // Text content
+                content = formData.content;
             }
             
               console.log(formData)
