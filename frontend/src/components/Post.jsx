@@ -7,8 +7,10 @@ import ContentRenderer from "../components/ContentRenderer"
 import {useContext,useEffect} from "react"
 import {Heart,MessageCircle,Share2, Globe, Lock, Calendar, Link} from "lucide-react"
 import getCookie from "../context/Cookie"
+import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
+import {getAuthorObject} from "../utils/utils.js";
 
-export default function Post({post, onPostClick,onCommentClick, hideCommentsButton = false}){
+export default function Post({post, onPostClick,onCommentClick, hideCommentsButton = false, hideFollowButton = false}){
     const {user} = useContext(AuthContext)
     const csrfToken = getCookie('csrftoken')
     const [likeCount,setLikeCount] = useState(post.likes.count)
@@ -29,7 +31,7 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
     useEffect(() => {
         async function fetchLikeAndFollowStatus() {
             const liked = await getLikeStatus(user);
-            const relationship = await getAuthorRelationship(user);
+            const relationship = await getAuthorRelationship(post.author);
             setLikes(liked);
             setAuthorsRelationship(relationship);
         }
@@ -75,46 +77,8 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
 
         const userAuthor =  await getAuthorObject(user);
 
-        switch(authorsRelationship) {
-            case "Following": {
-                const response = await fetch(`http://localhost:8000/api/authors/${postAuthorId}/followers/${userAuthor.id}`, {
-                method: "DELETE",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                    },
-                });
-
-                if (response.ok) {
-                    setAuthorsRelationship("Not Following");
-                    console.log("Unfollowed successfully");
-                }
-                else {
-                    console.log("Error unfollowing");
-                }
-                break;
-            }
-            case "Not Following": {
-                const response = await fetch(`http://localhost:8000/api/authors/${postAuthorId}/followers/${userAuthor.id}`, {
-                method: "PUT",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                    },
-                });
-
-                if (response.ok) {
-                    setAuthorsRelationship("Requested");
-                    console.log("Follow request sent successfully");
-                }
-                else {
-                    console.log("Error sending follow request");
-                }
-                break;
-            }
-        }
+        const newRelationship = await handleFollowRequest(userAuthor, postAuthorId, authorsRelationship);
+        setAuthorsRelationship(newRelationship);
     }
     
     function handleShare(){
@@ -123,49 +87,6 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
                 .then(() => alert("Post URL copied to clipboard!"))
                 .catch(err => console.error("Failed to copy URL", err));
           }
-    }
-
-    async function getAuthorRelationship(user){
-        if (user.displayName === post.author.displayName) {
-            return "Same Author";
-        }
-
-        try {
-            // Check if post author is in following list of user
-            const followerResponse = await fetch(`http://localhost:8000/api/authors/${user.author_id}/following?isPending=false`);
-            const followerData = await followerResponse.json();
-
-            if (followerData.following.some(author => author.id === post.author.id)) {
-                return "Following";
-            }
-
-            // Check if there is a pending request to post author
-            const followReqResponse = await fetch(`http://localhost:8000/api/authors/${user.author_id}/following?isPending=true`);
-            const followReqData = await followReqResponse.json();
-
-            if (followReqData.following.some(author => author.id === post.author.id)) {
-                return "Requested";
-            }
-
-            return "Not Following";
-        }
-        catch (error) {
-            console.error("Error checking follow status:", error);
-            return false;
-        }
-    }
-
-    function getButtonLabel(relationship) {
-        switch(relationship) {
-            case "Following":
-                return "Unfollow";
-
-            case "Not Following":
-                return "Follow";
-
-            case "Requested":
-                return "Requested";
-        }
     }
     
     async function getLikeStatus(user) {
@@ -218,13 +139,13 @@ export default function Post({post, onPostClick,onCommentClick, hideCommentsButt
                   <span className="post-date">{formattedDate}</span>
                 </div>
               </div>
-                {authorsRelationship !== "Same Author" &&
+                {authorsRelationship !== "Same Author" && !hideFollowButton &&
                   (<button
                       className="post-follow-button"
                       onClick={handleFollow}
                       disabled={authorsRelationship === "Requested"}
                       >
-                    {getButtonLabel(authorsRelationship)}
+                    {authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}
                   </button>)}
             </div>
             {post.description && (
