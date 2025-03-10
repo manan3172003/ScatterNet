@@ -12,6 +12,11 @@ body {
   font-family: 'Courier New', Courier, monospace;
   color: #0c1823;
 }
+
+button {
+  font-family: 'Courier New', Courier, monospace;
+}
+
 #root{
   height: 100%;
 }

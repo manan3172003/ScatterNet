@@ -10,8 +10,6 @@ visibility_options = [("PUBLIC", "PUBLIC"),
                       ]
 
 class Post(models.Model):
-    # TODO: remove the type field from the model and add it so only the serializer sends it
-    type = models.CharField(max_length=100, default='post')
     title = models.CharField(max_length=200)
     id_url = models.URLField(unique=True)
     page = models.URLField()
@@ -38,3 +36,6 @@ class Like(models.Model):
     published = models.DateTimeField(auto_now_add=True)
     id_url = models.URLField(unique=True)
     object = models.URLField() #this is the id_url of the thing that was liked, post/comment
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['author', 'object'], name='unique_like')]

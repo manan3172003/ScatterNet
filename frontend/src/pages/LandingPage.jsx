@@ -1,10 +1,10 @@
 
 import HeaderLogo from "../components/HeaderLogo"
 import {useContext, useState} from "react"
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContext"
 import "../assets/styles/landing-page.css"
 import {useNavigate } from "react-router-dom"
-
+import Notification from "../components/Notification"
 export default function LandingPage(){
     const {login} = useContext(AuthContext)
     const navigate = useNavigate()
@@ -16,26 +16,49 @@ export default function LandingPage(){
         confirmPassword: "",
         profileImageURL: null, 
         displayName:""
+    })    
+    // State for keeping track of notifications
+    const [notification, setNotification] = useState({
+        show: false,
+        type: "success",
+        title: "",
+        message: "",
     })
-    const [, setErrorMessage] = useState("");  
-    const [, setSuccessMessage] = useState("");
-    
+
+    // Helper function that is used to show notifications
+    const showNotification = (type, title, message) => {
+        setNotification({
+        show: true,
+        type,
+        title,
+        message,
+        })
+    }
+
+    // Helper function that is used to hide notifications
+    const hideNotification = () => {
+        setNotification((prev) => ({ ...prev, show: false }))
+    }
 
     function handleChange(e){
       setFormData({
         ...formData,
         [e.target.name]:e.target.value
       })
-      console.log(formData)
+      
 
     }
     async function handleSignUp(e){
         e.preventDefault()
         
         if (formData.password !== formData.confirmPassword){
-            alert("Passwords do not match!")
-            // To Do: Will replace later on to be better looking
-            return;
+            
+            showNotification(
+                "error",
+                "Password Error",
+                "Passwords do not match!"
+              )
+            return
         }
 
         try {
@@ -49,15 +72,15 @@ export default function LandingPage(){
                     password: formData.password,
                     github: formData.github || null,
                     displayName: formData.displayName,
-                    profileImageURL: formData.profileImageURL || null,
+                    profileImageURL: formData.profileImageURL || `https://robohash.org/${formData.displayName}.png`,
                 }),
                 credentials: "include"
             })
 
             const data = await response.json()
-            console.log(data)
+            
             if (response.ok){
-                alert("Your account has been created! Please wait for approval by the node admin.")
+                showNotification("warning", "Account Created", "Your account has been created! Please wait to be approved by the node admin.")
                 setFormData({
                     github: "",
                     username: "",
@@ -67,12 +90,20 @@ export default function LandingPage(){
                     profileImageURL: null,
                     displayName: "",
                 })
+            } else if (response.status === 400 && data.username) {
+                showNotification(
+                  "error",
+                  "Username Taken",
+                  "An author with this username already exists. Please log in or pick a different username."
+                )
+            } else {
+                showNotification("error", "Sign Up Failed", data.message || "Something went wrong. Please try again.")
             }
 
         }
         catch (error){
-            alert("Something went wrong. Please try again.");
-            console.log(error)
+            showNotification("error", "Sign Up Failed", error || "Something went wrong. Please try again.")
+            
         }
 
 
@@ -82,19 +113,30 @@ export default function LandingPage(){
     async function handleSubmit(e){
       e.preventDefault()
       if (activeTab == "login"){
-        console.log("made it here")
-        let response = await login(formData.username, formData.password);
+        
+        let response = await login(formData.username, formData.password)
 
         if (!response.success) {
             if (response.status === "401") {
-                setErrorMessage("Incorrect username or password.");
+                showNotification(
+                    "error",
+                    "Login Failed",
+                    "Incorrect username or password."
+                  )
             } else {
-                setErrorMessage("An error occurred. Please try again.");
+                showNotification(
+                    "error",
+                    "Login Error",
+                    "An error occurred. Please try again."
+                  )
             }
         } else {
-            setSuccessMessage("Login successful! Redirecting...");
-            
-            navigate("/home")
+            showNotification(
+                "success",
+                "Login Successful",
+                "Redirecting to your dashboard..."
+            )
+            setTimeout(() => {navigate("/home")}, 1500) 
         }
       }
       else {
@@ -111,6 +153,13 @@ export default function LandingPage(){
             <header className="landing-header">
                 <HeaderLogo/>
             </header>
+            <Notification
+                show={notification.show}
+                type={notification.type}
+                title={notification.title}
+                message={notification.message}
+                onClose={hideNotification}
+            />
             <main className="landing-main">
                 <div className="tab-switch">
                     <button className={activeTab === "login" ? "active" : ""}

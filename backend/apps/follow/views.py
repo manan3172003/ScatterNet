@@ -67,7 +67,11 @@ from ..authors.serializers import AuthorSerializer
 
 class FollowersListView(APIView):
     """
-    URL: authors/{author_id}/followers
+    Methods:
+        GET
+
+    URL:
+        authors/{author_id}/followers
     """
 
     @swagger_auto_schema(
@@ -79,6 +83,10 @@ class FollowersListView(APIView):
         }
     )
     def get(self, request, author_id):
+        """
+        This will return a list of authors who are followers of the given author id or a list of authors who sent a follow request.
+        """
+
         isPending = request.GET.get('isPending', "false").lower() == "true"
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
 
@@ -104,8 +112,15 @@ class FollowersListView(APIView):
 
 class FollowerDetailView(APIView):
     """
-    URL: authors/{author_id}/followers/{foreign_id_url}
+    Methods:
+        GET
+        DELETE
+        PUT
+
+    URL:
+        authors/{author_id}/followers/{foreign_id_url}
     """
+
     def get_permissions(self):
         if self.request.method in ['DELETE', 'PUT']:
             return [IsAuthenticated()]
@@ -121,6 +136,10 @@ class FollowerDetailView(APIView):
         }
     )
     def get(self, request, author_id, foreign_id_url):
+        """
+        Handles a GET request that would return foreign author's details if they are a follower
+        """
+
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
         foreign_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
@@ -156,6 +175,10 @@ class FollowerDetailView(APIView):
         }
     )
     def put(self, request, author_id, foreign_id_url):
+        """
+            Handles PUT requests that would send or accept a follow request.
+        """
+
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
         foreign_author = get_object_or_404(Author, id_url=decoded_url, state="ACTIVE")
@@ -230,6 +253,10 @@ class FollowerDetailView(APIView):
         }
     )
     def delete(self, request, author_id, foreign_id_url):
+        """
+        Handles rejecting a follow request or unfollowing an author.
+        """
+
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state="ACTIVE")
         foreign_author = get_object_or_404(Author, id_url=decoded_url, state="ACTIVE")
@@ -264,7 +291,11 @@ class FollowerDetailView(APIView):
 
 class FollowingListView(APIView):
     """
-    URL: authors/{author_id}/following/
+    Methods:
+        GET
+
+    URL:
+        authors/{author_id}/following/
     """
     permission_classes = [IsAuthenticated]
 
@@ -277,6 +308,10 @@ class FollowingListView(APIView):
         }
     )
     def get(self, request, author_id):
+        """
+        This will return a list of authors who the author follows or sent a follow request to.
+        """
+
         isPending = request.GET.get('isPending', "false").lower() == "true"
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
 
@@ -302,7 +337,11 @@ class FollowingListView(APIView):
 
 class FollowingDetailView(APIView):
     """
-    URL: authors/{author_id}/following/{foreign_id_url}
+    Methods:
+        GET
+
+    URL:
+        authors/{author_id}/following/{foreign_id_url}
     """
     permission_classes = [IsAuthenticated]
 
@@ -316,6 +355,9 @@ class FollowingDetailView(APIView):
         }
     )
     def get(self, request, author_id, foreign_id_url):
+        """
+        Handles a GET request that would return foreign author's details if they are followed by the author
+        """
         decoded_url = unquote(foreign_id_url)
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
         foreign_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
@@ -326,41 +368,14 @@ class FollowingDetailView(APIView):
         if not is_following:
             return Response({"error": "Not following"}, status=status.HTTP_404_NOT_FOUND)
         return Response(following_data, status=status.HTTP_200_OK)
-
-
-
-class FollowingDetailView(APIView):
-    """
-    URL: authors/{author_id}/following/{foreign_id_url}
-    """
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        responses={
-            200: openapi.Response(
-                description="Returns author details if the author is following the author specified in the foreign id",
-                schema=AuthorSerializer()
-            ),
-            404: openapi.Response(description="Author is not following the other author"),
-        }
-    )
-    def get(self, request, author_id, foreign_id_url):
-        decoded_url = unquote(foreign_id_url)
-        author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
-        foreign_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')
-
-        is_following = Follow.objects.filter(actor=author, object=foreign_author, isPending=False).exists()
-        following_data = AuthorSerializer(foreign_author).data
-
-        if not is_following:
-            return Response({"error": "Not following"}, status=status.HTTP_404_NOT_FOUND)
-        return Response(following_data, status=status.HTTP_200_OK)
-
-
 
 class FriendsListView(APIView):
     """
-    URL: authors/{author_id}/friends/
+    METHODS:
+        GET
+
+    URL:
+        authors/{author_id}/friends/
     """
     permission_classes = [IsAuthenticated]
 
@@ -373,6 +388,9 @@ class FriendsListView(APIView):
         }
     )
     def get(self, request, author_id):
+        """
+        Returns a list of authors that the specified author are friends with.
+        """
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
 
         authors_following = Follow.objects.filter(actor=author, isPending=False).values_list('object', flat=True)
@@ -389,7 +407,11 @@ class FriendsListView(APIView):
 
 class FriendDetailView(APIView):
     """
-    URL: authors/{author_id}/friends/{other_author_url}/
+    Methods:
+        GET
+
+    URL:
+        authors/{author_id}/friends/{other_author_url}/
     """
     permission_classes = [IsAuthenticated]
 
@@ -403,6 +425,9 @@ class FriendDetailView(APIView):
         }
     )
     def get(self, request, author_id, other_author_url):
+        """
+        Returns author details if the two authors are friends.
+        """
         decoded_url = unquote(other_author_url)
         author = get_object_or_404(Author, pk=author_id, state='ACTIVE')
         other_author = get_object_or_404(Author, id_url=decoded_url, state='ACTIVE')

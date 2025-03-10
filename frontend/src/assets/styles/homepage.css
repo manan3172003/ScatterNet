@@ -2,6 +2,12 @@ body {
     background-color: #111827;
 }
 
+.home-page-wrapper {
+    width: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
 .feed-container {
     padding-top: 2rem;
     display: flex;
@@ -13,11 +19,34 @@ body {
     margin: 0 auto;
     background-color: #111827;
 }
-  
+
+.infinite-scroll-component {
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+.end-message {
+    color: #F3F4F6;
+    text-align: center;
+    padding: 1rem;
+    width: 100%;
+}
+
+.loader-message {
+    color: #F3F4F6;
+    text-align: center;
+    padding: 1rem;
+    width: 100%;
+}
+
 @media screen and (min-width: 768px) {
-   
-    .infinite-scroll-component {
-        width: 500px;
+    .infinite-scroll-component__outerdiv {
+        width: 100%;
+        display: flex;
+        justify-content: center;
     }
     
+    .infinite-scroll-component {
+        width: 500px !important;
+    }
 }

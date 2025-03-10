@@ -1,7 +1,6 @@
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-
 import LandingPage from "./pages/LandingPage";
 import UserProfile from "./pages/UserProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -12,10 +11,16 @@ import { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import PublicPostPage from "./pages/PublicPostPage";
 import PostingPage from "./pages/PostingPage";
+import EditPostPage from "./pages/EditPostPage.jsx";
+import ProfileRedirect from "./components/ProfileRedirect";
+import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
+import AuthorsList from "./components/AuthorsList.jsx";
+import EditProfilePage from "./pages/EditProfilePage";
 
 function App() {
   const { user } = useContext(AuthContext);
-
+  console.log(user);
   return (
     <Router>
       <Routes>
@@ -25,24 +30,24 @@ function App() {
         />
 
         <Route element={<LayoutWithNavbar />}>
+          {/* Routes nested in here have the Navbar */}
+          <Route path="/home" element={<ProtectedRoute element={<HomePage />} />}/>
+          <Route path="/editPost" element={<ProtectedRoute element={<EditPostPage />} />}/>
+          <Route path="/profile" element={<ProtectedRoute element={<ProfileRedirect />} />}/>
+          <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
+          <Route path="/editProfile" element={<ProtectedRoute element={<EditProfilePage />} />}/>
+          <Route path="/requests" element={<ProtectedRoute element={<AuthorsList />} />}/>
+          <Route path="/authors/:authorId" element={<UserProfile/>} />
+          <Route path="/authors/:authorId/posts/:postId" element={<PublicPostPage />}/>
+
+          {/* Admin Routes only accessible to admins */}
           <Route
-            path="/home"
-            element={<ProtectedRoute element={<HomePage />} />}
+            path="/admin"
+            element={<AdminProtectedRoute element={<AdminPage />} />}
           />
-          <Route path="/authors/:authorId" element={<UserProfile />} />
-
         </Route>
-
-        <Route
-            path="/authors/:authorId/posts/:postId"
-            element={<PublicPostPage />}
-        />
-        <Route path="/userProfile/" element={<UserProfile />} />
-        <Route path="/post" element={<PostingPage />} />
-
       </Routes>
-   </Router>
-
+    </Router>
   );
 }
 

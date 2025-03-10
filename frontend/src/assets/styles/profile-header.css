@@ -5,13 +5,21 @@
 p {
   margin: 0;
 }
-a {
+.content-area {
+  padding: 0 !important;
+}
+#github {
+  color: rgb(139, 138, 148);
+}
+#github:link {
   color: #ffffff;
 }
 .cover-wrapper {
   background-color: var(--primaryBlue);
   margin: auto;
-  padding: 10px;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-evenly;
 }
 
 .cover-buttons-wrapper {
@@ -20,15 +28,17 @@ a {
   padding: 20px;
 }
 .info-wrapper {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 0 20px;
+  gap: 20px;
   justify-content: space-between;
 }
 .info-subwrapper {
   display: flex;
-  gap: 10px;
+  gap: 1rem;
+  border-bottom: solid #ffffff;
+  padding: 1rem;
 }
 #profile-image {
   height: 100px;
@@ -36,54 +46,64 @@ a {
   border-radius: 50%;
   object-fit: cover;
   border: 8px solid var(--secondaryBlue);
-  margin: auto;
-}
-#edit-btn {
-  background-color: transparent;
-  border: none;
-}
-#edit-btn-icon {
-  height: 25px;
-  width: 25px;
 }
 
 .info-names-wrapper {
-  margin-top: 25px;
+  margin-top: 2rem;
 }
 #displayname {
   font-family: "Karantina";
-  font-size: 64px;
+  font-size: 3rem;
   color: #ffffff;
-  -webkit-text-stroke-color: var(--secondaryBlue);
-  -webkit-text-stroke-width: 3px;
+  word-break: break-all;
 }
 .info-names-subwrapper {
   color: #ffffff;
-  font-size: 12px;
+  font-size: 1rem;
   font-family: "Inter";
   display: flex;
   flex-direction: row;
   gap: 10px;
 }
 .button {
-  width: 200px;
-  height: 50px;
+  width: 10rem;
+  height: 2rem;
   border-radius: 30px;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-color: white;
   margin: auto;
   transition: all 0.5s ease-in-out;
 }
 .button > p {
   text-align: center;
-  font-family: "Karantina";
-  font-size: 48px;
+  font-size: 18px;
   color: var(--secondaryBlue);
-  -webkit-text-stroke-color: var(--primaryBlue);
-  -webkit-text-stroke-width: 3px;
+  -webkit-text-stroke-width: 1px;
+  border: none;
 }
-.button:hover {
+.button:hover:enabled {
   background-color: rgb(57, 67, 108);
   transition: all 0.5s ease-in-out;
+}
+.button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+#edit-btn {
+  text-decoration: none;
+}
+.buttons-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 @media screen and (min-width: 768px) {
@@ -98,9 +118,9 @@ a {
 
   .info-wrapper {
     display: flex;
-    flex-direction: row;
     gap: 10px;
     margin: 0 20px;
+    width: 70%;
   }
 
   #displayname {
@@ -110,6 +130,11 @@ a {
     font-size: 24px;
   }
   .button {
+    width: 200px;
+    height: 50px;
     margin: auto 0;
+  }
+  .button > p {
+    font-size: 32px;
   }
 }

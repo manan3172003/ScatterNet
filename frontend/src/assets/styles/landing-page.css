@@ -1,94 +1,147 @@
+/* Import Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap");
 
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #0f1117; 
+  margin: 0;
+  padding: 0;
+}
 
-.landing-header{
-    background-color: #57659E;
-    text-align: center;
+.landing-header {
+  background-color: #111827; 
+  text-align: center;
+  padding: 1.5rem 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
-.landing-main{
-    margin: 1em auto;
-    width:80%;
-    padding: 20px;
-    border-radius: 10px;
-    background: #1a202c;
+
+.landing-main {
+  margin: 2em auto;
+  width: 80%;
+  padding: 30px;
+  border-radius: 12px;
+  background: #1a1d29; 
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  border: 1px solid #2d3748;
 }
+
 .tab-switch {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
 }
 
 .tab-switch button {
-    flex: 1;
-    padding: 10px;
-    background: #1e293b;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: 0.3s;
-    border-radius: 5px;
+  flex: 1;
+  padding: 12px;
+  background: #1e293b;
+  color: #a0aec0; 
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  margin: 0 5px;
 }
-  
-  .tab-switch button.active {
-    background: white;
-    color: black;
-    font-weight: bold;
+
+.tab-switch button.active {
+  background: #2d3748; 
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+
+.tab-switch button:hover:not(.active) {
+  background: #252f3f;
+  color: #e2e8f0;
+}
+
 .form-content {
-    text-align: left;
+  text-align: left;
 }
-  
-  .auth-form {
-    display: flex;
-    flex-direction: column;
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
 }
-.optional{
-    font-size: 0.9rem;
-    color: #888; /* Light gray to de-emphasize */
-    margin-left: 5px; 
+
+.optional {
+  font-size: 0.85rem;
+  color: #718096; 
+  margin-left: 5px;
+  font-style: italic;
 }
-  
-  .auth-form label {
-    color: white;
-    margin-bottom: 5px;
-    font-size: 14px;
+
+.auth-form label {
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
-  
-  .auth-form input {
-   
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    border: none;
-    background: #1e293b;
-    color: white;
+
+.auth-form input {
+  padding: 14px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  border: 1px solid #2d3748;
+  background: #171923;
+  color: white;
+  font-family: "Inter", sans-serif;
+  transition: all 0.2s ease;
 }
-  
-  .auth-form input::placeholder {
-    color: #94a3b8;
+
+.auth-form input:focus {
+  outline: none;
+  border-color: #4a5568;
+  box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.3);
 }
-  
-  .auth-form button {
-    background: white;
-    color: black;
-    font-weight: bold;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s;
+
+.auth-form input::placeholder {
+  color: #4a5568;
 }
-  
-  .auth-form button:hover {
-    background: #d1d5db;
+
+.auth-form button {
+  background: #2b6cb0; 
+  color: white;
+  font-weight: 600;
+  padding: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: "Montserrat", sans-serif;
+  letter-spacing: 0.5px;
+  margin-top: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+.auth-form button:hover {
+  background: #2c5282; 
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.auth-form button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .form-label {
-    font-size: 1rem;
+  font-size: 1rem;
 }
 
 @media screen and (min-width: 768px) {
-
-    .landing-main {
-        width: 700px;
-    }
-
+  .landing-main {
+    width: 600px;
+  }
 }
+
+@media screen and (min-width: 1024px) {
+  .landing-main {
+    width: 700px;
+  }
+}
+

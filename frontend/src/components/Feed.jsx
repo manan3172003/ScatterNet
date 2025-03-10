@@ -1,35 +1,64 @@
-import { useState, useEffect } from "react";
-import PostModal from "../components/PostModal";
+import { useState, useEffect, useRef, useCallback } from "react";
+import DesktopCommentModal from "../components/DesktopCommentModal";
 import MobileCommentModal from "../components/MobileCommentModal";
 import Post from "../components/Post";
 import InfiniteScroll from "react-infinite-scroll-component";
 import getCookie from "../context/Cookie.js";
 export default function Feed(values) {
-
-  async function fetchAuthorPosts(){
-        const response = await fetch(`http://localhost:8000/api/authors/${values.author_id}/posts`,
-            {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                "X-CSRFToken": csrfToken,
-        })
-        if (response.ok){
-            const posts_object = await response.json()
-            const posts = posts_object.src
-            setPosts(posts)
-        }
+  async function fetchAuthorPosts() {
+    const response = await fetch(
+      `http://localhost:8000/api/authors/${values.author_id}/posts`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        "X-CSRFToken": csrfToken,
+      }
+    );
+    if (response.ok) {
+      const posts_object = await response.json();
+      const posts = posts_object.src;
+      setPosts(posts);
     }
+  }
 
-  const [posts,setPosts] = useState([])
-  const csrfToken = getCookie('csrftoken')
+  const [posts, setPosts] = useState([]);
+  const csrfToken = getCookie("csrftoken");
   const [selectedPost, setSelectedPost] = useState(null);
   const [showComments, setShowComments] = useState(false);
+  const scrollPositionRef = useRef(0);
   const [isMobile, setIsMobile] = useState(false);
+  const POSTS_PER_PAGE = 5;
+  const [hasMore, setHasMore] = useState(true);
+  const [pagination, setPagination] = useState({
+    next: null,
+    previous: null,
+    currentPage: 1,
+  });
+  const [loading, setLoading] = useState(false);
+
+  // Save scroll position when opening comments
   useEffect(() => {
-    fetchAuthorPosts()
+    if (showComments) {
+      scrollPositionRef.current = window.scrollY;
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      // Restore scroll position when closing comments
+      setTimeout(() => {
+        window.scrollTo(0, scrollPositionRef.current);
+      }, 100);
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showComments]);
+
+  useEffect(() => {
+    fetchAuthorPosts();
 
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -38,53 +67,93 @@ export default function Feed(values) {
   }, []);
 
   function handlePostClick(post) {
-    if (!isMobile) {
-      selectedPost(post);
-    }
+    setSelectedPost(post);
   }
+
   function handleCommentClick(post, e) {
-    console.log("This got called!");
     e.stopPropagation();
-    if (isMobile) {
-      setSelectedPost(post);
-      setShowComments(true);
-    }
+    setSelectedPost(post);
+    setShowComments(true);
   }
-  async function fetchMorePosts() {
+  const fetchMorePosts = useCallback(async () => {
+    if (loading || !hasMore) return;
+
+    setLoading(true);
+
     try {
-      const response = await fetch(`http://localhost:8000/api/posts?page=${1}`); // to be added
-      const data = await response.json();
-      console.log(data); // to be added
+      let url = pagination.next;
+
+      if (!url) {
+        const nextPage = pagination.currentPage + 1;
+        url = `http://localhost:8000/api/authors/${values.author_id}/posts?page=${nextPage}&page=1&size=${POSTS_PER_PAGE}`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Avoid duplicate posts
+        const newPosts = data.src || [];
+        const existingIds = new Set(posts.map((post) => post.id));
+        const uniqueNewPosts = newPosts.filter(
+          (post) => !existingIds.has(post.id)
+        );
+
+        setPosts((prevPosts) => [...prevPosts, ...uniqueNewPosts]);
+
+        setPagination((prev) => ({
+          next: data.next,
+          previous: data.previous,
+          currentPage: prev.currentPage + 1,
+        }));
+
+        setHasMore(!!data.next);
+      }
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error("Error fetching more posts:", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  }, [loading, hasMore, pagination, posts, csrfToken]);
   return (
-    <InfiniteScroll
-      dataLength={posts.length}
-      next={fetchMorePosts}
-      loader={<p>Loading more posts...</p>}
-      endMessage={<p>No more posts to show.</p>}
-    >
-      <main className="feed-container">
-        {posts.map((post) => (
-          <Post
-            key={post.id}
-            post={post}
-            onPostClick={() => handlePostClick(post)}
-            onCommentClick={(e) => handleCommentClick(post, e)}
+    <div class="feed-wrapper">
+      <InfiniteScroll
+        dataLength={posts.length}
+        next={fetchMorePosts}
+        loader={<p>Loading more posts...</p>}
+        endMessage={<p>No more posts to show.</p>}
+      >
+        <main className="feed-container">
+          {posts.map((post) => (
+            <Post
+              key={post.id}
+              post={post}
+              onPostClick={() => handlePostClick(post)}
+              onCommentClick={(e) => handleCommentClick(post, e)}
+              hideFollowButton={true}
+            />
+          ))}
+        </main>
+      </InfiniteScroll>
+      {showComments &&
+        (isMobile ? (
+          <MobileCommentModal
+            post={selectedPost}
+            onClose={() => setShowComments(false)}
+          />
+        ) : (
+          <DesktopCommentModal
+            post={selectedPost}
+            onClose={() => setShowComments(false)}
           />
         ))}
-      </main>
-      {!isMobile && selectedPost && (
-        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
-      )}
-      {isMobile && showComments && (
-        <MobileCommentModal
-          post={selectedPost}
-          onClose={() => setShowComments(false)}
-        />
-      )}
-    </InfiniteScroll>
+    </div>
   );
 }

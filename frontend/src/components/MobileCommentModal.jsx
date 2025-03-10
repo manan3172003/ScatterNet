@@ -1,45 +1,79 @@
 /* eslint-disable react/prop-types */
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import getCookie from "../context/Cookie";
 import { X, Send, Heart } from "lucide-react";
-import "../assets/styles/mobile-comment-modal.css"
-import {motion} from "framer-motion"
+import "../assets/styles/mobile-comment-modal.css";
+import { motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
+
 export default function MobileCommentModal({ post, onClose }) {
     const [newComment, setNewComment] = useState("");
-    const [comments, setComments] = useState(post.comments.src);
+    const [comments, setComments] = useState(post.comments.src || []);
+    const [isMarkdown, setIsMarkdown] = useState(false);
+    const commentListRef = useRef(null);
+    
+    const { user } = useContext(AuthContext);
+    
    
-    const {user} = useContext(AuthContext)
-    useEffect(() => {}, [comments]); 
+    useEffect(() => {
+        fetchComments();
+    }, []);
     
-    const csrfToken = getCookie('csrftoken')
-    async function handleLike(commentId){
-        const response  = await fetch(`http://localhost:8000/api/like`,{
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken,
-            },
-            body: JSON.stringify({
-                "author_id": `${user.author_id}`,
-                "object":`${commentId}`,
-            }),
-            credentials: "include"
-        })
-        if (response.ok){
-            const newCommentsResponse = await fetch(`http://localhost:8000/api/posts/${post.id}`)
-            if (newCommentsResponse.ok){
-                let updatedComments = await newCommentsResponse.json()
-                setComments(updatedComments.comments.src)
-            }
-
+    // Scrolling to bottom when new comments are added 
+    useEffect(() => {
+        if (commentListRef.current) {
+            commentListRef.current.scrollTop = commentListRef.current.scrollHeight;
         }
+    }, [comments]);
     
+    const csrfToken = getCookie('csrftoken');
+    
+    
+    async function fetchComments() {
+        try {
+            const response = await fetch(`http://localhost:8000/api/posts/${post.id}/comments`);
+            if (response.ok) {
+                const data = await response.json();
+                setComments(data.src || []);
+            }
+        } catch (error) {
+            console.error("Something went wrong:", error);
+        }
     }
-    async function handleAddComment(e){
-        e.preventDefault()
-        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/commented`
-            , {
+    
+    async function handleLike(commentId) {
+        try {
+            const response = await fetch(`http://localhost:8000/api/like`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({
+                    "author_id": `${user.author_id}`,
+                    "object": `${commentId}`,
+                }),
+                credentials: "include"
+            });
+            
+            if (response.ok) {
+                // Once we like a comment we need to fetch the comments again to  get realtime updates
+                fetchComments();
+            }
+        } catch (error) {
+            console.error("Error liking comment:", error);
+        }
+    }
+    
+    async function handleAddComment(e) {
+        e.preventDefault();
+        if (!newComment.trim()) return;
+        
+        const contentType = isMarkdown ? "text/markdown" : "text/plain";
+        
+        try {
+            const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/commented`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -48,73 +82,123 @@ export default function MobileCommentModal({ post, onClose }) {
                 body: JSON.stringify({
                     "post": `${post.id}`,
                     "comment": `${newComment}`,
-                    "contentType": "text/plain",
+                    "contentType": contentType,
                 }),
                 credentials: "include",
-        })
-        if (response.ok){
-            const newCommentsResponse = await fetch(`http://localhost:8000/api/posts/${post.id}`)
-            if (newCommentsResponse.ok){
-                let updatedComments = await newCommentsResponse.json()
-                setComments(updatedComments.comments.src)
+            });
+            
+            if (response.ok) {
+                setNewComment("");
+                fetchComments();
             }
-
+        } catch (error) {
+            console.error("Error posting comment:", error);
         }
-      
-        }
+    }
     
-   
     return (
         <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="comment-modal"   
+            className="comment-modal"
         >
-           <div className="modal-header">
-                <h2>{post.title}</h2>
-                <button onClick={onClose} className="close-btn">
-                    <X className="icon"/>
+            <div className="modal-header">
+                <button onClick={onClose} className="back-btn">
+                    <X className="icon" />
                 </button>
-           </div>
-           <div className="comment-list">
-            {comments.map((comment) => (
+                <h2>Comments</h2>
+                <div className="header-spacer"></div>
+            </div>
+            
+            <div className="comment-list" ref={commentListRef}>
+                {comments.length > 0 ? (
+                    comments.map((comment) => (
                         <div key={comment.id} className="comment-item">
-                            <img 
-                                className="comment-pfp"
-                                src={comment.author.profileImageURL}
-                                alt={`${comment.author.displayName}'s profile`}
-                            />
-                            <div className="comment-content">
-                                <span className="comment-author">
-                                    {comment.author.displayName}
-                                </span>
-                                <p>{comment.comment}</p>
+                            <div className="comment-avatar">
+                                <img
+                                    className="comment-pfp"
+                                    src={comment.author.profileImageURL || `https://robohash.org/${comment.author.displayName}.png`}
+                                    
+                                />
+                            </div>
+                            <div className="comment-body">
+                                <div className="comment-content">
+                                    <span className="comment-author">
+                                        {comment.author.displayName}
+                                    </span>
+                                    {comment.contentType === "text/markdown" ? (
+                                        <ReactMarkdown>
+                                            {comment.comment}
+                                        </ReactMarkdown>
+                                    ) : (
+                                        <span className="comment-text">{comment.comment}</span>
+                                    )}
+                                </div>
+                                <div className="comment-meta">
+                                    <span className="comment-time">
+                                        {new Date(comment.published).toLocaleDateString(undefined, {
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </span>
+                                    <button className="like-btn" onClick={() => handleLike(comment.id)}>
+                                        {comment.likes.count > 0 ? `${comment.likes.count} likes` : "0 Likes"}
+                                    </button>
+                                   
+                                </div>
                             </div>
                             <div className="comment-actions">
-                                <Heart size={16} className="like-icon" onClick={() => handleLike(comment.id)} />
-                                <span className="like-count">{comment.likes.count} likes</span>
+                                <Heart
+                                    size={16}
+                                    className={`like-icon ${comment.likes.count > 0 ? 'liked' : ''}`}
+                                    onClick={() => handleLike(comment.id)}
+                                />
                             </div>
                         </div>
-            ))}
-           </div>
-           <div className="comment-input">
+                    ))
+                ) : (
+                    <div className="no-comments">
+                        <p>No comments yet. Be the first to comment!</p>
+                    </div>
+                )}
+            </div>
+            
+            <div className="comment-input-container">
+                <div className="format-toggle">
+                    <button
+                        type="button"
+                        className={`toggle-btn ${!isMarkdown ? 'active' : ''}`}
+                        onClick={() => setIsMarkdown(false)}
+                    >
+                        Plain Text
+                    </button>
+                    <button
+                        type="button"
+                        className={`toggle-btn ${isMarkdown ? 'active' : ''}`}
+                        onClick={() => setIsMarkdown(true)}
+                    >
+                        Markdown
+                    </button>
+                </div>
                 <form onSubmit={handleAddComment} className="comment-form">
                     <input
                         type="text"
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Add your comment here....."
+                        placeholder={`Add a comment for ${post.author.displayName}...`}
                         className="input-field"
                     />
-                    <button type="submit" className="send-btn">
-                        <Send className="icon"/>
+                    <button
+                        type="submit"
+                        className="send-btn"
+                        disabled={!newComment.trim()}
+                    >
+                        <Send className="icon" />
                     </button>
-
                 </form>
-           </div>
+            </div>
         </motion.div>
-        
-    )
+    );
 }
