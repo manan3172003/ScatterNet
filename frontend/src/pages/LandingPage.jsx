@@ -72,7 +72,7 @@ export default function LandingPage(){
                     password: formData.password,
                     github: formData.github || null,
                     displayName: formData.displayName,
-                    profileImageURL: formData.profileImageURL || null,
+                    profileImageURL: formData.profileImageURL || `https://robohash.org/${formData.displayName}.png`,
                 }),
                 credentials: "include"
             })

@@ -125,7 +125,7 @@ export default function DesktopCommentModal({ post, onClose }) {
                                     <div key={comment.id} className="desktop-comment-item">
                                         <img
                                             className="desktop-comment-avatar"
-                                            src={comment.author.profileImageURL}
+                                            src={comment.author.profileImageURL || `https://robohash.org/${comment.author.displayName}.png`}
                                             
                                         />
                                         <div className="desktop-comment-content">
