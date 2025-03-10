@@ -14,6 +14,7 @@ import PostingPage from "./pages/PostingPage";
 import ProfileRedirect from "./components/ProfileRedirect";
 import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
+import AuthorsList from "./components/AuthorsList.jsx";
 
 import EditProfilePage from "./pages/EditProfilePage";
 
@@ -30,27 +31,14 @@ function App() {
 
         <Route element={<LayoutWithNavbar />}>
           {/* Routes nested in here have the Navbar */}
-          <Route
-            path="/home"
-            element={<ProtectedRoute element={<HomePage />} />}
-          />
-          <Route
-            path="/profile"
-            element={<ProtectedRoute element={<ProfileRedirect />} />}
-          />
-          <Route
-            path="/editProfile"
-            element={<ProtectedRoute element={<EditProfilePage />} />}
-          />
-          <Route
-            path="/post"
-            element={<ProtectedRoute element={<PostingPage />} />}
-          />
-          <Route path="/authors/:authorId" element={<UserProfile />} />
-          <Route
-            path="/authors/:authorId/posts/:postId"
-            element={<PublicPostPage />}
-          />
+          <Route path="/home" element={<ProtectedRoute element={<HomePage />} />}/>
+          <Route path="/profile" element={<ProtectedRoute element={<ProfileRedirect />} />}/>
+          <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
+          <Route path="/editProfile" element={<ProtectedRoute element={<EditProfilePage />} />}/>
+          <Route path="/requests" element={<ProtectedRoute element={<AuthorsList />} />}/>
+          <Route path="/authors/:authorId" element={<UserProfile/>} />
+          <Route path="/authors/:authorId/posts/:postId" element={<PublicPostPage />}/>
+
           {/* Admin Routes only accessible to admins */}
           <Route
             path="/admin"
