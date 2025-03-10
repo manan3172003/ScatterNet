@@ -4,6 +4,10 @@ import React, { useState, useRef } from "react";
 import {getCookie, fetchUserData} from "../utils/utils.js";
 import { useLocation } from 'react-router-dom';
 export default function EditPostPage(){
+
+    const [base64Data, setBase64] = useState(""); 
+    const [fileName, setFileName] = useState(""); 
+
    
     const previewMethodsRef = useRef();
 
@@ -21,6 +25,46 @@ export default function EditPostPage(){
 
     const [formData, setFormData] = useState(initialData)
 
+    async function handleFile(e) {
+        const selectedFile = e.target.files[0];
+
+    
+        if (!selectedFile) {
+            console.error("No file selected!");
+            return;
+        }
+        console.log('File being processed:', selectedFile);
+    
+        try {
+            setFileName(selectedFile.name);
+            const base64string = await convertToBase64(selectedFile);
+            setBase64(base64string .split(",")[1]);
+            console.log('Base64 String: ', base64string);
+    
+        } catch (error) {
+            console.error('Error converting file to Base64: ', error);
+        }
+    }
+
+    function convertToBase64(selectedFile) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            console.log('File being processed:', selectedFile);
+            console.log('Reader result at load:', reader.result);
+    
+            reader.onload = function() {
+                console.log('called: ', reader);
+                resolve(reader.result); 
+            };
+    
+            reader.onerror = function(error) {
+                reject(error); 
+            };
+    
+            reader.readAsDataURL(selectedFile);
+        });
+    }
+
 
     function handleChange(e){
       setFormData({
@@ -31,6 +75,16 @@ export default function EditPostPage(){
       console.log(formData)
 
     }
+    function handleDropdownChange(e){
+        setFormData({
+          ...formData,
+          [e.target.name]:e.target.value,
+          content:""
+          
+        })
+        console.log(formData)
+  
+      }
     
     async function handleEdit(e){
         e.preventDefault()
@@ -39,10 +93,19 @@ export default function EditPostPage(){
             alert("Please select a valid option!");
             return;
           }
-        
-          console.log(formData)
 
-        try {
+          try {
+            let content = "";
+
+            if (formData.contentType.includes("base64")) {
+                content = base64Data; 
+            } else {
+                content = formData.content;
+            }
+            
+              console.log(formData)
+              console.log(base64Data)
+
             let resp = await fetchUserData();
             let AUTHOR_SERIAL = resp.user.author_id
             let csrfToken = getCookie('csrftoken');
@@ -58,7 +121,7 @@ export default function EditPostPage(){
                     title: formData.title,
                     description: formData.description,
                     contentType: formData.contentType || null,
-                    content: formData.content || null,
+                    content: content || null,
                     visibility: formData.visibility,
                 }),
                 credentials: "include"
@@ -108,13 +171,13 @@ export default function EditPostPage(){
                             <textarea name="description" placeholder="Enter the description of your post" required onChange={handleChange} value={formData.description}/>
                             
                             <label className="form-label">Content Type</label>
-                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleChange}>
-                                <option value="">Select...</option>
+                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
+                                {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
-                                {/* <option value="image/png;base64">Image (png)</option>
+                                <option value="image/png;base64">Image (png)</option>
                                 <option value="image/jpeg;base64">Image (jpeg)</option>
-                                <option value="application/base64">Image </option> */}
+                                <option value="application/base64">Image </option> 
 
                             </select>
                               {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
@@ -130,8 +193,9 @@ export default function EditPostPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleChange} value={formData.content}/>
-                            
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleFile} value={formData.content}/>
+                                 {fileName && <p>Selected File: {fileName}</p>} 
+
                                 </>
                             )}
                            
