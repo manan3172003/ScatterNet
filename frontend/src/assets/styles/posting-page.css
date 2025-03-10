@@ -51,6 +51,10 @@
     height: 3em;
 
   }
+
+  input[type='file'] {
+    color:  #1e293b
+  }
   
  select {
    
