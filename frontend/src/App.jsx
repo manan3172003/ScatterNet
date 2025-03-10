@@ -45,12 +45,6 @@ function App() {
             element={<AdminProtectedRoute element={<AdminPage />} />}
           />{" "}
         </Route>
-
-        {/* Public Routes Go Here */}
-        <Route
-          path="/authors/:authorId/posts/:postId"
-          element={<PublicPostPage />}
-        />
       </Routes>
     </Router>
   );
