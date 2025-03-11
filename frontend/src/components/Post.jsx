@@ -11,13 +11,13 @@ import getCookie from "../context/Cookie"
 import { getAuthorRelationship, handleFollowRequest } from "../utils/followApi.js";
 import { getAuthorObject } from "../utils/utils.js";
 
-export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false }) {
+export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh }) {
   const { user } = useContext(AuthContext)
   const csrfToken = getCookie('csrftoken')
   const [likeCount, setLikeCount] = useState(post.likes.count)
   const [commentCount, setCommentCount] = useState(post.comments.count)
   const [hasLiked, setLikes] = useState(false) // Default to false
-  const [authorsRelationship, setAuthorsRelationship] = useState("Same Author");
+  const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
 
   // This state is going keep track of whether or not the post has been expanded since by default we truncate excess text 
   const [expanded, setExpanded] = useState(false)
