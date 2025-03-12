@@ -1,13 +1,14 @@
 FROM python:3.12-alpine
 
-
 WORKDIR /frontend
 
 RUN apk update && apk add --no-cache nodejs npm
 
-COPY ./frontend /frontend/
+COPY ./frontend/package*.json /frontend/
 
 RUN npm install
+
+COPY ./frontend /frontend/
 
 RUN npm run build
 
