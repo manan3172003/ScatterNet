@@ -6,7 +6,7 @@ import "../assets/styles/post.css"
 import ContentRenderer from "../components/ContentRenderer"
 import { useNavigate } from 'react-router-dom';
 import { useContext, useEffect } from "react"
-import { Heart, MessageCircle, Share2, Globe, Lock, Calendar, Link } from "lucide-react"
+import { Heart, MessageCircle, Share2, Globe, Lock, Trash, Calendar, Link } from "lucide-react"
 import getCookie from "../context/Cookie"
 import { getAuthorRelationship, handleFollowRequest } from "../utils/followApi.js";
 import { getAuthorObject } from "../utils/utils.js";
@@ -188,8 +188,11 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
               <Globe size={16} className="visibility-icon public" title="Public" />
             ) : post.visibility === "FRIENDS" ? (
               <Lock size={16} className="visibility-icon private" title="Private" />
-            ) : (
-              <Link size={16} className="visibility-icon unlisted" title="Unlisted" />)}
+            ) : post.visibility === "UNLISTED" ? (
+              <Link size={16} className="visibility-icon unlisted" title="Unlisted" />
+            ) : post.visibility === "DELETED" ? (
+              <Trash size={16} className="visibility-icon deleted" title="Deleted" />
+            ) : null}
           </div>
         </div>
 
