@@ -8,10 +8,6 @@ COPY ./frontend/package*.json /frontend/
 
 RUN npm install
 
-COPY ./frontend /frontend/
-
-RUN npm run build
-
 WORKDIR /backend
 
 # Environment settings
@@ -22,6 +18,14 @@ ENV PYTHONUNBUFFERED 1
 COPY ./backend/requirements.txt /backend/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
+
+WORKDIR /frontend
+
+COPY ./frontend /frontend/
+
+RUN npm run build
+
+WORKDIR /backend
 
 # Copy backend code
 COPY ./backend /backend/

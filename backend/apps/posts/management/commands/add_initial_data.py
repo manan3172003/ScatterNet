@@ -235,4 +235,158 @@ class Command(BaseCommand):
             visibility='DELETED'
         )
 
+        user1_post1_comment1 = Comment.objects.create(
+            author=user1_author,
+            comment="# Im commenting on my first post.",
+            contentType='text/markdown',
+            id_url='http://localhost:8000/api/authors/2/commented/1',
+            post = user1_post_1
+        )
+
+        user2_post1_comment2 = Comment.objects.create(
+            author=user2_author,
+            comment="# Im commenting on john's first post.",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/3/commented/2',
+            post = user1_post_1
+        )
+
+        user3_post1_comment3 = Comment.objects.create(
+            author=user3_author,
+            comment="Im commenting on John's first post too.",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/4/commented/3',
+            post = user1_post_1
+        )
+
+        user1_post2_comment4 = Comment.objects.create(
+            author=user1_author,
+            comment="Im commenting on my second post now.",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/2/commented/4',
+            post=user1_post_2
+        )
+
+        user2_post2_comment5 = Comment.objects.create(
+            author=user2_author,
+            comment="# Im commenting on john's second post.",
+            contentType='text/markdown',
+            id_url='http://localhost:8000/api/authors/3/commented/5',
+            post=user1_post_2
+        )
+
+        user3_post1_comment3 = Comment.objects.create(
+            author=user3_author,
+            comment="Im commenting on John's second post too.",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/4/commented/6',
+            post=user1_post_2
+        )
+
+        user1_post3_comment7 = Comment.objects.create(
+            author=user1_author,
+            comment="Im tired of commenting on my own posts :(",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/2/commented/7',
+            post=user1_post_3
+        )
+
+        user2_post3_comment8 = Comment.objects.create(
+            author=user2_author,
+            comment="Please stop posting john ion wanna comment no more.",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/3/commented/8',
+            post=user1_post_3
+        )
+
+        user3_post3_comment9 = Comment.objects.create(
+            author=user3_author,
+            comment="Go kys john.",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/4/commented/9',
+            post=user1_post_3
+        )
+
+        user1_post4_comment10 = Comment.objects.create(
+            author=user1_author,
+            comment="Go kys jacob.",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/2/commented/10',
+            post=user1_post_4
+        )
+
+        user2_post4_comment11 = Comment.objects.create(
+            author=user2_author,
+            comment="Go kys jacob.",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/3/commented/11',
+            post=user1_post_4
+        )
+
+        user3_post4_comment12 = Comment.objects.create(
+            author=user3_author,
+            comment="mannnnn",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/4/commented/12',
+            post=user1_post_4
+        )
+
+        user1_post7_comment13 = Comment.objects.create(
+            author=user1_author,
+            comment="I wont even keep you-",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/2/commented/13',
+            post=user1_post_7
+        )
+
+        user2_post7_comment14 = Comment.objects.create(
+            author=user2_author,
+            comment="I wont invite you to my second birthday party",
+            contentType='text/plain',
+            id_url='http://localhost:8000/api/authors/3/commented/14',
+            post=user1_post_7
+        )
+
+        user1_post1_like = Like.objects.create(
+            author=user1_author,
+            id_url='http://localhost:8000/api/authors/2/liked/1',
+            object=user1_post_1.id_url,
+        )
+
+        user2_post1_like = Like.objects.create(
+            author=user2_author,
+            id_url='http://localhost:8000/api/authors/3/liked/2',
+            object=user1_post_1.id_url,
+        )
+
+        user3_post1_like = Like.objects.create(
+            author=user3_author,
+            id_url='http://localhost:8000/api/authors/4/liked/3',
+            object=user1_post_1.id_url,
+        )
+
+        user1_post2_like = Like.objects.create(
+            author=user1_author,
+            id_url='http://localhost:8000/api/authors/2/liked/4',
+            object=user1_post_2.id_url,
+        )
+
+        user2_post2_like = Like.objects.create(
+            author=user2_author,
+            id_url='http://localhost:8000/api/authors/3/liked/5',
+            object=user1_post_2.id_url,
+        )
+
+        user3_post2_like = Like.objects.create(
+            author=user3_author,
+            id_url='http://localhost:8000/api/authors/4/liked/6',
+            object=user1_post_2.id_url,
+        )
+
+        admin_author_comment10_like = Like.objects.create(
+            author=admin_author,
+            id_url='http://localhost:8000/api/authors/1/liked/7',
+            object=user1_post4_comment10.id_url,
+        )
+
         self.stdout.write(self.style.SUCCESS('Successfully added users and authors'))
