@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
     AuthProvider.propTypes = {
         children: PropTypes.node.isRequired, 
       };  
-    const csrfToken = getCookie('csrftoken')
+    const [csrfToken, setToken] = useState(getCookie('csrftoken'));
     const [user, setUser] = useState(null);
     const fetchUserData = async () => {
         try {
@@ -25,13 +25,16 @@ export const AuthProvider = ({ children }) => {
 
             if (response.ok) {
                 const data = await response.json();
-                setUser(data.user); 
+                setUser(data.user);
+                setToken(getCookie('csrftoken'));
             } else {
-                setUser(null); 
+                setUser(null);
+                setToken(getCookie('csrftoken'));
             }
         } catch (error) {
             console.error("Error fetching user data:", error);
             setUser(null);
+            setToken(getCookie('csrftoken'));
         }
     };
     useEffect(() => {
@@ -59,14 +62,17 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
             
             if (response.ok) {
+                fetchUserData();
                 if (data.user.is_node_admin) {
                      document.cookie = "isAdmin=true; path=/;";
                 } else {
                     document.cookie = "isAdmin=false; path=/;";
                 }
                 setUser(data.user);
+                setToken(getCookie('csrftoken'));
             } else {
                 setUser(null);
+                setToken(getCookie('csrftoken'));
                 throw new Error(response.status); 
             }
             
