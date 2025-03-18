@@ -7,12 +7,12 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('username', 'password', 'displayName', 'host', 'github', 'profileImageURL', 'page')
+        fields = ('username', 'password', 'displayName', 'host', 'github', 'profileImage', 'page')
         #this will also need to be cleaned up later when we finalize the host stuff
         extra_kwargs = {
             'host': {'required': False, 'allow_null': True},
             'github': {'required': False, 'allow_null': True},
-            'profileImageURL': {'required': False, 'allow_null': True},
+            'profileImage': {'required': False, 'allow_null': True},
             'page': {'required': False, 'allow_null': True},
         }
 
@@ -47,16 +47,21 @@ class AuthorSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField(read_only=True)
     state = serializers.CharField(read_only=True)
     username = serializers.CharField(read_only=True)
+    serial = serializers.SerializerMethodField(read_only=True)
+
 
     class Meta:
         model = Author
-        fields = ('type', 'id', 'host', 'displayName', 'github', 'profileImageURL', 'page', 'state', 'username')
+        fields = ('serial', 'type', 'id', 'host', 'displayName', 'github', 'profileImage', 'page', 'state', 'username')
 
     def get_id(self, obj):
         return obj.id_url
 
     def get_type(self, obj):
         return "author"
+
+    def get_serial(self, obj):
+        return obj.id
 
     #overrides conditional representation, we remove the state if it isnt a node admin requesting it
     def to_representation(self, instance):
@@ -76,7 +81,7 @@ class AuthorUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('type', 'id', 'username', 'host', 'displayName', 'github', 'profileImageURL', 'page', 'state')
+        fields = ('type', 'id', 'username', 'host', 'displayName', 'github', 'profileImage', 'page', 'state')
         extra_kwargs = {
             'displayName': {'required': False}, #not necessary to update it p much
             'state': {'required': False} #so users can also update other stuff
