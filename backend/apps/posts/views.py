@@ -61,6 +61,9 @@ def get_author_post(request, auth_id, post_id):
         return Response({"error": "Author not found"}, status=status.HTTP_404_NOT_FOUND)
     post = get_object_or_404(Post, id=post_id)
 
+    if author.id != post.author.id:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
     if has_post_access(request.user, post):
         return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
     else:
@@ -247,9 +250,16 @@ class ImagePostsView(RetrieveAPIView):
 
 
         elif 'author_serial' in self.kwargs and 'post_serial' in self.kwargs:
-            author_fqid = self.kwargs['author_serial']
+            author_serial = self.kwargs['author_serial']
             post_serial = self.kwargs['post_serial']
             post = get_object_or_404(Post, id=post_serial)
+            author = get_object_or_404(Author, id=author_serial)
+
+            if author.state != "ACTIVE":
+                return Response({"error": "Author not found"}, status=status.HTTP_404_NOT_FOUND)
+            if author.id != post.author.id:
+                return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
             return self.helper_filter(post)
 
 
