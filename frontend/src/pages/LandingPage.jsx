@@ -14,7 +14,7 @@ export default function LandingPage(){
         username: "",
         password: "",
         confirmPassword: "",
-        profileImageURL: null, 
+        profileImage: null,
         displayName:""
     })    
     // State for keeping track of notifications
@@ -72,7 +72,7 @@ export default function LandingPage(){
                     password: formData.password,
                     github: formData.github || null,
                     displayName: formData.displayName,
-                    profileImageURL: formData.profileImageURL || `https://robohash.org/${formData.displayName}.png`,
+                    profileImage: formData.profileImage || `https://robohash.org/${formData.displayName}.png`,
                 }),
                 credentials: "include"
             })
@@ -87,7 +87,7 @@ export default function LandingPage(){
                     email: "",
                     password: "",
                     confirmPassword: "",
-                    profileImageURL: null,
+                    profileImage: null,
                     displayName: "",
                 })
             } else if (response.status === 400 && data.username) {
@@ -195,7 +195,7 @@ export default function LandingPage(){
                             <input type="url" name="github" placeholder="A link to your Github Profile" onChange={handleChange} value={formData.github}/>
 
                             <label className="form-label">Profile Image Url</label>
-                            <input type="url" name="profileImageURL" placeholder="A link to your Profile picture" onChange={handleChange} value={formData.profileImageURL}/>
+                            <input type="url" name="profileImage" placeholder="A link to your Profile picture" onChange={handleChange} value={formData.profileImage}/>
                             
                             <label className="form-label">Password</label>
                             <input type="password" name="password" required onChange={handleChange} value={formData.password}/>

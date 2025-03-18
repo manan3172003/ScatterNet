@@ -14,7 +14,6 @@ class PostSerializer(serializers.ModelSerializer):
     page = serializers.URLField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
     author = serializers.SerializerMethodField(read_only=True)
-    # author = AuthorSerializer(read_only=True)
     comments = serializers.SerializerMethodField(read_only=True)
     likes = serializers.SerializerMethodField(read_only=True)
     published = serializers.DateTimeField(read_only=True, default=None)
@@ -93,15 +92,16 @@ class PostSerializer(serializers.ModelSerializer):
         return paginator.get_paginated_response(serializer.data).data
 
 class LikeSerializer(serializers.ModelSerializer):
+    serial = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
     id = serializers.SerializerMethodField(read_only=True)
-    author = AuthorSerializer(read_only=True)
+    author = serializers.SerializerMethodField(read_only=True)
     published = serializers.DateTimeField(read_only=True)
     object = serializers.URLField(read_only=True)
 
     class Meta:
         model = Like
-        fields = ['type', 'author', 'published', 'id', 'object']
+        fields = ['serial', 'type', 'author', 'published', 'id', 'object']
 
     def get_id(self, obj):
         return obj.id_url
@@ -109,10 +109,17 @@ class LikeSerializer(serializers.ModelSerializer):
     def get_type(self, obj):
         return "like"
 
+    def get_serial(self, obj):
+        return obj.id
+
+    def get_author(self, obj):
+        return AuthorSerializer(obj.author).data
+
 class CommentSerializer(serializers.ModelSerializer):
+    serial = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
     id = serializers.SerializerMethodField(read_only=True)
-    author = AuthorSerializer(read_only=True)
+    author = serializers.SerializerMethodField(read_only=True)
     published = serializers.DateTimeField(read_only=True)
     comment = serializers.CharField(read_only=True)
     contentType = serializers.CharField(read_only=True)
@@ -121,7 +128,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['type', 'author', 'comment', 'contentType', 'published', 'id', 'post', 'likes']
+        fields = ['serial', 'type', 'author', 'comment', 'contentType', 'published', 'id', 'post', 'likes']
 
     def get_id(self, obj):
         return obj.id_url
@@ -131,6 +138,12 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_post(self, obj):
         return obj.post.id_url
+
+    def get_serial(self, obj):
+        return obj.id
+
+    def get_author(self, obj):
+        return AuthorSerializer(obj.author).data
 
     def get_likes(self, obj):
         #can pass context to serializer if needed for future permissions.

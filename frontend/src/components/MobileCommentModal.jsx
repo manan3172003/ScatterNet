@@ -119,7 +119,7 @@ export default function MobileCommentModal({ post, onClose }) {
                             <div className="comment-avatar">
                                 <img
                                     className="comment-pfp"
-                                    src={comment.author.profileImageURL || `https://robohash.org/${comment.author.displayName}.png`}
+                                    src={comment.author.profileImage || `https://robohash.org/${comment.author.displayName}.png`}
                                     
                                 />
                             </div>
