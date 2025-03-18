@@ -40,7 +40,7 @@ def get_post(request, url_id):
     """
     context = {'request': request}
     decoded_url = unquote(url_id)
-    post = get_object_or_404(Post, id=decoded_url)
+    post = get_object_or_404(Post, id_url=decoded_url)
 
     if has_post_access(request.user, post):
         return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
