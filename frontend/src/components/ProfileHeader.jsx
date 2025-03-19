@@ -1,7 +1,5 @@
-import editBtn from "../assets/icons/edit.png";
 import { UserContext } from "../pages/UserProfile";
 import { useContext, useState, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
 import {useNavigate, useParams} from "react-router-dom";
 import { Link } from "react-router";
 import {getAuthorRelationship, getFollowers, getFollowing, handleFollowRequest} from "../utils/followApi.js";
@@ -48,7 +46,7 @@ export default function ProfileHeader() {
 
   async function fetchFollowStatus() {
     // TODO: otherAuthor is just the author id atm, will need tweaks eventually?
-    const relationship = await getAuthorRelationship(authorId);
+    const relationship = await getAuthorRelationship(user);
     setAuthorsRelationship(relationship);
   }
 
@@ -88,7 +86,7 @@ export default function ProfileHeader() {
   }
 
   async function handleNavigation(mode) {
-    navigate(`/${mode}`);
+    navigate(`/authors/${authorId}/${mode}`);
   }
 
   return (

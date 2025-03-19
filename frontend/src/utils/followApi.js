@@ -2,23 +2,17 @@ import {getCookie, fetchUserData, getAuthorObject} from "./utils.js";
 
 export async function getAuthorRelationship(otherAuthor){
     let {user: user} = await fetchUserData();
-
-    // TODO: In the profile header, we are only passed the author id, so we need to get the author object
-    if (typeof otherAuthor !== "object") {
-        // Since getAuthorObject expects an object with a field of author_id, just make the author id into an object
-        otherAuthor = {author_id: otherAuthor};
-        otherAuthor = await getAuthorObject(otherAuthor);
-    }
+    user = await getAuthorObject(user);
 
     // First condition is when we pass the whole author object
     // second is when we have the otherAuthor's author id (e.g., ProfileHeader)
-    if (user.displayName === otherAuthor.displayName || user.author_id.toString() === otherAuthor.id) {
+    if (user.displayName === otherAuthor.displayName) {
         return "Same Author";
     }
 
     try {
         // Check if other author is in following list of user
-        const followerResponse = await fetch(`http://localhost:8000/api/authors/${user.author_id}/following?isPending=false`);
+        const followerResponse = await fetch(`http://localhost:8000/api/authors/${user.serial}/following?isPending=false`);
         const followerData = await followerResponse.json();
 
         if (followerData.following.some(author => author.id === otherAuthor.id)) {
@@ -26,7 +20,7 @@ export async function getAuthorRelationship(otherAuthor){
         }
 
         // Check if there is a pending request to other author
-        const followReqResponse = await fetch(`http://localhost:8000/api/authors/${user.author_id}/following?isPending=true`);
+        const followReqResponse = await fetch(`http://localhost:8000/api/authors/${user.serial}/following?isPending=true`);
         const followReqData = await followReqResponse.json();
 
         if (followReqData.following.some(author => author.id === otherAuthor.id)) {
@@ -47,7 +41,7 @@ export async function handleFollowRequest(user, otherAuthor, authorsRelationship
         let newRelationship = authorsRelationship;
         let method = authorsRelationship === "Following" ? "DELETE" : "PUT";
 
-        const response = await fetch(`http://localhost:8000/api/authors/${otherAuthor}/followers/${user.id}`, {
+        const response = await fetch(`http://localhost:8000/api/authors/${otherAuthor.serial}/followers/${user.id}`, {
             method,
             credentials: "include",
             headers: {
@@ -117,7 +111,7 @@ export async function handleRespondingToFollowRequest(user, otherAuthor, authorR
     try {
         let method = authorResponse === "Accept" ? "PUT" : "DELETE";
 
-        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/followers/${otherAuthor.id}`, {
+        const response = await fetch(`http://localhost:8000/api/authors/${user.serial}/followers/${otherAuthor.id}`, {
             method,
             credentials: "include",
             headers: {

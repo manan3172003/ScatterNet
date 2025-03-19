@@ -72,14 +72,8 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
 
   // WE DONT HAVE A WAY TO CANCEL FOLLOW REQS, not in spec either
   async function handleFollow() {
-
-    // TODO: REMOVE THIS BEABADOBEE NEXT SPLIT, ONLY WORKS LOCALLY, LETS THINK OF SMT
-    const parts = post.author.id.split("/");
-    const postAuthorId = parts[parts.length - 1];
-
     const userAuthor = await getAuthorObject(user);
-
-    const newRelationship = await handleFollowRequest(userAuthor, postAuthorId, authorsRelationship);
+    const newRelationship = await handleFollowRequest(userAuthor, post.author, authorsRelationship);
     setAuthorsRelationship(newRelationship);
 
     if (onRefresh) {

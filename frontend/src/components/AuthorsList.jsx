@@ -8,57 +8,68 @@ import {
   handleRespondingToFollowRequest
 } from "../utils/followApi.js";
 import {AuthContext} from "../context/AuthContext.jsx";
-import {getAuthorObject} from "../utils/utils.js";
-import {useNavigate} from "react-router-dom";
+import {getAuthorObject, getAuthorObjectById} from "../utils/utils.js";
+import {useNavigate, useParams} from "react-router-dom";
 
 export default function AuthorsList({ chosenMode }) {
     const { user } = useContext(AuthContext);
     const [authors, setAuthors] = useState([]);
+    const [sameAuthor, setSameAuthor] = useState(false);
     const navigate = useNavigate();
+    const { authorId } = useParams();
 
   async function fetchAuthors() {
-    const currAuthor = await getAuthorObject(user);
+    try {
+      const currAuthor = authorId
+        ? await getAuthorObjectById(authorId)
+        : await getAuthorObject(user);
 
-      if (chosenMode === "Requests") {
-        const fetchedAuthors = await getFollowRequests(currAuthor);
-        setAuthors(fetchedAuthors.followers || []);
-      }
-      else if (chosenMode === "Following") {
-        const fetchedAuthors = await getFollowing(currAuthor);
-        setAuthors(fetchedAuthors.following || []);
-      }
-      else if (chosenMode === "Followers") {
-        const fetchedAuthors = await getFollowers(currAuthor);
-        setAuthors(fetchedAuthors.followers || []);
-      }
-  }
+    const relationship = await getAuthorRelationship(currAuthor);
+    await console.log(user, currAuthor, relationship, "te");
+    setSameAuthor(relationship === "Same Author");
 
-  // When we are in the followers/following mode
-  async function handleModeChange(newMode) {
-    navigate(`/${newMode.toLowerCase()}`);
+    let fetchedAuthors = [];
+    if (chosenMode === "Requests") {
+      fetchedAuthors = (await getFollowRequests(currAuthor)).followers || [];
+    }
+    else if (chosenMode === "Following") {
+      fetchedAuthors = (await getFollowing(currAuthor)).following || [];
+    }
+    else if (chosenMode === "Followers") {
+      fetchedAuthors = (await getFollowers(currAuthor)).followers || [];
+    }
+
+    setAuthors(fetchedAuthors);
+    }
+    catch (error) {
+      console.error("Error fetching authors:", error);
+      setAuthors([]);
+    }
   }
 
   useEffect(() => {
       fetchAuthors();
-  }, [chosenMode]);
+  }, [authorId, chosenMode]);
 
   async function handleUnfollow(otherAuthor){
-    // TODO: remove this someday
-    const parts = otherAuthor.id.split("/");
-    const otherAuthorId = parts[parts.length - 1];
-
     const currAuthor = await getAuthorObject(user);
-    await handleFollowRequest(currAuthor, otherAuthorId, "Following");
+    await handleFollowRequest(currAuthor, otherAuthor, "Following");
 
     // Fetch latest data when an unfollow happens
     await fetchAuthors();
   }
 
   async function handleResponseToFollowRequest(otherAuthor, authorResponse) {
-    await handleRespondingToFollowRequest(user, otherAuthor, authorResponse);
+    let currAuthor = await getAuthorObject(user);
+    await handleRespondingToFollowRequest(currAuthor, otherAuthor, authorResponse);
 
     // Make the component re-render
     await fetchAuthors();
+  }
+
+  // When we are in the followers/following mode
+  async function handleModeChange(newMode) {
+    navigate(`/authors/${authorId}/${newMode.toLowerCase()}`);
   }
 
   return (
@@ -113,7 +124,7 @@ export default function AuthorsList({ chosenMode }) {
                             Reject
                           </button>
                         </>
-                      ) : chosenMode === "Following" ? (
+                      ) : chosenMode === "Following" && sameAuthor ? (
                           <button
                               className="btn-action btn-unfollow"
                               onClick={() => handleUnfollow(author)}
