@@ -11,7 +11,7 @@ export default function ProfileHeader() {
   const user = useContext(UserContext);
   const [currentUser, setCurrentUser] = useState();
   const [isOwner, setIsOwner] = useState(null);
-  const [authorsRelationship, setAuthorsRelationship] = useState("Same Author");
+  const [authorsRelationship, setAuthorsRelationship] = useState("");
   const { authorId } = useParams();
   //const { currentUser } = useContext(AuthContext);
   const fetchUserData = async () => {
@@ -71,35 +71,39 @@ export default function ProfileHeader() {
     <div className="profile-header">
       <div class="cover-wrapper">
         <div class="info-wrapper">
-          <div class="info-subwrapper">
-            <img id="profile-image" src={user.profileImage || `https://robohash.org/${user.displayName}.png`} />
-            <div class="info-names-wrapper">
-              <p id="displayname">{user.displayName}</p>
-              <div class="info-names-subwrapper">
-                <a id="github" href={user.github}>
-                  Github
-                </a>
+          <div className="info-subwrapper">
+            <img id="profile-image" src={user.profileImage || `https://robohash.org/${user.displayName}.png`}/>
+
+            <div className="name-follow-container">
+              <div className="info-names-wrapper">
+                <p id="displayname">{user.displayName}</p>
+                {!isOwner && (
+                  <button
+                      className="button"
+                      onClick={handleFollow}
+                      disabled={authorsRelationship === "Requested"
+                      }>
+                    <p>{authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}</p>
+                  </button>
+              )}
+              {isOwner && (
+                  <Link to="/editProfile" className="link-button">
+                      <p>Edit Profile</p>
+                  </Link>
+              )}
+              </div>
+
+              <div id="follow-info">
+                <div className="follow-data">
+                  <span>1000</span>
+                  <button>Followers</button>
+                </div>
+                <div className="follow-data">
+                  <span>1200</span>
+                  <button>Following</button>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="buttons-wrapper">
-            {!isOwner && (
-              <button
-                  className="button"
-                  id="follow-btn"
-                  onClick={handleFollow}
-                  disabled={authorsRelationship === "Requested"
-              }>
-                <p>{authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}</p>
-              </button>
-            )}
-            {isOwner && (
-              <Link to="/editProfile" id="edit-btn">
-                <div class="button" id="edit-btn">
-                  <p>edit profile</p>
-                </div>
-              </Link>
-            )}
           </div>
         </div>
       </div>
