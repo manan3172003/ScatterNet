@@ -16,7 +16,7 @@ class Author(models.Model):
     github = models.URLField(default=None, blank=True, null=True)
     profileImage = models.URLField(default=None, blank=True, null=True)
     page = models.URLField(default=None, blank=True, null=True) #this too
-    # basically we'll use this in the future to identify whether or not our current Author is from another node
+    # basically we'll use this in the future to identify whether our current Author is from another node
     is_local = models.BooleanField(default=True)
     username = models.CharField(max_length=128, unique=True)
 
