@@ -1,4 +1,3 @@
-# TODO: Cleanup this file for example make validations cleaner and replace try excepts with get_object_or_404
 from urllib.parse import unquote
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -11,8 +10,7 @@ from rest_framework import status
 from .models import Post, Like, Comment
 from .serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentCreateSerializer
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
-
-
+from .validations import has_post_access, can_access_comment
 from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
 from ..utils.helper import are_friends, follows, merge_sorted_post_lists
@@ -42,29 +40,13 @@ def get_post(request, url_id):
     """
     context = {'request': request}
     decoded_url = unquote(url_id)
-    try:
-        post = Post.objects.get(id_url=decoded_url)
-    except Post.DoesNotExist:
-        return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+    post = get_object_or_404(Post, id_url=decoded_url)
 
-    if post.visibility in ["PUBLIC", "UNLISTED"]:
+    if has_post_access(request.user, post):
         return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
-
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
-        elif post.visibility == "DELETED":
-            return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
-        elif request.user.author_profile.id == post.author.id or are_friends(request.user.author_profile.id, post.author.id):
-            return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'This post cannot be accessed.'}
-                            , status=status.HTTP_403_FORBIDDEN)
-    elif post.visibility != "DELETED":
-        return Response({'error': 'This post cannot be accessed.'}
-                        , status=status.HTTP_403_FORBIDDEN)
     else:
-        return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+        raise PermissionDenied
+
 
 """
 http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
@@ -72,37 +54,20 @@ http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
 GETs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
 if the caller has permissions
 """
-
 def get_author_post(request, auth_id, post_id):
     context = {'request': request}
-    try:
-        author = Author.objects.get(id=auth_id)
-        if author.state != "ACTIVE":
-            return Response({"error": "Author not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Author.DoesNotExist:
+    author = get_object_or_404(Author, id=auth_id)
+    if author.state != "ACTIVE":
         return Response({"error": "Author not found"}, status=status.HTTP_404_NOT_FOUND)
+    post = get_object_or_404(Post, id=post_id)
 
-    try:
-        post = Post.objects.get(id=post_id)
-    except Post.DoesNotExist:
+    if author.id != post.author.id:
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    if post.visibility in ["PUBLIC", "UNLISTED"]:
+    if has_post_access(request.user, post):
         return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
-
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
-        elif post.visibility == "DELETED":
-            return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
-        elif request.user.author_profile.id == post.author.id or are_friends(request.user.author_profile.id, post.author.id):
-            return Response(PostSerializer(post, context=context).data, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'This post cannot be accessed.'})
-    elif post.visibility != "DELETED":
-        return Response({'error': 'This post cannot be accessed.'})
     else:
-        return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+        raise PermissionDenied
 
 
 """
@@ -111,7 +76,6 @@ http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
 PUTs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
 if the caller has permissions (Caller needs to be author AUTHOR_SERIAL or node admin)
 """
-
 def put_author_post(request, auth_id, post_id):
     context = {'request': request}
     if not request.user.is_authenticated:
@@ -120,10 +84,7 @@ def put_author_post(request, auth_id, post_id):
     if request.user.author_profile.id != auth_id and not request.user.is_staff:
         return Response({'error': 'Incorrect author'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    try:
-        post = Post.objects.get(id=post_id)
-    except Post.DoesNotExist:
-        return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
+    post = get_object_or_404(Post, id=post_id)
 
     serializer = PostSerializer(post, data=request.data, partial=True, context=context)
     if serializer.is_valid():
@@ -138,20 +99,14 @@ http://{node}/api/authors/{AUTHOR_SERIAL}/posts/{POST_SERIAL}
 DELETEs a post with id POST_SERIAL belonging to author with id AUTHOR_SERIAL
 if the caller has permissions (Caller needs to be author AUTHOR_SERIAL or node admin)
 """
-
 def delete_author_post(request, auth_id, post_id):
     if not request.user.is_authenticated:
         return Response({'error': 'Need to be logged in to delete a post'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if request.user.author_profile.id != auth_id and not request.user.is_staff:
-        # TODO: Fix error message to something like "You cannot edit this post unless you made it or you are a Node Admin"
-        return Response({'error': 'Incorrect author'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'You cannot edit this post unless you made it or you are a Node Admin'}, status=status.HTTP_403_FORBIDDEN)
 
-    try:
-        post = Post.objects.get(id=post_id, author__id=auth_id)
-    except Post.DoesNotExist:
-        return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
-
+    post = get_object_or_404(Post, id=post_id)
     post.visibility = 'DELETED'
     post.save()
 
@@ -295,9 +250,16 @@ class ImagePostsView(RetrieveAPIView):
 
 
         elif 'author_serial' in self.kwargs and 'post_serial' in self.kwargs:
-            author_fqid = self.kwargs['author_serial']
+            author_serial = self.kwargs['author_serial']
             post_serial = self.kwargs['post_serial']
             post = get_object_or_404(Post, id=post_serial)
+            author = get_object_or_404(Author, id=author_serial)
+
+            if author.state != "ACTIVE":
+                return Response({"error": "Author not found"}, status=status.HTTP_404_NOT_FOUND)
+            if author.id != post.author.id:
+                return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
             return self.helper_filter(post)
 
 
@@ -441,27 +403,6 @@ def create_or_delete_like(request):
         return delete_like(author_id, object_url)
 
 
-def can_access_comment(comment, request):
-    """
-    checks:
-      - if the post is public or unlisted, anyone can see the comment.
-      - if the user is authenticated:
-            - node admin can access any comment.
-            - if deleted post, then the comment is not accessible to anyone.
-            - if the user is the comment’s author or is friends with the comment’s author, allow access.
-      - Otherwise, access is denied.
-    """
-    post_visibility = comment.post.visibility
-    if post_visibility in ["PUBLIC", "UNLISTED"]:
-        return True
-    if request.user.is_authenticated:
-        if request.user.is_staff:
-            return True
-        elif post_visibility == "DELETED":
-            return False
-        elif request.user.author_profile.id == comment.author.id or are_friends(request.user.author_profile.id, comment.author.id):
-            return True
-    return False
 
 
 class CommentsListView(ListAPIView):
