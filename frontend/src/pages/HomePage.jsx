@@ -6,7 +6,6 @@ import "../assets/styles/homepage.css";
 import getCookie from "../context/Cookie";
 import DesktopCommentModal from "../components/DesktopCommentModal";
 import HeaderLogo from "../components/HeaderLogo";
-
 import {apiCall} from "../utils/utils.js";
 export default function HomePage() {
     const [posts, setPosts] = useState([]);
