@@ -111,6 +111,46 @@ async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
         }
     }
 
+async function apiCall(
+    endpoint,
+    httpmethod = "GET",
+    body = null,
+    node = "localhost:8000"
+) {
+    return await fetch(
+        `http://${node}/api/${endpoint}`,
+        {
+            method: httpmethod,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: (body !== null) ? JSON.stringify(body) : body,
+            credentials: "include"
+        }
+    );
+}
+
+async function handleFile(e, setFileName, setBase64) {
+        const selectedFile = e.target.files[0];
+
+        if (!selectedFile) {
+            console.error("No file selected!");
+            return;
+        }
+        console.log('File being processed:', selectedFile);
+
+        try {
+            setFileName(selectedFile.name);
+            const base64string = await convertToBase64(selectedFile);
+            setBase64(base64string .split(",")[1]);
+            console.log('Base64 String: ', base64string);
+
+        } catch (error) {
+            console.error('Error converting file to Base64: ', error);
+        }
+    }
+
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
