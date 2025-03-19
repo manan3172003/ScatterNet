@@ -1,10 +1,9 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
-import React, { useState, useRef,useEffect } from "react";
-import {getCookie, fetchUserData} from "../utils/utils.js";
+import React, { useState } from "react";
+import {fetchUserData, apiCall, handleFile} from "../utils/utils.js";
 export default function PostingPage(){
-   
-    const previewMethodsRef = useRef();
+
     const [base64Data, setBase64] = useState(""); 
     const [fileName, setFileName] = useState(""); 
 
@@ -15,46 +14,6 @@ export default function PostingPage(){
         content: "", //deets
         visibility: "",
     })
-
-    async function handleFile(e) {
-        const selectedFile = e.target.files[0];
-
-    
-        if (!selectedFile) {
-            console.error("No file selected!");
-            return;
-        }
-        console.log('File being processed:', selectedFile);
-    
-        try {
-            setFileName(selectedFile.name);
-            const base64string = await convertToBase64(selectedFile);
-            setBase64(base64string .split(",")[1]);
-            console.log('Base64 String: ', base64string);
-    
-        } catch (error) {
-            console.error('Error converting file to Base64: ', error);
-        }
-    }
-
-    function convertToBase64(selectedFile) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            console.log('File being processed:', selectedFile);
-            console.log('Reader result at load:', reader.result);
-    
-            reader.onload = function() {
-                console.log('called: ', reader);
-                resolve(reader.result); 
-            };
-    
-            reader.onerror = function(error) {
-                reject(error); 
-            };
-    
-            reader.readAsDataURL(selectedFile);
-        });
-    }
 
     function handleChange(e){
       setFormData({
@@ -74,7 +33,7 @@ export default function PostingPage(){
             return;
           }
         try {
-            let content = "";
+            let content;
 
             if (formData.contentType.includes("base64")) {
                 content = base64Data; 
@@ -86,24 +45,18 @@ export default function PostingPage(){
               console.log(base64Data)
 
             let resp = await fetchUserData();
-            let AUTHOR_SERIAL = resp.user.author_id
-            let csrfToken = getCookie('csrftoken');
+            let AUTHOR_SERIAL = resp.user.author_id;
 
-            const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts`,{
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify({
+            const response = await apiCall(`authors/${AUTHOR_SERIAL}/posts`,
+                "POST",
+                {
                     title: formData.title,
                     description: formData.description,
                     contentType: formData.contentType || null,
                     content: content || null,
                     visibility: formData.visibility,
-                }),
-                credentials: "include"
-            })
+                }
+                );
 
             const data = await response.json()
             console.log(data)
@@ -170,7 +123,7 @@ export default function PostingPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleFile} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64)} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
                                 </>
                             )}

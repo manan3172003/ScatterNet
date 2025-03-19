@@ -1,25 +1,22 @@
 /* eslint-disable react/prop-types */
 
-import { useState } from "react"
-import { AuthContext } from "../context/AuthContext";
+import {useContext, useEffect, useState} from "react"
+import {AuthContext} from "../context/AuthContext";
 import "../assets/styles/post.css"
 import ContentRenderer from "../components/ContentRenderer"
-import { useNavigate } from 'react-router-dom';
-import { useContext, useEffect } from "react"
-import { Heart, MessageCircle, Share2, Globe, Lock, Trash, Calendar, Link } from "lucide-react"
-import getCookie from "../context/Cookie"
-import { getAuthorRelationship, handleFollowRequest } from "../utils/followApi.js";
-import { getAuthorObject } from "../utils/utils.js";
+import {useNavigate} from 'react-router-dom';
+import {Calendar, Globe, Heart, Link, Lock, MessageCircle, Share2} from "lucide-react"
+import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
+import {apiCall, getAuthorObject} from "../utils/utils.js";
 
 export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh }) {
   const { user } = useContext(AuthContext)
-  const csrfToken = getCookie('csrftoken')
   const [likeCount, setLikeCount] = useState(post.likes.count)
   const [commentCount, setCommentCount] = useState(post.comments.count)
   const [hasLiked, setLikes] = useState(false) // Default to false
   const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
 
-  // This state is going keep track of whether or not the post has been expanded since by default we truncate excess text 
+  // This state is going keep track of whether the post has been expanded since by default we truncate excess text
   const [expanded, setExpanded] = useState(false)
   const navigate = useNavigate();
 
@@ -48,18 +45,13 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/like`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken,
-        },
-        body: JSON.stringify({
+      const response = await apiCall(
+        `like`,
+        "POST",
+        {
           "author_id": `${user.author_id}`,
           "object": `${post.id}`
-        }),
-      })
+        });
 
       if (response.ok) {
         setLikes(true)
@@ -70,7 +62,7 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
     }
   }
 
-  // WE DONT HAVE A WAY TO CANCEL FOLLOW REQS, not in spec either
+  // WE DON'T HAVE A WAY TO CANCEL FOLLOW REQS, not in spec either
   async function handleFollow() {
     const userAuthor = await getAuthorObject(user);
     const newRelationship = await handleFollowRequest(userAuthor, post.author, authorsRelationship);
@@ -120,13 +112,7 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
       let POST_URL_ID = post.id
       let post_object = null;
 
-      const get_post_response = await fetch(`http://localhost:8000/api/posts/${POST_URL_ID}`, {
-            headers: {
-              "X-CSRFToken": csrfToken
-            },
-            credentials: "include",
-          }
-      )
+      const get_post_response = await apiCall(`posts/${POST_URL_ID}`)
 
       if (get_post_response.ok) {
         post_object = await get_post_response.json();
@@ -134,13 +120,10 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
         throw new Error("Failed to delete post");
       }
 
-      const response = await fetch(`http://localhost:8000/api/authors/${USER_ID}/posts/${post_object.serial}`, {
-        method: "DELETE",
-        headers: {
-          "X-CSRFToken": csrfToken
-        },
-        credentials: "include"
-      })
+      const response = await apiCall(
+          `authors/${USER_ID}/posts/${post_object.serial}`,
+          "DELETE"
+      );
 
       if (response.ok) {
         alert("Deleted Post! If you'd like to undelete your post, please contact a node admin for assistance.")
@@ -155,13 +138,11 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
   }
   async function getLikeStatus(user) {
 
-    const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/liked`)
+    const response = await apiCall(`authors/${user.author_id}/liked`)
     if (response.ok) {
       const liked = await response.json()
       const targetObject = post.id
-      const exists = liked.src.some(like => like.object === targetObject)
-
-      return exists;
+      return liked.src.some(like => like.object === targetObject);
     }
   }
   // TODO: FIX LONG CONTENT STUFF PLEASE
@@ -215,7 +196,7 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
               {authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}
             </button>)}
           {/* edit and delete post button */}
-          {authorsRelationship == "Same Author" && (
+          {authorsRelationship === "Same Author" && (
             <div className="button-container">
               <button
                 className="edit-post-button"
@@ -264,7 +245,7 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
             }}
           >
             <Heart size={20} className={`action-icon ${hasLiked ? "liked" : ""}`} />
-            {post.visibility != "FRIENDS" && <span className="action-count">{likeCount}</span>}
+            {post.visibility !== "FRIENDS" && <span className="action-count">{likeCount}</span>}
           </button>
 
           <button

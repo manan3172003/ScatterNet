@@ -1,11 +1,11 @@
 /* eslint-disable react/prop-types */
 import { useState, useContext, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import getCookie from "../context/Cookie";
 import { X, Heart } from "lucide-react";
 import "../assets/styles/desktop-comment-modal.css";
 import { AuthContext } from "../context/AuthContext";
-import Post from "./Post"; 
+import Post from "./Post";
+import {apiCall} from "../utils/utils.js";
 
 export default function DesktopCommentModal({ post, onClose }) {
     const [newComment, setNewComment] = useState("");
@@ -25,11 +25,9 @@ export default function DesktopCommentModal({ post, onClose }) {
         };
     }, []);
     
-    const csrfToken = getCookie('csrftoken');
-    
     async function fetchComments() {
         try {
-            const response = await fetch(`http://localhost:8000/api/posts/${post.id}/comments`);
+            const response = await apiCall(`posts/${post.id}/comments`);
             if (response.ok) {
                 const data = await response.json();
                 setComments(data.src || []);
@@ -41,18 +39,14 @@ export default function DesktopCommentModal({ post, onClose }) {
     
     async function handleLike(commentId) {
         try {
-            const response = await fetch(`http://localhost:8000/api/like`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken,
-                },
-                body: JSON.stringify({
+            const response = await apiCall(
+                `like`,
+                "POST",
+                {
                     "author_id": `${user.author_id}`,
                     "object": `${commentId}`,
-                }),
-                credentials: "include"
-            });
+                }
+                );
             
             if (response.ok) {
                 fetchComments();
@@ -69,19 +63,15 @@ export default function DesktopCommentModal({ post, onClose }) {
         const contentType = isMarkdown ? "text/markdown" : "text/plain";
         
         try {
-            const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/commented`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify({
+            const response = await apiCall(
+                `authors/${user.author_id}/commented`,
+                "POST",
+                {
                     "post": `${post.id}`,
                     "comment": `${newComment}`,
                     "contentType": contentType,
-                }),
-                credentials: "include",
-            });
+                }
+                );
             
             if (response.ok) {
                 setNewComment("");
