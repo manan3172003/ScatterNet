@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView,CreateAPIView
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -291,3 +291,11 @@ def get_current_user(request):
         return Response({'error': "User is not logged in."}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+class Inbox(CreateAPIView):
+    def create(self, request, *args, **kwargs):
+        if request.data['type'] == 'post':
+
+        elif request.data['type'] == 'author':
+        elif request.data['type'] == 'like':
+        elif request.data['type'] == 'comment':
+        elif request.data['type'] == 'follow':
