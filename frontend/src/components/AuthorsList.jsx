@@ -1,6 +1,7 @@
 import "../assets/styles/authors-list.css";
 import {useContext, useEffect, useState} from "react";
 import {
+  getAuthorRelationship, getFollowers,
   getFollowing,
   getFollowRequests,
   handleFollowRequest,
@@ -8,26 +9,38 @@ import {
 } from "../utils/followApi.js";
 import {AuthContext} from "../context/AuthContext.jsx";
 import {getAuthorObject} from "../utils/utils.js";
+import {useNavigate} from "react-router-dom";
 
-export default function AuthorsList() {
+export default function AuthorsList({ chosenMode }) {
     const { user } = useContext(AuthContext);
-    const [mode, setMode] = useState("Requests");
     const [authors, setAuthors] = useState([]);
+    const navigate = useNavigate();
 
   async function fetchAuthors() {
-      if (mode === "Requests") {
-        const fetchedAuthors = await getFollowRequests(user);
+    const currAuthor = await getAuthorObject(user);
+
+      if (chosenMode === "Requests") {
+        const fetchedAuthors = await getFollowRequests(currAuthor);
         setAuthors(fetchedAuthors.followers || []);
       }
-      else if (mode === "Following") {
-        const fetchedAuthors = await getFollowing(user);
+      else if (chosenMode === "Following") {
+        const fetchedAuthors = await getFollowing(currAuthor);
         setAuthors(fetchedAuthors.following || []);
+      }
+      else if (chosenMode === "Followers") {
+        const fetchedAuthors = await getFollowers(currAuthor);
+        setAuthors(fetchedAuthors.followers || []);
       }
   }
 
+  // When we are in the followers/following mode
+  async function handleModeChange(newMode) {
+    navigate(`/${newMode.toLowerCase()}`);
+  }
+
   useEffect(() => {
-    fetchAuthors();
-  }, [mode]);
+      fetchAuthors();
+  }, [chosenMode]);
 
   async function handleUnfollow(otherAuthor){
     // TODO: remove this someday
@@ -42,7 +55,6 @@ export default function AuthorsList() {
   }
 
   async function handleResponseToFollowRequest(otherAuthor, authorResponse) {
-    console.log(user);
     await handleRespondingToFollowRequest(user, otherAuthor, authorResponse);
 
     // Make the component re-render
@@ -53,23 +65,25 @@ export default function AuthorsList() {
     <div className="table-container">
       <div className="table-content">
         <div className="table-header">
-          <h2>{mode}</h2>
-          <div className="header-buttons">
-            <button
-                onClick={() => setMode("Requests")}
-                className={`btn ${mode === "Requests" ? "selected" : ""}`}
-                disabled={mode === "Requests"}
-            >
-              Requests
-            </button>
-            <button
-                onClick={() => setMode("Following")}
-                className={`btn ${mode === "Following" ? "selected" : ""}`}
-                disabled={mode === "Following"}
-            >
-              Following
-            </button>
-          </div>
+          <h2>{chosenMode}</h2>
+          {chosenMode !== "Requests" &&
+            <div className="header-buttons">
+              <button
+                  onClick={() => handleModeChange("Followers")}
+                  className={`btn ${chosenMode === "Followers" ? "selected" : ""}`}
+                  disabled={chosenMode === "Followers"}
+              >
+                Followers
+              </button>
+              <button
+                  onClick={() => handleModeChange("Following")}
+                  className={`btn ${chosenMode === "Following" ? "selected" : ""}`}
+                  disabled={chosenMode === "Following"}
+              >
+                Following
+              </button>
+            </div>
+          }
         </div>
         <div className="table-scroll">
           <table>
@@ -82,9 +96,9 @@ export default function AuthorsList() {
             <tbody>
               {authors.map((author) => (
                 <tr key={author.id}>
-                  <td>{author.displayName}</td>
+                  <td className="author-name">{author.displayName}</td>
                   <td className="actions-cell">
-                    {mode === "Requests" ? (
+                    {chosenMode === "Requests" ? (
                         <>
                           <button
                               onClick={() => handleResponseToFollowRequest(author, "Accept")}
@@ -99,14 +113,14 @@ export default function AuthorsList() {
                             Reject
                           </button>
                         </>
-                      ) : (
+                      ) : chosenMode === "Following" ? (
                           <button
                               className="btn-action btn-unfollow"
                               onClick={() => handleUnfollow(author)}
                           >
                             Unfollow
                           </button>
-                    )}
+                    ) : null}
                   </td>
                 </tr>
               ))}

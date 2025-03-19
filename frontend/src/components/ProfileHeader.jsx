@@ -2,9 +2,9 @@ import editBtn from "../assets/icons/edit.png";
 import { UserContext } from "../pages/UserProfile";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { useParams } from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import { Link } from "react-router";
-import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
+import {getAuthorRelationship, getFollowers, getFollowing, handleFollowRequest} from "../utils/followApi.js";
 import {getAuthorObject} from "../utils/utils.js";
 
 export default function ProfileHeader() {
@@ -12,9 +12,12 @@ export default function ProfileHeader() {
   const [currentUser, setCurrentUser] = useState();
   const [isOwner, setIsOwner] = useState(null);
   const [authorsRelationship, setAuthorsRelationship] = useState("");
+  const [followerCount, setFollowerCount] = useState(null);
+  const [followingCount, setFollowingCount] = useState(null);
   const { authorId } = useParams();
-  //const { currentUser } = useContext(AuthContext);
-  const fetchUserData = async () => {
+  const navigate = useNavigate();
+
+  async function fetchUserData() {
     try {
       const response = await fetch(
         "http://localhost:8000/api/authors/current-user",
@@ -30,7 +33,7 @@ export default function ProfileHeader() {
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
-        // Set isOwner state
+        await fetchFollowCounts(data.user);
         setIsOwner(String(data.user.author_id) === String(authorId));
       } else {
         setCurrentUser(null);
@@ -43,11 +46,35 @@ export default function ProfileHeader() {
     }
   };
 
-  const fetchFollowStatus = async () => {
+  async function fetchFollowStatus() {
     // TODO: otherAuthor is just the author id atm, will need tweaks eventually?
     const relationship = await getAuthorRelationship(authorId);
     setAuthorsRelationship(relationship);
   }
+
+  async function fetchFollowCounts(){
+    console.log(user, "h");
+    try {
+      const followerResponse = await getFollowers(user);
+      const followingResponse = await getFollowing(user);
+
+      if (followerResponse && followerResponse.followers) {
+        setFollowerCount(followerResponse.followers.length);
+      } else {
+        setFollowerCount(0);
+      }
+
+      if (followingResponse && followingResponse.following) {
+        setFollowingCount(followingResponse.following.length);
+      } else {
+        setFollowingCount(0);
+      }
+    }
+    catch (error) {
+        console.error("Error fetching follow counts: ", error);
+    }
+  }
+
 
   useEffect(() => {
     fetchUserData();
@@ -60,12 +87,9 @@ export default function ProfileHeader() {
     setAuthorsRelationship(newRelationship);
   }
 
-  // useEffect(() => {
-  //   //determine if user is owner of page
-  //   if (currentUser && authorId) {
-  //     setIsOwner(currentUser.id === authorId);
-  //   }
-  // }, [currentUser, authorId]);
+  async function handleNavigation(mode) {
+    navigate(`/${mode}`);
+  }
 
   return (
     <div className="profile-header">
@@ -95,12 +119,12 @@ export default function ProfileHeader() {
 
               <div id="follow-info">
                 <div className="follow-data">
-                  <span>1000</span>
-                  <button>Followers</button>
+                  <span>{followerCount}</span>
+                  <button onClick={() => handleNavigation("followers")}>Followers</button>
                 </div>
                 <div className="follow-data">
-                  <span>1200</span>
-                  <button>Following</button>
+                  <span>{followingCount}</span>
+                  <button onClick={() => handleNavigation("following")}>Following</button>
                 </div>
               </div>
             </div>

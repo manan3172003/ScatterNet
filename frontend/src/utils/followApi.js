@@ -76,7 +76,7 @@ export async function handleFollowRequest(user, otherAuthor, authorsRelationship
 
 export async function getFollowRequests(user) {
     try {
-        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/followers?isPending=true`)
+        const response = await fetch(`http://localhost:8000/api/authors/${user.serial}/followers?isPending=true`)
         if (response.ok) {
             return await response.json()
         }
@@ -89,13 +89,26 @@ export async function getFollowRequests(user) {
 
 export async function getFollowing(user) {
     try {
-        const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/following`)
+        const response = await fetch(`http://localhost:8000/api/authors/${user.serial}/following`)
         if (response.ok) {
             return await response.json()
         }
     }
     catch (error) {
         console.error("Error fetching following list", error);
+        return null;
+    }
+}
+
+export async function getFollowers(user) {
+    try {
+        const response = await fetch(`http://localhost:8000/api/authors/${user.serial}/followers`)
+        if (response.ok) {
+            return await response.json()
+        }
+    }
+    catch (error) {
+        console.error("Error fetching followers list", error);
         return null;
     }
 }
