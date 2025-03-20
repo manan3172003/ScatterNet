@@ -320,7 +320,13 @@ def remote_author(request):
     authorserializer = RemoteAuthorSerializer(data=request.data)
     if not authorserializer.is_valid():
         return Response(authorserializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    authorserializer.save()
+
+    try:
+        Author.objects.get(id_url=request.data['id'])
+        return Response({'message': 'Author already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except Author.DoesNotExist:
+        authorserializer.save()
+
     return Response(authorserializer.data, status=status.HTTP_200_OK)
 
 def remote_comment(request):
