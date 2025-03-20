@@ -91,6 +91,7 @@ class PostSerializer(serializers.ModelSerializer):
         serializer = LikeSerializer(paginated_likes, many=True, context=self.context)
         return paginator.get_paginated_response(serializer.data).data
 
+
 class LikeSerializer(serializers.ModelSerializer):
     serial = serializers.SerializerMethodField(read_only=True)
     type = serializers.SerializerMethodField(read_only=True)
@@ -182,3 +183,16 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         comment.id_url = f"{NODEHOSTNAME}/api/authors/{author.id}/commented/{comment.id}"
         comment.save()
         return comment
+
+class RemotePostSerializer(serializers.ModelSerializer):
+    serial = serializers.SerializerMethodField(read_only=True)
+    id = serializers.URLField()
+    page = serializers.URLField()
+    type = serializers.SerializerMethodField(read_only=True)
+    author = AuthorSerializer()
+    comments = CommentSerializer(many=True)
+    likes = LikeSerializer(many=True)
+    published = serializers.DateTimeField()
+    class Meta:
+        model = Post
+        fields = ['serial', 'type', 'title', 'id', 'page', 'description', 'contentType', 'content', 'author', 'comments', 'likes', 'published', 'visibility']
