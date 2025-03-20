@@ -4,6 +4,7 @@ import MobileCommentModal from "../components/MobileCommentModal";
 import Post from "../components/Post";
 import InfiniteScroll from "react-infinite-scroll-component";
 import getCookie from "../context/Cookie.js";
+import "../assets/styles/profile-feed.css";
 export default function Feed(values) {
   async function fetchAuthorPosts() {
     const response = await fetch(
@@ -130,7 +131,7 @@ export default function Feed(values) {
         loader={<p className="error-text">Loading more posts...</p>}
         endMessage={<p className="error-text">No more posts to show.</p>}
       >
-        <main className="feed-container">
+        <main className="user-feed-container">
           {posts.map((post) => (
             <Post
               key={post.id}

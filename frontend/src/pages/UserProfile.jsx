@@ -39,7 +39,7 @@ export default function UserProfile() {
       ) : user ? (
         <div className="profile-page-wrapper">
           <ProfileHeader />
-          <div className="feed-container">
+          <div className="user-feed-wrapper">
             <Feed author_id={authorId} />
           </div>
         </div>
