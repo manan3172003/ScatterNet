@@ -52,6 +52,6 @@ body {
   }
 
   .infinite-scroll-component {
-    width: 500px !important;
+    width: 500px;
   }
 }
