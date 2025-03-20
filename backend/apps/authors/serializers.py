@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from dodgerblue.settings import NODEHOSTNAME
 from .models import Author
+from hashlib import sha256
 
 class AuthorSignUpSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -90,6 +91,42 @@ class AuthorUpdateSerializer(serializers.ModelSerializer):
 
     def get_id(self, obj):
         return obj.id_url
+
+    def get_type(self, obj):
+        return "author"
+
+class RemoteAuthorSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField(read_only=True)
+    serial = serializers.SerializerMethodField(read_only=True)
+    id = serializers.URLField()
+
+    class Meta:
+        model = Author
+        fields = ('serial', 'type', 'id', 'host', 'displayName', 'github', 'profileImage', 'page')
+
+    def create(self, validated_data):
+        author = Author.objects.create(
+            id_url=validated_data.get('id'),
+            host=validated_data.get('host'),
+            displayName=validated_data.get('displayName'),
+            github=None,
+            profileImage=validated_data.get('profileImage'),
+            page=validated_data.get('page'),
+            is_local=False,
+            state='ACTIVE',
+            username=sha256(validated_data.get('id').encode('utf-8')).hexdigest()
+        )
+        author.save()
+
+        return author
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['id'] = instance.id_url
+        return data
+
+    def get_serial(self, obj):
+        return obj.id
 
     def get_type(self, obj):
         return "author"

@@ -11,7 +11,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from urllib.parse import unquote
 from .models import Author
-from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer
+from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
+from ..posts.serializers import PostSerializer
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
 
@@ -292,6 +293,44 @@ def get_current_user(request):
     else:
         return Response({'error': "User is not logged in."}, status=status.HTTP_401_UNAUTHORIZED)
 
+def remotePost(request):
+    postserializer = PostSerializer(data=request.data)
+    print(postserializer)
+    if not postserializer.is_valid():
+        return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        author = Author.objects.get(id_url=request.data['author'].id)
+    except Author.DoesNotExist:
+        authorserial = AuthorSerializer(data=request.data['author'])
+        if authorserial.is_valid():
+            author = authorserial.save()
+            author.id_url = request.data['author'].id_url
+
+        else:
+            return Response(authorserial.errors, status=status.HTTP_400_BAD_REQUEST)
+    postserializer = PostSerializer(data=request.data, context={'auth_id': author.id, 'request': request})
+    if postserializer.is_valid():
+        postserializer.save()
+        return Response(postserializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(postserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def remoteAuthor(request):
+    authorserializer = RemoteAuthorSerializer(data=request.data)
+    if not authorserializer.is_valid():
+        return Response(authorserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    author = authorserializer.save()
+    return Response(authorserializer.data, status=status.HTTP_200_OK)
+
+def remoteComment(request):
+    return NotImplemented
+
+def remoteLike(request):
+    return NotImplemented
+
+def remoteFollow(request):
+    return NotImplemented
+
 
 class Inbox(CreateAPIView):
     def create(self, request, *args, **kwargs):
@@ -305,15 +344,16 @@ class Inbox(CreateAPIView):
         username, password = b64decode(auth[1]).decode('utf-8').split(':')
         user = authenticate(username=username, password=password)
         if user is not None:
+            # TODO: Some sort of validation to check the "user" is a node and not an app "user" since we dont want our users to be able to post to our own inbox
             if request.data['type'] == 'post':
-                print('post')
+                return remotePost(request)
             elif request.data['type'] == 'author':
-                print('author')
+                return remoteAuthor(request)
             elif request.data['type'] == 'like':
-                print('like')
+                return remoteLike(request)
             elif request.data['type'] == 'comment':
-                print('comment')
+                return remoteComment(request)
             elif request.data['type'] == 'follow':
-                print('follow')
+                return remoteFollow(request)
             else:
                 return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)
