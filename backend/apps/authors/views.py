@@ -12,7 +12,8 @@ from drf_yasg import openapi
 from urllib.parse import unquote
 from .models import Author
 from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
-from ..posts.serializers import PostSerializer
+from ..posts.models import Like
+from ..posts.serializers import PostSerializer, RemoteLikeSerializer
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
 
@@ -315,20 +316,32 @@ def remotePost(request):
     else:
         return Response(postserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-def remoteAuthor(request):
+def remote_author(request):
     authorserializer = RemoteAuthorSerializer(data=request.data)
     if not authorserializer.is_valid():
         return Response(authorserializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    author = authorserializer.save()
+    authorserializer.save()
     return Response(authorserializer.data, status=status.HTTP_200_OK)
 
-def remoteComment(request):
+def remote_comment(request):
     return NotImplemented
 
-def remoteLike(request):
-    return NotImplemented
+def remote_like(request):
+    likeserializer = RemoteLikeSerializer(data=request.data)
+    if not likeserializer.is_valid():
+        return Response(likeserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-def remoteFollow(request):
+    try:
+        author = Author.objects.get(id_url=request.data['author']['id'])
+        Like.objects.get(author=author, object=request.data['object'])
+        return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except (Like.DoesNotExist, Author.DoesNotExist) as e:
+        likeserializer.save()
+
+
+    return Response(likeserializer.data, status=status.HTTP_200_OK)
+
+def remote_follow(request):
     return NotImplemented
 
 
@@ -348,12 +361,12 @@ class Inbox(CreateAPIView):
             if request.data['type'] == 'post':
                 return remotePost(request)
             elif request.data['type'] == 'author':
-                return remoteAuthor(request)
+                return remote_author(request)
             elif request.data['type'] == 'like':
-                return remoteLike(request)
+                return remote_like(request)
             elif request.data['type'] == 'comment':
-                return remoteComment(request)
+                return remote_comment(request)
             elif request.data['type'] == 'follow':
-                return remoteFollow(request)
+                return remote_follow(request)
             else:
                 return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)
