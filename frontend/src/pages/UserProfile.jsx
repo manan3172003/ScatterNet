@@ -35,7 +35,7 @@ export default function UserProfile() {
   return (
     <UserContext.Provider value={user}>
       {loading ? (
-        <p className="error-text">loading...</p>
+        <p className="debug-text">loading...</p>
       ) : user ? (
         <div className="profile-page-wrapper">
           <ProfileHeader />
