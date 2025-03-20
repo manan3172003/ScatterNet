@@ -13,6 +13,8 @@ from urllib.parse import unquote
 from .models import Author
 from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer
 from ..utils.paginators import AuthorsPaginator
+from base64 import b64decode
+
 
 # Create your views here.
 class AuthorLoginView(APIView):
@@ -293,9 +295,25 @@ def get_current_user(request):
 
 class Inbox(CreateAPIView):
     def create(self, request, *args, **kwargs):
-        if request.data['type'] == 'post':
+        if "HTTP_AUTHORIZATION" not in request.META:
+            return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        elif request.data['type'] == 'author':
-        elif request.data['type'] == 'like':
-        elif request.data['type'] == 'comment':
-        elif request.data['type'] == 'follow':
+        auth = request.META['HTTP_AUTHORIZATION'].split()
+        if len(auth) != 2 or auth[0].lower() != "basic":
+            return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        username, password = b64decode(auth[1]).decode('utf-8').split(':')
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            if request.data['type'] == 'post':
+                print('post')
+            elif request.data['type'] == 'author':
+                print('author')
+            elif request.data['type'] == 'like':
+                print('like')
+            elif request.data['type'] == 'comment':
+                print('comment')
+            elif request.data['type'] == 'follow':
+                print('follow')
+            else:
+                return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)
