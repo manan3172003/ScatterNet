@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from .models import Post, visibility_options, Comment, Like
 from ..authors.models import Author
-from ..authors.serializers import AuthorSerializer
+from ..authors.serializers import AuthorSerializer, RemoteAuthorSerializer
 from ..utils.paginators import LikesPaginator, CommentsPaginator
 
 class PostSerializer(serializers.ModelSerializer):
@@ -196,3 +196,44 @@ class RemotePostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['serial', 'type', 'title', 'id', 'page', 'description', 'contentType', 'content', 'author', 'comments', 'likes', 'published', 'visibility']
+
+class RemoteLikeSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField(read_only=True)
+    serial = serializers.SerializerMethodField(read_only=True)
+    id = serializers.URLField()
+    author = RemoteAuthorSerializer()
+
+    class Meta:
+        model = Like
+        fields = ('serial', 'type', 'id', 'author', 'published', 'object')
+
+    def create(self, validated_data):
+        authorserializer = RemoteAuthorSerializer(data=validated_data.get('author'))
+        authorserializer.is_valid(raise_exception=True)
+        try:
+            author = Author.objects.get(id_url=validated_data.get('author').get('id'))
+        except Author.DoesNotExist:
+            author = authorserializer.save()
+
+        print(author)
+        validated_data.pop('author')
+
+        like = Like.objects.create(
+            author=author,
+            id_url=validated_data.get('id'),
+            published=validated_data.get('published'),
+            object=validated_data.get('object')
+        )
+        like.save()
+        return like
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['id'] = instance.id_url
+        return data
+
+    def get_type(self, obj):
+        return "like"
+
+    def get_serial(self, obj):
+        return obj.id
