@@ -18,15 +18,12 @@ export const AuthProvider = ({ children }) => {
             if (response.ok) {
                 const data = await response.json();
                 setUser(data.user);
-                setToken(getCookie('csrftoken'));
             } else {
                 setUser(null);
-                setToken(getCookie('csrftoken'));
             }
         } catch (error) {
             console.error("Error fetching user data:", error);
             setUser(null);
-            setToken(getCookie('csrftoken'));
         }
     };
     useEffect(() => {
@@ -55,10 +52,8 @@ export const AuthProvider = ({ children }) => {
                     document.cookie = "isAdmin=false; path=/;";
                 }
                 setUser(data.user);
-                setToken(getCookie('csrftoken'));
             } else {
                 setUser(null);
-                setToken(getCookie('csrftoken'));
                 throw new Error(response.status); 
             }
             
