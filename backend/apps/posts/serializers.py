@@ -215,7 +215,6 @@ class RemoteLikeSerializer(serializers.ModelSerializer):
         except Author.DoesNotExist:
             author = authorserializer.save()
 
-        print(author)
         validated_data.pop('author')
 
         like = Like.objects.create(
