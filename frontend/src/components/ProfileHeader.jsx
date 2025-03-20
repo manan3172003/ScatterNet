@@ -31,7 +31,6 @@ export default function ProfileHeader() {
       if (response.ok) {
         const data = await response.json();
         setCurrentUser(data.user);
-        await fetchFollowCounts(data.user);
         setIsOwner(String(data.user.author_id) === String(authorId));
       } else {
         setCurrentUser(null);
@@ -51,7 +50,6 @@ export default function ProfileHeader() {
   }
 
   async function fetchFollowCounts(){
-    console.log(user, "h");
     try {
       const followerResponse = await getFollowers(user);
       const followingResponse = await getFollowing(user);
@@ -75,8 +73,10 @@ export default function ProfileHeader() {
 
 
   useEffect(() => {
+    console.log(user, "test");
     fetchUserData();
     fetchFollowStatus();
+    fetchFollowCounts();
   }, []);
 
   async function handleFollow() {
@@ -99,7 +99,7 @@ export default function ProfileHeader() {
             <div className="name-follow-container">
               <div className="info-names-wrapper">
                 <p id="displayname">{user.displayName}</p>
-                {!isOwner && (
+                {!isOwner && authorsRelationship !== "" && (
                   <button
                       className="button"
                       onClick={handleFollow}
@@ -108,7 +108,7 @@ export default function ProfileHeader() {
                     <p>{authorsRelationship === "Not Following" ? "Follow" : authorsRelationship}</p>
                   </button>
               )}
-              {isOwner && (
+              {isOwner && authorsRelationship !== "" && (
                   <Link to="/editProfile" className="link-button">
                       <p>Edit Profile</p>
                   </Link>
