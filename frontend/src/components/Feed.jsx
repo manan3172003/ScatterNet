@@ -127,8 +127,8 @@ export default function Feed(values) {
       <InfiniteScroll
         dataLength={posts.length}
         next={fetchMorePosts}
-        loader={<p>Loading more posts...</p>}
-        endMessage={<p>No more posts to show.</p>}
+        loader={<p className="error-text">Loading more posts...</p>}
+        endMessage={<p className="error-text">No more posts to show.</p>}
       >
         <main className="feed-container">
           {posts.map((post) => (
