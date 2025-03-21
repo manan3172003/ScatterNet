@@ -1,18 +1,30 @@
 /*
-content type bug on create post page
 image should just be one type and determined by frontend not the user
-when we create a post notification says updated post instead of created post, after the post is successfully made page should redirect to homepage
-notification on edit post needs to be fixed
+notification on edit and create post needs to be fixed
 */
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, { useState, useRef,useEffect } from "react";
 import {getCookie, fetchUserData} from "../utils/utils.js";
+import Notification from "../components/Notification.jsx";
+import {useLocation, useNavigate} from 'react-router-dom';
+
+
 export default function PostingPage(){
    
     const previewMethodsRef = useRef();
     const [base64Data, setBase64] = useState(""); 
+    const [base64ContentType, setBase64ContentType] = useState(""); 
     const [fileName, setFileName] = useState(""); 
+    const navigate = useNavigate();
+    
+
+     const [notification, setNotification] = useState({
+        show: false,
+        type: "success",
+        title: "",
+        message: "",
+      });
 
     const [formData, setFormData] = useState({
         title: "",
@@ -21,6 +33,23 @@ export default function PostingPage(){
         content: "", //deets
         visibility: "PUBLIC",
     })
+
+    
+
+    const showNotification = (type, title, message) => {
+        setNotification({
+          show: true,
+          type,
+          title,
+          message,
+        });
+      };
+
+      // Helper to hide notifications
+  const hideNotification = () => {
+    setNotification((prev) => ({ ...prev, show: false }));
+  };
+
 
     async function handleFile(e) {
         const selectedFile = e.target.files[0];
@@ -35,6 +64,7 @@ export default function PostingPage(){
         try {
             setFileName(selectedFile.name);
             const base64string = await convertToBase64(selectedFile);
+            console.log('Base64 String before strip: ', base64string);
             setBase64(base64string .split(",")[1]);
             console.log('Base64 String: ', base64string);
     
@@ -114,14 +144,12 @@ export default function PostingPage(){
             const data = await response.json()
             console.log(data)
             if (response.ok){
-                alert("Uploaded Post!")
-                setFormData({
-                    title: "",
-                    description: "",
-                    contentType: "text/markdown",
-                    content: "",
-                    visibility: "PUBLIC",
-                })
+                showNotification(
+                    "Success",
+                    "Created Post!",
+                    "Redirecting to your home feed..."
+                    )
+                setTimeout(() => {navigate(`/home`)}, 1500);
             }
 
         }
@@ -132,6 +160,13 @@ export default function PostingPage(){
     }
 
     return <div className="posting-container">
+     <Notification
+            show={notification.show}
+            type={notification.type}
+            title={notification.title}
+            message={notification.message}
+            onClose={hideNotification}
+          />
         
             <header className="posting-header">
                 {<HeaderLogo/> }
