@@ -18,6 +18,7 @@ class Author(models.Model):
     page = models.URLField(default=None, blank=True, null=True) #this too
     # basically we'll use this in the future to identify whether our current Author is from another node
     is_local = models.BooleanField(default=True)
+    is_node = models.BooleanField(default=False, null=False, blank=False)
     username = models.CharField(max_length=128, unique=True)
 
     #we'll use this to identify which authors haven't been onboarded into the system or soft deleted
