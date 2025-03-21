@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Post from "../components/Post";
 import { useParams } from "react-router-dom";
+import "../assets/styles/public-post-page.css";
 
 export default function PublicPostPage() {
   const { authorId, postId } = useParams();
@@ -28,7 +29,13 @@ export default function PublicPostPage() {
 
   return (
     <div className="post-page-container">
-      {loading ? <p>Loading...</p> : post ? <Post post={post} onCommentClick={null} onPostClick={null} /> : <p>Post not found</p>}
+      {loading ? (
+        <p className="debug-text">Loading...</p>
+      ) : post ? (
+        <Post post={post} onCommentClick={null} onPostClick={null} />
+      ) : (
+        <p className="error-text">Post not found</p>
+      )}
     </div>
   );
 }
