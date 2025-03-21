@@ -141,6 +141,11 @@ class AuthorSignUpView(APIView):
                 'displayName': openapi.Schema(
                     type=openapi.TYPE_STRING,
                     description="String that is to be displayed on an author's profile"
+                ),
+                'is_node': openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description="Whether a user is being registered or a node",
+                    default=False
                 )
             }
         )
@@ -177,7 +182,7 @@ class AuthorsView(ListAPIView):
 
         #filters to it such that only node admins can see all the users and everyone else just gets the active list
         if not (user and user.is_authenticated and user.is_staff):
-            queryset = queryset.filter(state='ACTIVE')
+            queryset = queryset.filter(state='ACTIVE', is_node=False)
 
         state = self.request.query_params.get('state')
         if state:
@@ -396,17 +401,26 @@ class Inbox(CreateAPIView):
 
         username, password = b64decode(auth[1]).decode('utf-8').split(':')
         user = authenticate(username=username, password=password)
-        if user is not None:
-            # TODO: Some sort of validation to check the "user" is a node and not an app "user" since we dont want our users to be able to post to our own inbox
-            if request.data['type'] == 'post':
-                return remote_post(request)
-            elif request.data['type'] == 'author':
-                return remote_author(request)
-            elif request.data['type'] == 'like':
-                return remote_like(request)
-            elif request.data['type'] == 'comment':
-                return remote_comment(request)
-            elif request.data['type'] == 'follow':
-                return remote_follow(request)
-            else:
-                return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)
+        if user is None:
+            return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        author = user.author_profile
+
+        if not (author.state == 'ACTIVE'):
+            return Response({'error': 'This user cannot login to the system.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not author.is_node:
+            return Response({'error': 'Not a node'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if request.data['type'] == 'post':
+            return remote_post(request)
+        elif request.data['type'] == 'author':
+            return remote_author(request)
+        elif request.data['type'] == 'like':
+            return remote_like(request)
+        elif request.data['type'] == 'comment':
+            return remote_comment(request)
+        elif request.data['type'] == 'follow':
+            return remote_follow(request)
+        else:
+            return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)

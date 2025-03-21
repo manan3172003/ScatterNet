@@ -6,10 +6,11 @@ from hashlib import sha256
 
 class AuthorSignUpSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    is_node = serializers.BooleanField(default=False)
 
     class Meta:
         model = Author
-        fields = ('username', 'password', 'displayName', 'host', 'github', 'profileImage', 'page')
+        fields = ('username', 'password', 'displayName', 'host', 'github', 'profileImage', 'page', 'is_node')
         #this will also need to be cleaned up later when we finalize the host stuff
         extra_kwargs = {
             'host': {'required': False, 'allow_null': True},
