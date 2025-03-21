@@ -36,8 +36,10 @@ function App() {
           <Route path="/profile" element={<ProtectedRoute element={<ProfileRedirect />} />}/>
           <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
           <Route path="/editProfile" element={<ProtectedRoute element={<EditProfilePage />} />}/>
-          <Route path="/requests" element={<ProtectedRoute element={<AuthorsList />} />}/>
+          <Route path="/requests" element={<ProtectedRoute element={<AuthorsList chosenMode="Requests" />} />}/>
           <Route path="/authors/:authorId" element={<UserProfile/>} />
+          <Route path="/authors/:authorId/followers" element={<ProtectedRoute element={<AuthorsList chosenMode="Followers" />} />}/>
+          <Route path="/authors/:authorId/following" element={<ProtectedRoute element={<AuthorsList chosenMode="Following" />} />}/>
           <Route path="/authors/:authorId/posts/:postId" element={<PublicPostPage />}/>
 
           {/* Admin Routes only accessible to admins */}

@@ -35,7 +35,22 @@ async function getAuthorObject(user) {
             console.error("Failed to fetch author:", error);
             return null;
         }
-};
+}
+
+async function getAuthorObjectById(author_serial) {
+        try {
+            const response = await fetch(`http://localhost:8000/api/authors/${author_serial}`);
+
+            if (!response.ok) {
+                throw new Error(`Error fetching author: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Failed to fetch author:", error);
+            return null;
+        }
+}
 
 function getCookie(name) {
   let cookieValue = null;
@@ -52,4 +67,4 @@ function getCookie(name) {
   return cookieValue;
 }
 
-export {getCookie, fetchUserData, getAuthorObject}
+export {getCookie, fetchUserData, getAuthorObject, getAuthorObjectById}
