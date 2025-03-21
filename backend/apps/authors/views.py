@@ -15,7 +15,7 @@ from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateS
 from ..follow.models import Follow
 from ..follow.serializers import RemoteFollowSerializer
 from ..posts.models import Like, Comment, Post
-from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer
+from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer, PostSerializer
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
 
@@ -318,8 +318,11 @@ def remote_post(request):
         return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        Post.objects.get(id_url=request.data.get('id'))
-        return Response({'message': 'Post already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        post = Post.objects.get(id_url=request.data.get('id'))
+        postserializer = RemotePostSerializer(post, data=request.data, partial=True)
+        if not postserializer.is_valid():
+            return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        postserializer.save()
     except Post.DoesNotExist:
         postserializer.save()
 
@@ -333,8 +336,9 @@ def remote_author(request):
     try:
         author = Author.objects.get(id_url=request.data['id'])
         authorserializer = RemoteAuthorSerializer(author, data=request.data, partial=True)
-        if authorserializer.is_valid():
-            authorserializer.save()
+        if not authorserializer.is_valid():
+            return Response(authorserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        authorserializer.save()
     except Author.DoesNotExist:
         authorserializer.save()
 

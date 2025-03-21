@@ -344,6 +344,17 @@ class RemotePostSerializer(serializers.ModelSerializer):
 
         return post
 
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.contentType = validated_data.get('contentType', instance.contentType)
+        instance.content = validated_data.get('content', instance.content)
+        instance.visibility = validated_data.get('visibility', instance.visibility)
+
+        instance.published = timezone.now()
+        instance.save()
+        return instance
+
     def to_representation(self, instance):
         data = dict()
         data['type'] = 'post'
