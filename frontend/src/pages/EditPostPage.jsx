@@ -162,7 +162,7 @@ export default function EditPostPage(){
             console.log(data)
             if (response.ok){
                 showNotification(
-                    "Success",
+                    "success",
                     "Edited Post!",
                     "Redirecting to your profile..."
                     )

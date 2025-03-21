@@ -6,7 +6,7 @@ import "../assets/styles/posting-page.css"
 import React, { useState, useRef,useEffect } from "react";
 import {getCookie, fetchUserData} from "../utils/utils.js";
 import Notification from "../components/Notification.jsx";
-import {useLocation, useNavigate} from 'react-router-dom';
+import {data, useLocation, useNavigate} from 'react-router-dom';
 
 
 export default function PostingPage(){
@@ -165,11 +165,14 @@ export default function PostingPage(){
             console.log(data)
             if (response.ok){
                 showNotification(
-                    "Success",
+                    "success",
                     "Created Post!",
                     "Redirecting to your home feed..."
                     )
                 setTimeout(() => {navigate(`/home`)}, 1500);
+            }else{
+                console.error("Error creating post");
+                showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
             }
 
         }
