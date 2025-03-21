@@ -27,4 +27,4 @@ class Author(models.Model):
         ('DELETED', 'DELETED')
     )
     state = models.CharField(max_length=7, choices=allowed_states, default='PENDING')
-    id_url = models.URLField()
+    id_url = models.URLField(unique=True)
