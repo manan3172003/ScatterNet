@@ -1,5 +1,4 @@
 /*
-image should just be one type and determined by frontend not the user
 notification on edit and create post needs to be fixed
 */
 import HeaderLogo from "../components/HeaderLogo"
@@ -108,6 +107,17 @@ export default function PostingPage(){
       console.log(formData)
 
     }
+
+    function handleDropdownChange(e){
+        setFormData({
+          ...formData,
+          [e.target.name]:e.target.value,
+          content:""
+          
+        })
+        console.log(formData)
+  
+      }
     
     async function handlePost(e){
         e.preventDefault()
@@ -198,7 +208,7 @@ export default function PostingPage(){
                             <textarea name="description" placeholder="Enter the description of your post" required onChange={handleChange} value={formData.description}/>
                             
                             <label className="form-label">Content Type</label>
-                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleChange}>
+                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
                                 {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
