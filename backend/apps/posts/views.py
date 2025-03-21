@@ -1,7 +1,7 @@
 import base64
 from urllib.parse import unquote
 from django.http import Http404, HttpResponse
-from dodgerblue.settings import HOSTNAME
+from dodgerblue.settings import NODEHOSTNAME
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -362,7 +362,7 @@ def post_like(author_id, object_url):
     if not created_success:
         return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-    created_like.id_url = "{}/api/authors/{}/liked/{}".format(HOSTNAME, author.id, created_like.id)
+    created_like.id_url = "{}/api/authors/{}/liked/{}".format(NODEHOSTNAME, author.id, created_like.id)
     created_like.save()
 
     return Response({'message': 'Like created successfully'}, status=status.HTTP_201_CREATED)
