@@ -361,7 +361,7 @@ def post_like(author_id, object_url):
     if not created_success:
         return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-    created_like.id_url = "http://localhost:8000/authors/{}/liked/{}".format(author.id, created_like.id)
+    created_like.id_url = "http://localhost:8000/api/authors/{}/liked/{}".format(author.id, created_like.id)
     created_like.save()
 
     return Response({'message': 'Like created successfully'}, status=status.HTTP_201_CREATED)
