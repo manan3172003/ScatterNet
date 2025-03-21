@@ -331,8 +331,10 @@ def remote_author(request):
         return Response(authorserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        Author.objects.get(id_url=request.data['id'])
-        return Response({'message': 'Author already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        author = Author.objects.get(id_url=request.data['id'])
+        authorserializer = RemoteAuthorSerializer(author, data=request.data, partial=True)
+        if authorserializer.is_valid():
+            authorserializer.save()
     except Author.DoesNotExist:
         authorserializer.save()
 

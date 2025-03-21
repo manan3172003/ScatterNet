@@ -121,6 +121,11 @@ class RemoteAuthorSerializer(serializers.ModelSerializer):
 
         return author
 
+    def update(self, instance, validated_data):
+        instance.displayName = validated_data.get('displayName', instance.displayName)
+        instance.save()
+        return instance
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['id'] = instance.id_url

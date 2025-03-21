@@ -37,6 +37,13 @@ class Command(BaseCommand):
             is_staff=False,
         )
 
+        node_user = User.objects.create_user(
+            username='node',
+            password='node',
+            is_active=True,
+            is_staff=False
+        )
+
         # Create Authors
         admin_author = Author.objects.create(
             user=admin_user,
@@ -84,6 +91,19 @@ class Command(BaseCommand):
             username='jacob',
             state='ACTIVE',
             id_url='http://localhost:8000/api/authors/4'
+        )
+
+        node_author = Author.objects.create(
+            user=node_user,
+            displayName='Node',
+            github='',
+            profileImage='',
+            page='',
+            is_local=True,
+            username='node',
+            state='ACTIVE',
+            id_url='http://localhost:8000/api/authors/5',
+            is_node=True
         )
 
         # Create follow relations
