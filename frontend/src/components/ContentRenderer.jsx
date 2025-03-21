@@ -20,7 +20,7 @@ export default function ContentRenderer({contentType, content, postHostname, pos
     
     if (isImageContent(contentType)){
         if (imageError){
-            return <p className="image-error">An error occured will loading the image.</p>
+            return <p className="image-error">An error occurred while loading the image.</p>
         }
         const imageEndpoint = `${postHostname}/api/posts/${postId}/image`;
         return (
