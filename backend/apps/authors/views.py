@@ -12,8 +12,8 @@ from drf_yasg import openapi
 from urllib.parse import unquote
 from .models import Author
 from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
-from ..posts.models import Like, Comment
-from ..posts.serializers import PostSerializer, RemoteLikeSerializer, RemoteCommentSerializer
+from ..posts.models import Like, Comment, Post
+from ..posts.serializers import PostSerializer, RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
 
@@ -294,27 +294,30 @@ def get_current_user(request):
     else:
         return Response({'error': "User is not logged in."}, status=status.HTTP_401_UNAUTHORIZED)
 
-def remotePost(request):
-    postserializer = PostSerializer(data=request.data)
-    print(postserializer)
+def remote_post(request):
+    if not request.data.get('comments') or not request.data.get('comments').get('src'):
+        return Response({'error': 'No comments object'}, status=status.HTTP_400_BAD_REQUEST)
+
+    for comment in list(request.data.get('comments').get('src')):
+        comment['likes'] = comment['likes']['src']
+
+    if not request.data.get('likes') or not request.data.get('likes').get('src'):
+        return Response({'error': 'No likes object'}, status=status.HTTP_400_BAD_REQUEST)
+
+    request.data['comments'] = request.data['comments']['src']
+    request.data['likes'] = request.data['likes']['src']
+
+    postserializer = RemotePostSerializer(data=request.data)
     if not postserializer.is_valid():
         return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    try:
-        author = Author.objects.get(id_url=request.data['author'].id)
-    except Author.DoesNotExist:
-        authorserial = AuthorSerializer(data=request.data['author'])
-        if authorserial.is_valid():
-            author = authorserial.save()
-            author.id_url = request.data['author'].id_url
 
-        else:
-            return Response(authorserial.errors, status=status.HTTP_400_BAD_REQUEST)
-    postserializer = PostSerializer(data=request.data, context={'auth_id': author.id, 'request': request})
-    if postserializer.is_valid():
+    try:
+        Post.objects.get(id_url=request.data.get('id'))
+        return Response({'message': 'Post already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except Post.DoesNotExist:
         postserializer.save()
-        return Response(postserializer.data, status=status.HTTP_201_CREATED)
-    else:
-        return Response(postserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response(postserializer.data, status=status.HTTP_200_OK)
 
 def remote_author(request):
     authorserializer = RemoteAuthorSerializer(data=request.data)
@@ -331,10 +334,8 @@ def remote_author(request):
 
 def remote_comment(request):
 
-    if not request.data['likes']:
-        return Response({'message': 'No likes'}, status=status.HTTP_400_BAD_REQUEST)
-    elif not request.data['likes']['count']:
-        return Response({'message': 'No likes count'}, status=status.HTTP_400_BAD_REQUEST)
+    if not request.data.get('likes') or not request.data.get('likes').get('src'):
+            return Response({'message': 'No likes'}, status=status.HTTP_400_BAD_REQUEST)
 
     request.data['likes'] = request.data['likes']['src']
 
@@ -356,6 +357,7 @@ def remote_like(request):
         return Response(likeserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        print(request.data)
         author = Author.objects.get(id_url=request.data['author']['id'])
         Like.objects.get(author=author, object=request.data['object'])
         return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
@@ -382,7 +384,7 @@ class Inbox(CreateAPIView):
         if user is not None:
             # TODO: Some sort of validation to check the "user" is a node and not an app "user" since we dont want our users to be able to post to our own inbox
             if request.data['type'] == 'post':
-                return remotePost(request)
+                return remote_post(request)
             elif request.data['type'] == 'author':
                 return remote_author(request)
             elif request.data['type'] == 'like':
