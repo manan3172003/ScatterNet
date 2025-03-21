@@ -12,8 +12,8 @@ from drf_yasg import openapi
 from urllib.parse import unquote
 from .models import Author
 from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
-from ..posts.models import Like
-from ..posts.serializers import PostSerializer, RemoteLikeSerializer
+from ..posts.models import Like, Comment
+from ..posts.serializers import PostSerializer, RemoteLikeSerializer, RemoteCommentSerializer
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
 
@@ -330,7 +330,25 @@ def remote_author(request):
     return Response(authorserializer.data, status=status.HTTP_200_OK)
 
 def remote_comment(request):
-    return NotImplemented
+
+    if not request.data['likes']:
+        return Response({'message': 'No likes'}, status=status.HTTP_400_BAD_REQUEST)
+    elif not request.data['likes']['count']:
+        return Response({'message': 'No likes count'}, status=status.HTTP_400_BAD_REQUEST)
+
+    request.data['likes'] = request.data['likes']['src']
+
+    commentserializer = RemoteCommentSerializer(data=request.data)
+    if not commentserializer.is_valid():
+        return Response(commentserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        Comment.objects.get(id_url=request.data['id'])
+        return Response({'message': 'Comment already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except Comment.DoesNotExist:
+        commentserializer.save()
+
+    return Response(commentserializer.data, status=status.HTTP_200_OK)
 
 def remote_like(request):
     likeserializer = RemoteLikeSerializer(data=request.data)
@@ -343,7 +361,6 @@ def remote_like(request):
         return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
     except (Like.DoesNotExist, Author.DoesNotExist) as e:
         likeserializer.save()
-
 
     return Response(likeserializer.data, status=status.HTTP_200_OK)
 
