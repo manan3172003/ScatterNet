@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../assets/styles/admin-dashboard.css";
 import getCookie from "../context/Cookie.js";
 import Notification from "../components/Notification";
+import {apiCall} from "../utils/utils.js";
 
 const AdminDashboard = () => {
   const [authors, setAuthors] = useState([]);
@@ -41,9 +42,7 @@ const AdminDashboard = () => {
   const fetchAuthors = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/authors", {
-        credentials: "include",
-      });
+      const response = await apiCall("authors");
       if (!response.ok) {
         throw new Error("Failed to fetch authors");
       }
@@ -79,15 +78,11 @@ const AdminDashboard = () => {
     };
 
     try {
-      const response = await fetch(`/api/authors/${authorId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken,
-        },
-        body: JSON.stringify(payload),
-        credentials: "include",
-      });
+      const response = await apiCall(
+          `authors/${authorId}`,
+          "PUT",
+          payload
+      );
       if (!response.ok) {
         throw new Error("Failed to update author");
       }

@@ -4,6 +4,7 @@ import "../assets/styles/profile-header.css";
 import "../assets/styles/user-profile.css";
 import { useParams } from "react-router-dom";
 import { useState, createContext, useContext, useEffect } from "react";
+import {apiCall} from "../utils/utils.js";
 
 export const UserContext = createContext();
 
@@ -16,9 +17,7 @@ export default function UserProfile() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/authors/${authorId}`
-        );
+        const response = await apiCall(`authors/${authorId}`);
         if (!response.ok) throw new Error("User not found");
         const data = await response.json();
         setUser(data);

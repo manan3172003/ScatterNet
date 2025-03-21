@@ -3,7 +3,7 @@ import { useContext, useState, useEffect } from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import { Link } from "react-router";
 import {getAuthorRelationship, getFollowers, getFollowing, handleFollowRequest} from "../utils/followApi.js";
-import {getAuthorObject} from "../utils/utils.js";
+import {apiCall, getAuthorObject} from "../utils/utils.js";
 
 export default function ProfileHeader() {
   const user = useContext(UserContext);
@@ -17,16 +17,7 @@ export default function ProfileHeader() {
 
   async function fetchUserData() {
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/authors/current-user",
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await apiCall("authors/current-user");
 
       if (response.ok) {
         const data = await response.json();

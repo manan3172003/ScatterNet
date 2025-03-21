@@ -1,16 +1,25 @@
+function convertToBase64(selectedFile) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        console.log('File being processed:', selectedFile);
+        console.log('Reader result at load:', reader.result);
+
+        reader.onload = function() {
+            console.log('called: ', reader);
+            resolve(reader.result);
+        };
+
+        reader.onerror = function(error) {
+            reject(error);
+        };
+
+        reader.readAsDataURL(selectedFile);
+    });
+}
+
 const fetchUserData = async () => {
         try {
-          const response = await fetch(
-            "http://localhost:8000/api/authors/current-user",
-            {
-              method: "GET",
-              credentials: "include",
-              headers: {
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": getCookie("csrftoken")
-              },
-            }
-          );
+          const response = await apiCall("authors/current-user");
 
           if (response.ok) {
             const data = await response.json();
@@ -24,7 +33,7 @@ const fetchUserData = async () => {
 
 async function getAuthorObject(user) {
         try {
-            const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}`);
+            const response = await apiCall(`authors/${user.author_id}`);
 
             if (!response.ok) {
                 throw new Error(`Error fetching author: ${response.status}`);
@@ -52,6 +61,46 @@ async function getAuthorObjectById(author_serial) {
         }
 }
 
+async function apiCall(
+    endpoint,
+    httpmethod = "GET",
+    body = null,
+    node = "localhost:8000"
+) {
+    return await fetch(
+        `http://${node}/api/${endpoint}`,
+        {
+            method: httpmethod,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: (body !== null) ? JSON.stringify(body) : body,
+            credentials: "include"
+        }
+    );
+}
+
+async function handleFile(e, setFileName, setBase64) {
+        const selectedFile = e.target.files[0];
+
+        if (!selectedFile) {
+            console.error("No file selected!");
+            return;
+        }
+        console.log('File being processed:', selectedFile);
+
+        try {
+            setFileName(selectedFile.name);
+            const base64string = await convertToBase64(selectedFile);
+            setBase64(base64string .split(",")[1]);
+            console.log('Base64 String: ', base64string);
+
+        } catch (error) {
+            console.error('Error converting file to Base64: ', error);
+        }
+    }
+
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -67,4 +116,4 @@ function getCookie(name) {
   return cookieValue;
 }
 
-export {getCookie, fetchUserData, getAuthorObject, getAuthorObjectById}
+export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById}
