@@ -1,5 +1,6 @@
+import base64
 from urllib.parse import unquote
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -261,6 +262,19 @@ class ImagePostsView(RetrieveAPIView):
                 return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
             return self.helper_filter(post)
+
+    #this method returns straight bytes when you hit the endpoint for the image
+    def get(self, request, *args, **kwargs):
+        post = self.get_object()
+        image_data = base64.b64decode(post.content)
+        if 'png' in post.contentType:
+            content_type = 'image/png'
+        elif 'jpeg' in post.contentType:
+            content_type = 'image/jpeg'
+        else:
+            content_type = 'application/octet-stream'
+
+        return HttpResponse(image_data, content_type=content_type)
 
 
 class LikesListView(ListAPIView):
