@@ -185,19 +185,6 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         comment.save()
         return comment
 
-class RemotePostSerializer(serializers.ModelSerializer):
-    serial = serializers.SerializerMethodField(read_only=True)
-    id = serializers.URLField()
-    page = serializers.URLField()
-    type = serializers.SerializerMethodField(read_only=True)
-    author = AuthorSerializer()
-    comments = CommentSerializer(many=True)
-    likes = LikeSerializer(many=True)
-    published = serializers.DateTimeField()
-    class Meta:
-        model = Post
-        fields = ['serial', 'type', 'title', 'id', 'page', 'description', 'contentType', 'content', 'author', 'comments', 'likes', 'published', 'visibility']
-
 class RemoteLikeSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField(read_only=True)
     serial = serializers.SerializerMethodField(read_only=True)
@@ -286,6 +273,7 @@ class RemoteCommentSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = dict()
+        data['serial'] = instance.id
         data['type'] = 'comment'
         data['author'] = RemoteAuthorSerializer(instance.author).data
         data['comment'] = instance.comment
@@ -304,8 +292,100 @@ class RemoteCommentSerializer(serializers.ModelSerializer):
 
         return data
 
-    def get_type(self, obj):
-        return "comment"
+class RemotePostSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField(read_only=True)
+    serial = serializers.SerializerMethodField(read_only=True)
+    id = serializers.URLField()
+    author = RemoteAuthorSerializer()
+    comments = RemoteCommentSerializer(many=True)
+    likes = RemoteLikeSerializer(many=True)
+    page = serializers.URLField()
 
-    def get_serial(self, obj):
-        return obj.id
+    class Meta:
+        model = Post
+        fields = ['serial', 'type', 'title', 'id', 'page', 'description', 'contentType', 'content', 'author', 'comments', 'likes', 'published', 'visibility']
+
+    def create(self, validated_data):
+        authorserializer = RemoteAuthorSerializer(data=validated_data.get('author'))
+        authorserializer.is_valid(raise_exception=True)
+        try:
+            author = Author.objects.get(id_url=validated_data.get('author').get('id'))
+        except Author.DoesNotExist:
+            author = authorserializer.save()
+
+        post = Post.objects.create(
+            title=validated_data.get('title'),
+            id_url=validated_data.get('id'),
+            page=validated_data.get('page'),
+            description=validated_data.get('description'),
+            contentType=validated_data.get('contentType'),
+            content=validated_data.get('content'),
+            author=author,
+            visibility=validated_data.get('visibility')
+        )
+
+        for comment in validated_data.get('comments'):
+            try:
+                Comment.objects.get(id_url=comment.get("id"))
+            except Comment.DoesNotExist:
+                comment_obj = RemoteCommentSerializer(data=comment)
+                comment_obj.is_valid(raise_exception=True)
+                comment_obj.save()
+
+        for like in validated_data.get('likes'):
+            try:
+                like_author = Author.objects.get(id_url=like.get('author').get('id'))
+                Like.objects.get(author=like_author, object=like.get('object'))
+            except (Like.DoesNotExist, Author.DoesNotExist) as e:
+                like_obj = RemoteLikeSerializer(data=like)
+                like_obj.is_valid(raise_exception=True)
+                like_obj.save()
+
+
+        return post
+
+    def to_representation(self, instance):
+        data = dict()
+        data['type'] = 'post'
+        data['serial'] = instance.id
+        data['title'] = instance.title
+        data['id'] = instance.id_url
+        data['contentType'] = instance.contentType
+        data['content'] = instance.content
+        data['author'] = RemoteAuthorSerializer(instance.author).data
+
+        comments = []
+        for comment in self.validated_data.get("comments"):
+            commentobj = Comment.objects.get(id_url=comment.get("id"))
+            comment_dict = dict()
+            comment_dict['serial'] = commentobj.id
+            comment_dict['type'] = 'comment'
+            comment_dict['author'] = RemoteAuthorSerializer(commentobj.author).data
+            comment_dict['comment'] = commentobj.comment
+            comment_dict['contentType'] = commentobj.contentType
+            comment_dict['published'] = commentobj.published
+            comment_dict['id'] = commentobj.id_url
+            comment_dict['post'] = commentobj.post.id_url
+
+            comment_likes = []
+            for like in comment.get('likes'):
+                commentlikeobj = Like.objects.get(id_url=like.get('id'))
+                commentlikeserializer = RemoteLikeSerializer(commentlikeobj)
+                comment_likes.append(commentlikeserializer.data)
+
+            comment_dict['likes'] = comment_likes
+            comments.append(comment_dict)
+
+        data['comments'] = comments
+
+        likes = []
+        for like in self.validated_data.get("likes"):
+            likeobj = Like.objects.get(id_url=like.get('id'))
+            likeserializer = RemoteLikeSerializer(likeobj)
+            likes.append(likeserializer.data)
+
+        data['likes'] = likes
+        data['visibility'] = instance.visibility
+        data['published'] = instance.published
+
+        return data
