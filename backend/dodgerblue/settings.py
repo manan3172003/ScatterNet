@@ -29,6 +29,7 @@ DEBUG = bool(os.environ.get('DEBUG', default=True))
 # ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 ALLOWED_HOSTS = ['*'] #this is temp, gotta change that when we go prod
 
+HOSTNAME = os.environ.get('HOSTNAME', default="http://localhost:8000")
 
 # Application definition
 

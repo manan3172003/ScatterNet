@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from dodgerblue.settings import HOSTNAME
 from .models import Author
 
 class AuthorSignUpSerializer(serializers.ModelSerializer):
@@ -36,8 +37,8 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
             is_local=True,
             **validated_data)
 
-        author.id_url = "http://localhost:8000/api/authors/{}".format(author.id)
-        author.page = "http://localhost:8000/authors/{}".format(author.id)
+        author.id_url = "{}/api/authors/{}".format(HOSTNAME, author.id)
+        author.page = "{}/authors/{}".format(HOSTNAME, author.id)
         author.save()
 
         return author
