@@ -1,9 +1,10 @@
 from copy import copy
 from dodgerblue.settings import NODEHOSTNAME
+from django.http.response import Http404
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from .models import Post, visibility_options, Comment, Like
+from .models import Post, Comment, Like
 from ..authors.models import Author
 from ..authors.serializers import AuthorSerializer, RemoteAuthorSerializer
 from ..utils.paginators import LikesPaginator, CommentsPaginator
@@ -233,6 +234,78 @@ class RemoteLikeSerializer(serializers.ModelSerializer):
 
     def get_type(self, obj):
         return "like"
+
+    def get_serial(self, obj):
+        return obj.id
+
+class RemoteCommentSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField(read_only=True)
+    serial = serializers.SerializerMethodField(read_only=True)
+    id = serializers.URLField()
+    author = RemoteAuthorSerializer()
+    post = serializers.URLField()
+    likes = RemoteLikeSerializer(many=True)
+
+    class Meta:
+        model = Comment
+        fields = ('serial', 'type', 'id', 'author', 'post', 'published', 'contentType', 'comment', 'likes')
+
+    def create(self, validated_data):
+        authorserializer = RemoteAuthorSerializer(data=validated_data.get('author'))
+        authorserializer.is_valid(raise_exception=True)
+        try:
+            author = Author.objects.get(id_url=validated_data.get('author').get('id'))
+        except Author.DoesNotExist:
+            author = authorserializer.save()
+
+        for like in validated_data.get('likes'):
+            try:
+                like_author = Author.objects.get(id_url=like.get('author').get('id'))
+                Like.objects.get(author=like_author, object=like.get('object'))
+            except (Like.DoesNotExist, Author.DoesNotExist) as e:
+                like_obj = RemoteLikeSerializer(data=like)
+                like_obj.is_valid(raise_exception=True)
+                like_obj.save()
+
+        # TODO: if post's id does not exist in DB, GET post from remote and store in DB?
+        try:
+            post = Post.objects.get(id_url=validated_data.get('post'))
+        except Post.DoesNotExist:
+            raise Http404
+
+        comment = Comment.objects.create(
+            author=author,
+            comment=validated_data.get('comment'),
+            contentType=validated_data.get('contentType'),
+            id_url=validated_data.get('id'),
+            post=post,
+            page=validated_data.get('page')
+        )
+
+        return comment
+
+    def to_representation(self, instance):
+        data = dict()
+        data['type'] = 'comment'
+        data['author'] = RemoteAuthorSerializer(instance.author).data
+        data['comment'] = instance.comment
+        data['contentType'] = instance.contentType
+        data['published'] = instance.published
+        data['id'] = instance.id_url
+        data['post'] = instance.post.id_url
+
+        likes = []
+        for like in self.validated_data.get('likes'):
+            likeobj = Like.objects.get(id_url=like.get('id'))
+            likeserializer = RemoteLikeSerializer(likeobj)
+            likes.append(likeserializer.data)
+
+        data['likes'] = likes
+
+        return data
+
+    def get_type(self, obj):
+        return "comment"
 
     def get_serial(self, obj):
         return obj.id

@@ -22,6 +22,8 @@ populate-db:
 build-backend: install-requirements clean-db migrations populate-db
 	python ./backend/manage.py runserver
 
+reset-db: clean-db migrations populate-db
+
 run-app-local: build-frontend build-backend
 
 run-app-docker:
