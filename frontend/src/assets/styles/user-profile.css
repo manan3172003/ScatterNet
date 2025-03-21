@@ -14,5 +14,6 @@
 .content-area {
   padding: 0 !important;
 }
-@media screen and (min-width: 768px) {
+.user-feed-container {
+  padding-top: 2rem;
 }
