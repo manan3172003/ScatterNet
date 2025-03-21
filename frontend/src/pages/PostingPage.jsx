@@ -65,7 +65,14 @@ export default function PostingPage(){
             setFileName(selectedFile.name);
             const base64string = await convertToBase64(selectedFile);
             console.log('Base64 String before strip: ', base64string);
-            setBase64(base64string .split(",")[1]);
+            const [contentTypeWithPrefix, base64DataString] = base64string.split(','); //splits string to data:datatype and the base64 string
+            const base64ContentType = contentTypeWithPrefix.replace("data:", "");// strip data
+            
+            setBase64(base64DataString); 
+            setBase64ContentType(base64ContentType); 
+            
+            console.log('Base64 Content Type:', base64ContentType);
+            console.log('Base64 Data:', base64DataString);
             console.log('Base64 String: ', base64string);
     
         } catch (error) {
@@ -111,11 +118,14 @@ export default function PostingPage(){
           }
         try {
             let content = "";
+            let contentType = "";
 
             if (formData.contentType.includes("base64")) {
                 content = base64Data; 
+                contentType = base64ContentType;
             } else {
                 content = formData.content;
+                contentType = formData.contentType;
             }
             
               console.log(formData)
@@ -134,7 +144,7 @@ export default function PostingPage(){
                 body: JSON.stringify({
                     title: formData.title,
                     description: formData.description,
-                    contentType: formData.contentType || null,
+                    contentType: contentType || null,
                     content: content || null,
                     visibility: formData.visibility,
                 }),
@@ -192,8 +202,6 @@ export default function PostingPage(){
                                 {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
-                                 <option value="image/png;base64">Image (png)</option>
-                                <option value="image/jpeg;base64">Image (jpeg)</option>
                                 <option value="application/base64">Image </option> 
 
                             </select>
