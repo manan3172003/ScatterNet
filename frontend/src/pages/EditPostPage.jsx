@@ -7,6 +7,7 @@ import Notification from "../components/Notification.jsx";
 export default function EditPostPage(){
 
     const [base64Data, setBase64] = useState(""); 
+    const [base64ContentType, setBase64ContentType] = useState(""); 
     const [fileName, setFileName] = useState("");
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -55,11 +56,18 @@ export default function EditPostPage(){
         console.log('File being processed:', selectedFile);
     
         try {
-            setFileName(selectedFile.name);
-            const base64string = await convertToBase64(selectedFile);
-            setBase64(base64string .split(",")[1]);
-            console.log('Base64 String: ', base64string);
-    
+          setFileName(selectedFile.name);
+          const base64string = await convertToBase64(selectedFile);
+          console.log('Base64 String before strip: ', base64string);
+          const [contentTypeWithPrefix, base64DataString] = base64string.split(','); //splits string to data:datatype and the base64 string
+          const base64ContentType = contentTypeWithPrefix.replace("data:", "");// strip data
+          
+          setBase64(base64DataString); 
+          setBase64ContentType(base64ContentType); 
+          
+          console.log('Base64 Content Type:', base64ContentType);
+          console.log('Base64 Data:', base64DataString);
+          console.log('Base64 String: ', base64string);
         } catch (error) {
             console.error('Error converting file to Base64: ', error);
         }
@@ -115,12 +123,17 @@ export default function EditPostPage(){
 
           try {
             let content = "";
+            let contentType = "";
 
             if (formData.contentType.includes("base64")) {
                 content = base64Data; 
+                contentType = base64ContentType;
             } else {
                 content = formData.content;
+                contentType = formData.contentType;
             }
+
+            
             
               console.log(formData)
               console.log(base64Data)
@@ -138,7 +151,7 @@ export default function EditPostPage(){
                 body: JSON.stringify({
                     title: formData.title,
                     description: formData.description,
-                    contentType: formData.contentType || null,
+                    contentType: contentType || null,
                     content: content || null,
                     visibility: formData.visibility,
                 }),
@@ -233,11 +246,8 @@ export default function EditPostPage(){
                             
                             <label className="form-label">Content Type</label>
                             <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
-                                {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
-                                <option value="image/png;base64">Image (png)</option>
-                                <option value="image/jpeg;base64">Image (jpeg)</option>
                                 <option value="application/base64">Image </option> 
 
                             </select>
