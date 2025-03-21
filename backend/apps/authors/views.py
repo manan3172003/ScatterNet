@@ -12,8 +12,10 @@ from drf_yasg import openapi
 from urllib.parse import unquote
 from .models import Author
 from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
+from ..follow.models import Follow
+from ..follow.serializers import RemoteFollowSerializer
 from ..posts.models import Like, Comment, Post
-from ..posts.serializers import PostSerializer, RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer
+from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
 
@@ -306,7 +308,6 @@ def remote_post(request):
 
     request.data['comments'] = request.data['comments']['src']
     request.data['likes'] = request.data['likes']['src']
-
     postserializer = RemotePostSerializer(data=request.data)
     if not postserializer.is_valid():
         return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -357,7 +358,6 @@ def remote_like(request):
         return Response(likeserializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        print(request.data)
         author = Author.objects.get(id_url=request.data['author']['id'])
         Like.objects.get(author=author, object=request.data['object'])
         return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
@@ -367,7 +367,22 @@ def remote_like(request):
     return Response(likeserializer.data, status=status.HTTP_200_OK)
 
 def remote_follow(request):
-    return NotImplemented
+    followserializer = RemoteFollowSerializer(data=request.data)
+    if not followserializer.is_valid():
+        return Response(followserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        actor_author = Author.objects.get(id_url=request.data['actor']['id'])
+        object_author = Author.objects.get(id_url=request.data['object']['id'])
+        Follow.objects.get(
+            actor=actor_author,
+            object=object_author,
+        )
+        return Response({'message': 'Follow already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except (Follow.DoesNotExist, Author.DoesNotExist) as e:
+        followserializer.save()
+
+    return Response(followserializer.data, status=status.HTTP_200_OK)
 
 
 class Inbox(CreateAPIView):
