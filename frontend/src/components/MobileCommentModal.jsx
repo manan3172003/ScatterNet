@@ -6,6 +6,7 @@ import { X, Send, Heart } from "lucide-react";
 import "../assets/styles/mobile-comment-modal.css";
 import { motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
+import {apiCall} from "../utils/utils.js";
 
 export default function MobileCommentModal({ post, onClose }) {
     const [newComment, setNewComment] = useState("");
@@ -27,12 +28,9 @@ export default function MobileCommentModal({ post, onClose }) {
         }
     }, [comments]);
     
-    const csrfToken = getCookie('csrftoken');
-    
-    
     async function fetchComments() {
         try {
-            const response = await fetch(`http://localhost:8000/api/posts/${post.id}/comments`);
+            const response = await apiCall(`posts/${post.id}/comments`);
             if (response.ok) {
                 const data = await response.json();
                 setComments(data.src || []);
@@ -44,18 +42,13 @@ export default function MobileCommentModal({ post, onClose }) {
     
     async function handleLike(commentId) {
         try {
-            const response = await fetch(`http://localhost:8000/api/like`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken,
-                },
-                body: JSON.stringify({
+            const response = await apiCall(`like`,
+                "POST",
+                {
                     "author_id": `${user.author_id}`,
                     "object": `${commentId}`,
-                }),
-                credentials: "include"
-            });
+                }
+                );
             
             if (response.ok) {
                 // Once we like a comment we need to fetch the comments again to  get realtime updates
@@ -73,19 +66,14 @@ export default function MobileCommentModal({ post, onClose }) {
         const contentType = isMarkdown ? "text/markdown" : "text/plain";
         
         try {
-            const response = await fetch(`http://localhost:8000/api/authors/${user.author_id}/commented`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify({
+            const response = await apiCall(`authors/${user.author_id}/commented`,
+                "POST",
+                {
                     "post": `${post.id}`,
                     "comment": `${newComment}`,
                     "contentType": contentType,
-                }),
-                credentials: "include",
-            });
+                }
+            );
             
             if (response.ok) {
                 setNewComment("");
