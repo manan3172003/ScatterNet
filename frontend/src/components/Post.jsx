@@ -5,11 +5,7 @@ import {AuthContext} from "../context/AuthContext";
 import "../assets/styles/post.css"
 import ContentRenderer from "../components/ContentRenderer"
 import {useNavigate} from 'react-router-dom';
-<<<<<<< HEAD
 import {Calendar, Globe, Heart, Trash, Link, Lock, MessageCircle, Share2} from "lucide-react"
-=======
-import {Calendar, Globe, Heart, Link, Lock, MessageCircle, Share2} from "lucide-react"
->>>>>>> f7c940e (Major frontend API call edits)
 import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
 import {apiCall, getAuthorObject, getPostHostname} from "../utils/utils.js";
 
