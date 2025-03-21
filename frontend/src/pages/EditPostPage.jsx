@@ -1,7 +1,7 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
-import React, {useState, useRef, useEffect} from "react";
-import {getCookie, fetchUserData} from "../utils/utils.js";
+import React, {useState, useEffect} from "react";
+import {fetchUserData, handleFile, apiCall} from "../utils/utils.js";
 import {useLocation, useNavigate} from 'react-router-dom';
 import Notification from "../components/Notification.jsx";
 export default function EditPostPage(){
@@ -11,9 +11,7 @@ export default function EditPostPage(){
     const [fileName, setFileName] = useState("");
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
-    const csrfToken = getCookie('csrftoken');
     const navigate = useNavigate();
-    const previewMethodsRef = useRef();
     const location = useLocation();
     const initialData = location.state?.formData || {
         title: "",
@@ -125,6 +123,7 @@ export default function EditPostPage(){
             let content = "";
             let contentType = "";
 
+
             if (formData.contentType.includes("base64")) {
                 content = base64Data; 
                 contentType = base64ContentType;
@@ -142,21 +141,16 @@ export default function EditPostPage(){
             let AUTHOR_SERIAL = resp.user.author_id;
             let POST_URL_ID = post.serial;
 
-            const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts/${POST_URL_ID}`,{
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify({
+            const response = await apiCall(`authors/${AUTHOR_SERIAL}/posts/${POST_URL_ID}`,
+                "PUT",
+                {
                     title: formData.title,
                     description: formData.description,
                     contentType: contentType || null,
                     content: content || null,
                     visibility: formData.visibility,
-                }),
-                credentials: "include"
-            })
+                }
+            )
 
             const data = await response.json()
             console.log(data)
@@ -184,15 +178,9 @@ export default function EditPostPage(){
 
   const fetchPost = async () => {
     setLoading(true);
-    let resp = await fetchUserData();
-
-    try {
-      const response = await fetch(`http://localhost:8000/api/posts/${postId}`, {
-        headers: {
-          "X-CSRFToken": csrfToken
-        },
-        credentials: "include",
-      });
+      await fetchUserData();
+      try {
+          const response = await apiCall(`posts/${postId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch post");
       }
@@ -264,7 +252,7 @@ export default function EditPostPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleFile} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64)} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
 
                                 </>

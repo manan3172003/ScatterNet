@@ -5,6 +5,8 @@ import { AuthContext } from "../context/AuthContext"
 import "../assets/styles/landing-page.css"
 import {useNavigate } from "react-router-dom"
 import Notification from "../components/Notification"
+import { apiCall } from "../utils/utils.js";
+
 export default function LandingPage(){
     const {login} = useContext(AuthContext)
     const navigate = useNavigate()
@@ -62,20 +64,17 @@ export default function LandingPage(){
         }
 
         try {
-            const response = await fetch("http://localhost:8000/api/authors/signup",{
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+            const response = await apiCall(
+                "authors/signup",
+                "POST",
+                {
                     username: formData.username,
                     password: formData.password,
                     github: formData.github || null,
                     displayName: formData.displayName,
-                    profileImage: formData.profileImage || `https://robohash.org/${formData.displayName}.png`,
-                }),
-                credentials: "include"
-            })
+                    profileImage: formData.profileImage || `https://robohash.org/${formData.displayName}.png`
+                }
+                )
 
             const data = await response.json()
             

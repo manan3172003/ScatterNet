@@ -7,11 +7,9 @@ import React, { useState, useRef,useEffect } from "react";
 import {getCookie, fetchUserData} from "../utils/utils.js";
 import Notification from "../components/Notification.jsx";
 import {data, useLocation, useNavigate} from 'react-router-dom';
-
-
+import {fetchUserData, apiCall, handleFile, getCookie} from "../utils/utils.js";
 export default function PostingPage(){
-   
-    const previewMethodsRef = useRef();
+
     const [base64Data, setBase64] = useState(""); 
     const [base64ContentType, setBase64ContentType] = useState(""); 
     const [fileName, setFileName] = useState(""); 
@@ -32,6 +30,7 @@ export default function PostingPage(){
         content: "", //deets
         visibility: "PUBLIC",
     })
+
 
     
 
@@ -130,6 +129,7 @@ export default function PostingPage(){
             let content = "";
             let contentType = "";
 
+
             if (formData.contentType.includes("base64")) {
                 content = base64Data; 
                 contentType = base64ContentType;
@@ -142,24 +142,18 @@ export default function PostingPage(){
               console.log(base64Data)
 
             let resp = await fetchUserData();
-            let AUTHOR_SERIAL = resp.user.author_id
-            let csrfToken = getCookie('csrftoken');
+            let AUTHOR_SERIAL = resp.user.author_id;
 
-            const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}/posts`,{
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                body: JSON.stringify({
+            const response = await apiCall(`authors/${AUTHOR_SERIAL}/posts`,
+                "POST",
+                {
                     title: formData.title,
                     description: formData.description,
                     contentType: contentType || null,
                     content: content || null,
                     visibility: formData.visibility,
-                }),
-                credentials: "include"
-            })
+                }
+                );
 
             const data = await response.json()
             console.log(data)
@@ -231,7 +225,7 @@ export default function PostingPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={handleFile} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64)} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
                                 </>
                             )}

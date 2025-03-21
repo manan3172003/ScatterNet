@@ -77,6 +77,10 @@ table {
   border-collapse: collapse;
 }
 
+table tbody tr {
+  height: 3.75rem;
+}
+
 th {
   padding: 0.75rem 1.5rem;
   text-align: left;

@@ -5,6 +5,9 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import "../assets/styles/homepage.css";
 import getCookie from "../context/Cookie";
 import DesktopCommentModal from "../components/DesktopCommentModal";
+import HeaderLogo from "../components/HeaderLogo";
+
+import {apiCall} from "../utils/utils.js";
 export default function HomePage() {
     const [posts, setPosts] = useState([]);
     const csrfToken = getCookie('csrftoken');
@@ -65,14 +68,7 @@ export default function HomePage() {
         setLoading(true);
         
         try {
-            const response = await fetch(`http://localhost:8000/api/posts?page=1&size=${POSTS_PER_PAGE}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                credentials: "include"
-            });
+            const response = await apiCall(`posts?page=1&size=${POSTS_PER_PAGE}`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -98,12 +94,7 @@ export default function HomePage() {
         
         try {
             let url = pagination.next;
-            
-            if (!url) {
-                const nextPage = pagination.currentPage + 1;
-                url = `http://localhost:8000/api/posts?page=${nextPage}&size=${POSTS_PER_PAGE}`;
-            }
-            
+
             const response = await fetch(url, {
                 headers: {
                     "Content-Type": "application/json",
@@ -137,59 +128,60 @@ export default function HomePage() {
         }
     }, [loading, hasMore, pagination, posts, csrfToken]);
 
-    // Re-renders all posts if user follows an author on one of the post, so user won't be able
-    // to follow them in different post objects after they do in one
-     function refreshFeed() {
-         const currentScroll = window.scrollY;
-         setRefreshFlag(prev => prev * -1);
-         fetchUserPosts().then(() => {
-             window.scrollTo(0, currentScroll);
-         });
-    }
-    
-    return (
-        <div className="home-page-wrapper">
-            <InfiniteScroll
-                dataLength={posts.length}
-                next={fetchMorePosts}
-                hasMore={hasMore}
-                loader={<div className="loader-message">Loading more posts...</div>}
-                endMessage={<p className="end-message">No more posts to show.</p>}
-                scrollThreshold={0.8}
-                className="infinite-scroll-container"
-            >
-                <main key={refreshFlag} className="feed-container">
-                    {posts.length > 0 ? (
-                        posts.map((post) => (
-                            <Post
-                                key={post.id}
-                                post={post}
-                                onPostClick={() => handlePostClick(post)}
-                                onCommentClick={(e) => handleCommentClick(post, e)}
-                                onRefresh={refreshFeed}
-                            />
-                        ))
-                    ) : (
-                        !loading && (
-                            <p className="end-message">No posts available. Create a post or follow users to see content.</p>
-                        )
-                    )}
-                </main>
-            </InfiniteScroll>
-            
-            {showComments && (
-            isMobile ? (
-                <MobileCommentModal 
-                    post={selectedPost} 
-                    onClose={() => setShowComments(false)} 
+  // Re-renders all posts if user follows an author on one of the post, so user won't be able
+  // to follow them in different post objects after they do in one
+  function refreshFeed() {
+    const currentScroll = window.scrollY;
+    setRefreshFlag((prev) => prev * -1);
+    fetchUserPosts().then(() => {
+      window.scrollTo(0, currentScroll);
+    });
+  }
+
+  return (
+    <div className="home-page-wrapper">
+      <header className="header">{<HeaderLogo />}</header>
+      <InfiniteScroll
+        dataLength={posts.length}
+        next={fetchMorePosts}
+        hasMore={hasMore}
+        loader={<div className="loader-message">Loading more posts...</div>}
+        endMessage={<p className="end-message">No more posts to show.</p>}
+        scrollThreshold={0.8}
+        className="infinite-scroll-container"
+      >
+        <main key={refreshFlag} className="feed-container">
+          {posts.length > 0
+            ? posts.map((post) => (
+                <Post
+                  key={post.id}
+                  post={post}
+                  onPostClick={() => handlePostClick(post)}
+                  onCommentClick={(e) => handleCommentClick(post, e)}
+                  onRefresh={refreshFeed}
                 />
-            ) : (
-                <DesktopCommentModal 
-                    post={selectedPost} 
-                    onClose={() => setShowComments(false)} 
-                />
-            )
-        )}
-        </div>
-    );
+              ))
+            : !loading && (
+                <p className="end-message">
+                  No posts available. Create a post or follow users to see
+                  content.
+                </p>
+              )}
+        </main>
+      </InfiniteScroll>
+
+      {showComments &&
+        (isMobile ? (
+          <MobileCommentModal
+            post={selectedPost}
+            onClose={() => setShowComments(false)}
+          />
+        ) : (
+          <DesktopCommentModal
+            post={selectedPost}
+            onClose={() => setShowComments(false)}
+          />
+        ))}
+    </div>
+  );
 }
