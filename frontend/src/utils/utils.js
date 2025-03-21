@@ -116,4 +116,22 @@ function getCookie(name) {
   return cookieValue;
 }
 
-export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById}
+function getPostHostname(post) {
+  try {
+    const url = new URL(post.id);
+    return url.origin; // this pulls out the stuff like "http://localhost:8000"
+  } catch (error) {
+    // try using the fall back to the author's node instead id
+    try {
+      const authorUrl = new URL(post.author.id);
+      return authorUrl.origin;
+    } catch (e) {
+      console.error("Could not figure out hostname");
+      return "";
+    }
+  }
+}
+
+
+export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById,
+    getPostHostname}
