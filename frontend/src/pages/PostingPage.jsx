@@ -1,3 +1,9 @@
+/*
+content type bug on create post page
+image should just be one type and determined by frontend not the user
+when we create a post notification says updated post instead of created post, after the post is successfully made page should redirect to homepage
+notification on edit post needs to be fixed
+*/
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, { useState, useRef,useEffect } from "react";
@@ -11,9 +17,9 @@ export default function PostingPage(){
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        contentType: "", //markdown, plain,img
+        contentType: "text/markdown", //markdown, plain,img
         content: "", //deets
-        visibility: "",
+        visibility: "PUBLIC",
     })
 
     async function handleFile(e) {
@@ -112,9 +118,9 @@ export default function PostingPage(){
                 setFormData({
                     title: "",
                     description: "",
-                    contentType: "",
+                    contentType: "text/markdown",
                     content: "",
-                    visibility: "",
+                    visibility: "PUBLIC",
                 })
             }
 
@@ -136,7 +142,6 @@ export default function PostingPage(){
                             <label className="form-label">Create Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
-                                <option value="">Select...</option> 
                                 <option value="PUBLIC">Public</option>
                                 <option value="FRIENDS">Friends-Only</option>
                                 <option value="UNLISTED">Unlisted</option>
