@@ -224,7 +224,7 @@ export default function PostingPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64)} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64)} value={formData.content} accept="image/*"/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
                                 </>
                             )}
