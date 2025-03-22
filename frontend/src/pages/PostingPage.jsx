@@ -3,11 +3,10 @@ notification on edit and create post needs to be fixed
 */
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
-import React, { useState, useRef,useEffect } from "react";
-import {getCookie, fetchUserData} from "../utils/utils.js";
+import React, { useState } from "react";
 import Notification from "../components/Notification.jsx";
-import {data, useLocation, useNavigate} from 'react-router-dom';
-import {fetchUserData, apiCall, handleFile, getCookie} from "../utils/utils.js";
+import {useNavigate} from 'react-router-dom';
+import {fetchUserData, apiCall} from "../utils/utils.js";
 export default function PostingPage(){
 
     const [base64Data, setBase64] = useState(""); 
