@@ -224,7 +224,7 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
         <ContentRenderer contentType={post.contentType} content={displayContent} postHostname={postHostname}
                          postId={post.id}/>
 
-        {hasLongContent && (
+        {hasLongContent && (!post.contentType.includes("image")) && (
           <button
             className="read-more-button"
             onClick={(e) => {
