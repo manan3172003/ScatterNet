@@ -15,7 +15,8 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIV
 from .validations import has_post_access, can_access_comment
 from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
-from ..utils.helper import are_friends, follows, merge_sorted_post_lists
+from ..utils.helper import *
+
 
 @swagger_auto_schema(
     method='get',
@@ -198,6 +199,21 @@ class PostListCreateView(ListAPIView):
             serializer = PostSerializer(data=request.data, context=context)
             if serializer.is_valid():
                 serializer.save()
+                #TODO: this is currently a shitty fucking sync operation, which will hold response. Rewrite to async (queue) if time allows
+                post_data = serializer.data
+                post_visibility = post_data['visibility']
+                if post_visibility == "PUBLIC":
+                    all_remote_authors = fetch_all_remote_users()
+                    send_object(post_data, all_remote_authors)
+
+                elif post_visibility == 'UNLISTED':
+                    remote_followers = fetch_remote_followers()
+                    send_object(post_data, remote_followers)
+
+                elif post_visibility == "FRIENDS":
+                    remote_friends = fetch_remote_friends()
+                    send_object(post_data, remote_friends)
+
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

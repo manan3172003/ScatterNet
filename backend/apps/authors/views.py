@@ -302,13 +302,13 @@ def get_current_user(request):
         return Response({'error': "User is not logged in."}, status=status.HTTP_401_UNAUTHORIZED)
 
 def remote_post(request):
-    if not request.data.get('comments') or not request.data.get('comments').get('src'):
+    if 'comments' not in request.data or 'src' not in request.data['comments']:
         return Response({'error': 'No comments object'}, status=status.HTTP_400_BAD_REQUEST)
 
     for comment in list(request.data.get('comments').get('src')):
         comment['likes'] = comment['likes']['src']
 
-    if not request.data.get('likes') or not request.data.get('likes').get('src'):
+    if 'likes' not in request.data or 'src' not in request.data['likes']:
         return Response({'error': 'No likes object'}, status=status.HTTP_400_BAD_REQUEST)
 
     request.data['comments'] = request.data['comments']['src']
@@ -346,7 +346,7 @@ def remote_author(request):
 
 def remote_comment(request):
 
-    if not request.data.get('likes') or not request.data.get('likes').get('src'):
+    if 'likes' not in request.data or 'src' not in request.data['likes']:
             return Response({'message': 'No likes'}, status=status.HTTP_400_BAD_REQUEST)
 
     request.data['likes'] = request.data['likes']['src']
