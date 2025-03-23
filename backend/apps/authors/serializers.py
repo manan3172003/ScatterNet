@@ -40,6 +40,7 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
             **validated_data)
 
         author.id_url = "{}/api/authors/{}".format(NODEHOSTNAME, author.id)
+        author.host = NODEHOSTNAME
         author.page = "{}/authors/{}".format(NODEHOSTNAME, author.id)
         author.save()
 

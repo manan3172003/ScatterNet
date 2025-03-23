@@ -52,10 +52,13 @@ def send_object(payload, remote_authors):
     headers = {'Content-Type': 'application/json'}
     for remote_author in remote_authors:
         inbox_url = f"{remote_author.host}/api/authors/{remote_author.id_url}/inbox"
-        resp = request(method="POST",
+        try:
+            resp = request(method="POST",
                 url=inbox_url,
                 data=payload,
-                auth=HTTPBasicAuth("8000user", "8000user"),
+                auth=HTTPBasicAuth(DODGERBLUE_NODE_USERNAME,DODGERBLUE_NODE_PASSWORD),
                 headers=headers
-        )
-        print("This is the fuckin response:", resp.text)
+            )
+            print("This is the response:", resp.text)
+        except Exception as e:
+            print("sending an object to a node failed. This is the reason: ", e)
