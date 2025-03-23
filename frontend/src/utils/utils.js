@@ -50,7 +50,7 @@ async function getAuthorObject(user) {
 
 async function getAuthorObjectById(author_serial) {
         try {
-            const response = await fetch(`http://localhost:8000/api/authors/${author_serial}`);
+            const response = await apiCall(`authors/${author_serial}`);
 
             if (!response.ok) {
                 throw new Error(`Error fetching author: ${response.status}`);
@@ -91,14 +91,14 @@ async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
         }
     }
 
+const nodeHost = import.meta.env.VITE_NODEHOSTNAME || "http://localhost:8000";
 async function apiCall(
     endpoint,
     httpmethod = "GET",
     body = null,
-    node = "localhost:8000"
 ) {
     return await fetch(
-        `http://${node}/api/${endpoint}`,
+        `${nodeHost}/api/${endpoint}`,
         {
             method: httpmethod,
             headers: {

@@ -354,7 +354,7 @@ class LikesListView(ListAPIView):
 
         if post_fqid:
             post = get_object_or_404(Post, id_url=post_fqid)
-            queryset = Like.objects.filter(object=post.id)
+            queryset = Like.objects.filter(object=post.id_url)
             return queryset
 
 class LikeRetrieveView(RetrieveAPIView):
@@ -518,7 +518,7 @@ def check_if_comment_was_successful(response):
     if response.status_code == status.HTTP_201_CREATED:
         new_comment_id_url = response.data.get('id')
         try:
-            new_comment = Comment.objects.get(id=new_comment_id_url)
+            new_comment = Comment.objects.get(id_url=new_comment_id_url)
             send_comment_to_remote_post_author(new_comment)
             return new_comment
         except Comment.DoesNotExist:
@@ -526,7 +526,7 @@ def check_if_comment_was_successful(response):
             return None
     return None
 
-def send_comment_to_remote_post_author(response, comment_instance):
+def send_comment_to_remote_post_author(comment_instance):
     post_author = comment_instance.post.author
     if not post_author.is_local:
         comment_data = CommentSerializer(comment_instance).data
@@ -536,7 +536,7 @@ def send_comment_to_remote_post_author(response, comment_instance):
 class CommentedListCreateView(ListCreateAPIView):
     """
     APIView to both, list a collection and create a comment on that endpoint
-    Method:
+    Method:`
         GET
         POST
     URL:

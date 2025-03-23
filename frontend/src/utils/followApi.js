@@ -1,4 +1,4 @@
-import {getCookie, fetchUserData, getAuthorObject} from "./utils.js";
+import {getCookie, fetchUserData, getAuthorObject, apiCall} from "./utils.js";
 
 export async function getAuthorRelationship(otherAuthor){
     let {user: user} = await fetchUserData();
@@ -12,7 +12,7 @@ export async function getAuthorRelationship(otherAuthor){
 
     try {
         // Check if other author is in following list of user
-        const followerResponse = await fetch(`http://localhost:8000/api/authors/${user.serial}/following?isPending=false`);
+        const followerResponse = await apiCall(`authors/${user.serial}/following?isPending=false`);
         const followerData = await followerResponse.json();
 
         if (followerData.following.some(author => author.id === otherAuthor.id)) {
@@ -20,7 +20,7 @@ export async function getAuthorRelationship(otherAuthor){
         }
 
         // Check if there is a pending request to other author
-        const followReqResponse = await fetch(`http://localhost:8000/api/authors/${user.serial}/following?isPending=true`);
+        const followReqResponse = await apiCall(`authors/${user.serial}/following?isPending=true`);
         const followReqData = await followReqResponse.json();
 
         if (followReqData.following.some(author => author.id === otherAuthor.id)) {
@@ -41,14 +41,7 @@ export async function handleFollowRequest(user, otherAuthor, authorsRelationship
         let newRelationship = authorsRelationship;
         let method = authorsRelationship === "Following" ? "DELETE" : "PUT";
 
-        const response = await fetch(`http://localhost:8000/api/authors/${otherAuthor.serial}/followers/${user.id}`, {
-            method,
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-            },
-        });
+        const response = await apiCall(`authors/${otherAuthor.serial}/followers/${user.id}`)
 
         if (response.ok) {
             newRelationship = authorsRelationship === "Following" ? "Not Following" : "Requested";
@@ -70,7 +63,7 @@ export async function handleFollowRequest(user, otherAuthor, authorsRelationship
 
 export async function getFollowRequests(user) {
     try {
-        const response = await fetch(`http://localhost:8000/api/authors/${user.serial}/followers?isPending=true`)
+        const response = await apiCall(`authors/${user.serial}/followers?isPending=true`)
         if (response.ok) {
             return await response.json()
         }
@@ -83,7 +76,7 @@ export async function getFollowRequests(user) {
 
 export async function getFollowing(user) {
     try {
-        const response = await fetch(`http://localhost:8000/api/authors/${user.serial}/following`)
+        const response = await apiCall(`authors/${user.serial}/following`)
         if (response.ok) {
             return await response.json()
         }
@@ -96,7 +89,7 @@ export async function getFollowing(user) {
 
 export async function getFollowers(user) {
     try {
-        const response = await fetch(`http://localhost:8000/api/authors/${user.serial}/followers`)
+        const response = await apiCall(`authors/${user.serial}/followers`)
         if (response.ok) {
             return await response.json()
         }
@@ -111,14 +104,7 @@ export async function handleRespondingToFollowRequest(user, otherAuthor, authorR
     try {
         let method = authorResponse === "Accept" ? "PUT" : "DELETE";
 
-        const response = await fetch(`http://localhost:8000/api/authors/${user.serial}/followers/${otherAuthor.id}`, {
-            method,
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-            },
-        });
+        const response = await apiCall(`authors/${user.serial}/followers/${otherAuthor.id}`, method)
         if (!response.ok) {
             console.error(`Error responding to follow request (${method}):`, response.status);
         }
