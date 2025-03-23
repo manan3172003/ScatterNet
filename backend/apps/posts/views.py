@@ -388,32 +388,21 @@ def send_like_to_remote_post_author(likes_data, object_model):
 def post_like(author_id, object_url):
     author = get_object_or_404(Author, id=author_id)
 
-    created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
-
-    if not created_success:
-        return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
-
-    """
-    object_model will always be a "post" object because we care about the visibility of the post
-    based on that we determine where we will be sending the like object
-        - PUBLIC: everyone in the remote node will get that like
-        - UNLISTED: everyone who is the follower of the author of the post will get that like
-        - FRIENDS: only the friends of the author of the post will get the like
-    
-    this imma just send it to just the post author
-    Assuming:
-        - if we like a comment, even if it was a remote comment, we are going to assume that the post author ALSO has that comment
-        - if we like a post, then we only send the like to the post author
-    """
+    #we try to pull the post, if the object_url is already a post its fine, if its a comment, pull its parent post and send a like to the author of the parent post
     try:
         object_model = Comment.objects.get(id_url=object_url)
-        object_model = Post.objects.get(id_url=object_model.post)
+        object_model = Post.objects.get(id_url=object_model.post.id_url)
     except Comment.DoesNotExist:
         try:
             object_model = Post.objects.get(id_url=object_url)
         except Post.DoesNotExist:
             return Response({"error": "what da flip are you liking lil bro?"},
                             status=status.HTTP_403_FORBIDDEN)
+
+    created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
+
+    if not created_success:
+        return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
     created_like.id_url = "{}/api/authors/{}/liked/{}".format(NODEHOSTNAME, author.id, created_like.id)
     created_like.save()
