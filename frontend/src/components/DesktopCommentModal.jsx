@@ -6,6 +6,7 @@ import "../assets/styles/desktop-comment-modal.css";
 import { AuthContext } from "../context/AuthContext";
 import Post from "./Post";
 import {apiCall} from "../utils/utils.js";
+import {fetchAllComments} from "../utils/commentsAndLikesApi.js";
 
 export default function DesktopCommentModal({ post, onClose }) {
     const [newComment, setNewComment] = useState("");
@@ -24,17 +25,10 @@ export default function DesktopCommentModal({ post, onClose }) {
             document.body.style.overflow = '';
         };
     }, []);
-    
+
     async function fetchComments() {
-        try {
-            const response = await apiCall(`posts/${post.id}/comments`);
-            if (response.ok) {
-                const data = await response.json();
-                setComments(data.src || []);
-            }
-        } catch (error) {
-            console.error("Error fetching comments:", error);
-        }
+        const allComments = await fetchAllComments(post);
+        setComments(allComments);
     }
     
     async function handleLike(commentId) {

@@ -158,6 +158,7 @@ export default function HomePage() {
                   post={post}
                   onPostClick={() => handlePostClick(post)}
                   onCommentClick={(e) => handleCommentClick(post, e)}
+                  isCommentModalOpen={showComments}
                   onRefresh={refreshFeed}
                 />
               ))
