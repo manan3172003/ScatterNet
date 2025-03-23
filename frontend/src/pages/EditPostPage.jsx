@@ -1,7 +1,7 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, {useState, useEffect} from "react";
-import {fetchUserData, handleFile, apiCall} from "../utils/utils.js";
+import {fetchUserData, handleFile, apiCall,validExtensions} from "../utils/utils.js";
 import {useLocation, useNavigate} from 'react-router-dom';
 import Notification from "../components/Notification.jsx";
 export default function EditPostPage(){
@@ -44,53 +44,6 @@ export default function EditPostPage(){
     const postId = location.state?.postId
     const [formData, setFormData] = useState(initialData)
 
-    async function handleFile(e) {
-        const selectedFile = e.target.files[0];
-
-        if (!selectedFile) {
-            console.error("No file selected!");
-            return;
-        }
-        console.log('File being processed:', selectedFile);
-    
-        try {
-          setFileName(selectedFile.name);
-          const base64string = await convertToBase64(selectedFile);
-          console.log('Base64 String before strip: ', base64string);
-          const [contentTypeWithPrefix, base64DataString] = base64string.split(','); //splits string to data:datatype and the base64 string
-          const base64ContentType = contentTypeWithPrefix.replace("data:", "");// strip data
-          
-          setBase64(base64DataString); 
-          setBase64ContentType(base64ContentType); 
-          
-          console.log('Base64 Content Type:', base64ContentType);
-          console.log('Base64 Data:', base64DataString);
-          console.log('Base64 String: ', base64string);
-        } catch (error) {
-            console.error('Error converting file to Base64: ', error);
-        }
-    }
-
-    function convertToBase64(selectedFile) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            console.log('File being processed:', selectedFile);
-            console.log('Reader result at load:', reader.result);
-    
-            reader.onload = function() {
-                console.log('called: ', reader);
-                resolve(reader.result); 
-            };
-    
-            reader.onerror = function(error) {
-                reject(error); 
-            };
-    
-            reader.readAsDataURL(selectedFile);
-        });
-    }
-
-
     function handleChange(e){
       setFormData({
         ...formData,
@@ -127,12 +80,15 @@ export default function EditPostPage(){
             if (formData.contentType.includes("base64")) {
                 content = base64Data; 
                 contentType = base64ContentType;
+                 //checks if extension is valid
+                 const extension = contentType.split("/")[1].split(";")[0];
+                 if (!validExtensions.includes(extension)) {  
+                     contentType = 'application/base64';
+                 }
             } else {
                 content = formData.content;
                 contentType = formData.contentType;
             }
-
-            
             
               console.log(formData)
               console.log(base64Data)
@@ -160,7 +116,7 @@ export default function EditPostPage(){
                     "Edited Post!",
                     "Redirecting to your profile..."
                     )
-                setTimeout(() => {navigate(`/authors/${AUTHOR_SERIAL}`)}, 1500);
+                setTimeout(() => {navigate(`/home`)}, 1500);
             } else {
                 console.error("Error updating post");
                 showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
@@ -246,13 +202,11 @@ export default function EditPostPage(){
                                 </>
                             )}
 
-                            {(formData.contentType === 'image/png;base64' ||
-                                formData.contentType === 'image/jpeg;base64' ||
-                                formData.contentType === 'application/base64') && (
+                            {(formData.contentType === 'application/base64') && (
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64)} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64,setBase64ContentType)} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
 
                                 </>
