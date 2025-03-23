@@ -157,3 +157,6 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False, #will override this later when our proper login/logout views are in place
     'LOGIN_URL': '/api/authors/login',
 }
+
+DODGERBLUE_NODE_USERNAME = os.environ.get('DODGERBLUE_NODE_USERNAME')
+DODGERBLUE_NODE_PASSWORD = os.environ.get('DODGERBLUE_NODE_PASSWORD')
