@@ -165,10 +165,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class CommentCreateSerializer(serializers.ModelSerializer):
     post = serializers.URLField(write_only=True)
+    id = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['comment', 'contentType', 'post']
+        fields = ['comment', 'contentType', 'post', 'id']
 
     def create(self, validated_data):
         author_serial = self.context.get("view").kwargs.get("author_serial")
@@ -184,6 +185,9 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         comment.id_url = f"{NODEHOSTNAME}/api/authors/{author.id}/commented/{comment.id}"
         comment.save()
         return comment
+
+    def get_id(self, obj):
+        return obj.id_url
 
 class RemoteLikeSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField(read_only=True)

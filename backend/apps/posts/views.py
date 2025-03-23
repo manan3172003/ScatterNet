@@ -514,25 +514,13 @@ class CommentsListView(ListAPIView):
 
 # TODO: URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
 
-def check_if_comment_was_successful(response):
-    if response.status_code == status.HTTP_201_CREATED:
-        new_comment_id_url = response.data.get('id')
-        try:
-            new_comment = Comment.objects.get(id_url=new_comment_id_url)
-            send_comment_to_remote_post_author(new_comment)
-            return new_comment
-        except Comment.DoesNotExist:
-            print("For some reason we couldn't find the comment to send to a remote node. Please investigate.")
-            return None
-    return None
-
-def send_comment_to_remote_post_author(comment_instance):
+def send_comment_to_remote_post_author(comment_instance, request):
     post_author = comment_instance.post.author
     if not post_author.is_local:
-        comment_data = CommentSerializer(comment_instance).data
+        comment_data = CommentSerializer(comment_instance, context={'request': request}).data
         send_object(comment_data, [post_author])
 
-
+#TODO: response objects should be comment objects
 class CommentedListCreateView(ListCreateAPIView):
     """
     APIView to both, list a collection and create a comment on that endpoint
@@ -574,9 +562,9 @@ class CommentedListCreateView(ListCreateAPIView):
         if request.user.is_authenticated:
             if request.user.is_staff or post.visibility in ["PUBLIC", "UNLISTED"]:
                 response = super().post(request, *args, **kwargs)
-                tested_comment = check_if_comment_was_successful(response)
-                if tested_comment:
-                    send_comment_to_remote_post_author(tested_comment)
+                if response.status_code == status.HTTP_201_CREATED:
+                    comment_obj = Comment.objects.get(id_url=response.data.get('id'))
+                    send_comment_to_remote_post_author(comment_obj, request)
                 return response
 
             elif post.visibility == "DELETED":
@@ -584,9 +572,9 @@ class CommentedListCreateView(ListCreateAPIView):
             elif (request.user.author_profile.id == post.author.id or
                   are_friends(request.user.author_profile.id, post.author.id)):
                 response = super().post(request, *args, **kwargs)
-                tested_comment = check_if_comment_was_successful(response)
-                if tested_comment:
-                    send_comment_to_remote_post_author(tested_comment)
+                if response.status_code == status.HTTP_201_CREATED:
+                    comment_obj = Comment.objects.get(id_url=response.data.get('id'))
+                    send_comment_to_remote_post_author(comment_obj, request)
                 return response
 
             else:
@@ -595,12 +583,6 @@ class CommentedListCreateView(ListCreateAPIView):
         else:
             return Response({'error': 'You are not logged in to comment.'},
                             status=status.HTTP_403_FORBIDDEN)
-
-        response = super().post(request, *args, **kwargs)
-        tested_comment = check_if_comment_was_successful(response)
-        if tested_comment:
-            send_comment_to_remote_post_author(tested_comment)
-        return response
 
 
 class CommentRetrieveView(RetrieveAPIView):
