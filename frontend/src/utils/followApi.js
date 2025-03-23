@@ -6,7 +6,7 @@ export async function getAuthorRelationship(otherAuthor){
 
     // First condition is when we pass the whole author object
     // second is when we have the otherAuthor's author id (e.g., ProfileHeader)
-    if (user.displayName === otherAuthor.displayName) {
+    if (user.id === otherAuthor.id) {
         return "Same Author";
     }
 
@@ -36,12 +36,12 @@ export async function getAuthorRelationship(otherAuthor){
 }
 
 // WE DONT HAVE A WAY TO CANCEL FOLLOW REQS, not in spec either
-export async function handleFollowRequest(user, otherAuthor, authorsRelationship) {
+export async function handleFollowRequest(user, otherAuthorId, authorsRelationship) {
     try {
         let newRelationship = authorsRelationship;
         let method = authorsRelationship === "Following" ? "DELETE" : "PUT";
 
-        const response = await fetch(`http://localhost:8000/api/authors/${otherAuthor.serial}/followers/${user.id}`, {
+        const response = await fetch(`http://localhost:8000/api/authors/${otherAuthorId}/followers/${user.id}`, {
             method,
             credentials: "include",
             headers: {
