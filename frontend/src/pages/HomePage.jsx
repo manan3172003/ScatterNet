@@ -58,6 +58,7 @@ export default function HomePage() {
     
     function handleCommentClick(post, e) {
         e.stopPropagation();
+        console.log(post)
         setSelectedPost(post);
         setShowComments(true);
     }

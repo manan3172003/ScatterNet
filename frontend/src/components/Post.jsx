@@ -9,7 +9,7 @@ import {Calendar, Globe, Heart, Trash, Link, Lock, MessageCircle, Share2} from "
 import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
 import {apiCall, getAuthorObject} from "../utils/utils.js";
 
-export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh }) {
+export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh, isInModal=false }) {
   const { user } = useContext(AuthContext)
   const [likeCount, setLikeCount] = useState(post.likes.count)
   const [commentCount, setCommentCount] = useState(post.comments.count)
@@ -20,7 +20,7 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
   const [expanded, setExpanded] = useState(false)
   const navigate = useNavigate();
 
-  console.log(hasLiked)
+ 
   const formattedDate = new Date(post.published).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -136,14 +136,48 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
       console.log(error);
     }
   }
-  async function getLikeStatus(user) {
 
-    const response = await apiCall(`authors/${user.author_id}/liked`)
-    if (response.ok) {
-      const liked = await response.json()
-      const targetObject = post.id
-      return liked.src.some(like => like.object === targetObject);
+  async function getLikeStatus(user) {
+    const targetObject = post.id;
+    let currentUrl = `authors/${user.author_id}/liked`;
+    
+    while (currentUrl) {
+      const response = await apiCall(currentUrl);
+      if (!response.ok) {
+        console.error("Error fetching likes:", response.statusText);
+        return false;
+      }
+      
+      const liked = await response.json();
+      
+      if (liked.src.some(like => like.object === targetObject)) {
+        return true;
+      }
+      
+      if (liked.next) {
+        try {
+          const nextUrl = new URL(liked.next);
+          
+          let path = nextUrl.pathname;
+          const apiPrefix = '/api/';
+          
+          if (path.includes(apiPrefix)) {
+            path = path.substring(path.indexOf(apiPrefix) + apiPrefix.length);
+          } else if (path.startsWith('/')) {
+            path = path.substring(1);
+          }
+          
+          currentUrl = path + nextUrl.search;
+        } catch (error) {
+          console.error("Error parsing next URL:", error);
+          currentUrl = null;
+        }
+      } else {
+        currentUrl = null; 
+      }
     }
+    
+    return false;
   }
   // TODO: FIX LONG CONTENT STUFF PLEASE
   const hasLongContent = post.content && post.content.length > 300
@@ -153,7 +187,7 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
   const displayContent = post.content
 
   return (
-    <div className="post-container" onClick={onPostClick}>
+    <div className={`post-container ${isInModal ? 'post-in-modal' : ''}`} onClick={onPostClick}>
       <div className="post-header">
         <div className="post-header-top">
           <h2 className="post-title">{post.title}</h2>

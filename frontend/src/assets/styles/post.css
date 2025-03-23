@@ -6,14 +6,23 @@
   width: 100%;
   transition: transform 0.2s, box-shadow 0.2s;
   margin-bottom: 1.5rem;
+  
+}
+.post-in-modal {
+  transform: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
-.post-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+.post-in-modal:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
-
-
 .post-header {
   padding: 1.25rem 1.25rem 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -149,7 +158,7 @@
   max-height: 500px;
   object-fit: contain;
   border-radius: 0.5rem;
-  margin: 0.5rem 0;
+ 
 }
 
 .file-attachment {
