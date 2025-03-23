@@ -6,7 +6,7 @@ import "../assets/styles/desktop-comment-modal.css";
 import { AuthContext } from "../context/AuthContext";
 import Post from "./Post";
 import {apiCall} from "../utils/utils.js";
-import {fetchAllComments} from "../utils/commentApi.js";
+import {fetchAllComments} from "../utils/commentsAndLikesApi.js";
 
 export default function DesktopCommentModal({ post, onClose }) {
     const [newComment, setNewComment] = useState("");
@@ -25,7 +25,7 @@ export default function DesktopCommentModal({ post, onClose }) {
             document.body.style.overflow = '';
         };
     }, []);
-    
+
     async function fetchComments() {
         const allComments = await fetchAllComments(post);
         setComments(allComments);

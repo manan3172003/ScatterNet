@@ -7,7 +7,7 @@ import "../assets/styles/mobile-comment-modal.css";
 import { motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import {apiCall} from "../utils/utils.js";
-import {fetchAllComments} from "../utils/commentApi.js";
+import {fetchAllComments} from "../utils/commentsAndLikesApi.js";
 
 export default function MobileCommentModal({ post, onClose }) {
     const [newComment, setNewComment] = useState("");
