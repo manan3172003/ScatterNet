@@ -173,7 +173,7 @@ export default function EditPostPage(){
             <main className="posting-main">
                 <div className="form-content" >
                         <form className="post-form" onSubmit={handleEdit}>
-                            <label className="form-label">Create Post</label>
+                            <label className="form-label">Edit Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
                                 <option value="">Select...</option>
