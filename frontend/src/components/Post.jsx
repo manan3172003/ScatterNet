@@ -7,7 +7,7 @@ import ContentRenderer from "../components/ContentRenderer"
 import {useNavigate} from 'react-router-dom';
 import {Calendar, Globe, Heart, Trash, Link, Lock, MessageCircle, Share2} from "lucide-react"
 import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
-import {apiCall, getAuthorObject} from "../utils/utils.js";
+import {apiCall, getAuthorObject, getPostHostname} from "../utils/utils.js";
 import {fetchAllComments, fetchAllLikes} from "../utils/commentsAndLikesApi.js";
 
 export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh, isCommentModalOpen }) {
@@ -164,6 +164,7 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
   //   ? post.content.substring(0,300) + "....."
   //   : post.content
   const displayContent = post.content
+  const postHostname = getPostHostname(post)
 
   return (
     <div className="post-container" onClick={onPostClick}>
@@ -233,7 +234,8 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
       </div>
 
       <div className="post-content" onClick={onPostClick}>
-        <ContentRenderer contentType={post.contentType} content={displayContent} />
+        <ContentRenderer contentType={post.contentType} content={displayContent} postHostname={postHostname}
+                         postId={post.id}/>
 
         {hasLongContent && (
           <button

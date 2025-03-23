@@ -1,12 +1,13 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, {useState, useEffect} from "react";
-import {fetchUserData, handleFile, apiCall} from "../utils/utils.js";
+import {fetchUserData, handleFile, apiCall,validExtensions} from "../utils/utils.js";
 import {useLocation, useNavigate} from 'react-router-dom';
 import Notification from "../components/Notification.jsx";
 export default function EditPostPage(){
 
     const [base64Data, setBase64] = useState(""); 
+    const [base64ContentType, setBase64ContentType] = useState(""); 
     const [fileName, setFileName] = useState("");
     const [post, setPost] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -72,12 +73,21 @@ export default function EditPostPage(){
           }
 
           try {
-            let content;
+            let content = "";
+            let contentType = "";
+
 
             if (formData.contentType.includes("base64")) {
                 content = base64Data; 
+                contentType = base64ContentType;
+                 //checks if extension is valid
+                 const extension = contentType.split("/")[1].split(";")[0];
+                 if (!validExtensions.includes(extension)) {  
+                     contentType = 'application/base64';
+                 }
             } else {
                 content = formData.content;
+                contentType = formData.contentType;
             }
             
               console.log(formData)
@@ -92,7 +102,7 @@ export default function EditPostPage(){
                 {
                     title: formData.title,
                     description: formData.description,
-                    contentType: formData.contentType || null,
+                    contentType: contentType || null,
                     content: content || null,
                     visibility: formData.visibility,
                 }
@@ -102,11 +112,11 @@ export default function EditPostPage(){
             console.log(data)
             if (response.ok){
                 showNotification(
-                    "Success",
+                    "success",
                     "Edited Post!",
-                    "Redirecting to your profile..."
+                    "Redirecting to your home feed..."
                     )
-                setTimeout(() => {navigate(`/authors/${AUTHOR_SERIAL}`)}, 1500);
+                setTimeout(() => {navigate(`/home`)}, 1500);
             } else {
                 console.error("Error updating post");
                 showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
@@ -180,11 +190,8 @@ export default function EditPostPage(){
                             
                             <label className="form-label">Content Type</label>
                             <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
-                                {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
-                                <option value="image/png;base64">Image (png)</option>
-                                <option value="image/jpeg;base64">Image (jpeg)</option>
                                 <option value="application/base64">Image </option> 
 
                             </select>
@@ -195,13 +202,11 @@ export default function EditPostPage(){
                                 </>
                             )}
 
-                            {(formData.contentType === 'image/png;base64' ||
-                                formData.contentType === 'image/jpeg;base64' ||
-                                formData.contentType === 'application/base64') && (
+                            {(formData.contentType === 'application/base64') && (
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64)} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64,setBase64ContentType)} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
 
                                 </>

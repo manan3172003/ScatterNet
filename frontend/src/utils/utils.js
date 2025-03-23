@@ -1,3 +1,5 @@
+export const validExtensions = ['png','jpeg']
+
 function convertToBase64(selectedFile) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -81,7 +83,7 @@ async function apiCall(
     );
 }
 
-async function handleFile(e, setFileName, setBase64) {
+async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
         const selectedFile = e.target.files[0];
 
         if (!selectedFile) {
@@ -93,9 +95,17 @@ async function handleFile(e, setFileName, setBase64) {
         try {
             setFileName(selectedFile.name);
             const base64string = await convertToBase64(selectedFile);
-            setBase64(base64string .split(",")[1]);
+            console.log('Base64 String before strip: ', base64string);
+            const [contentTypeWithPrefix, base64DataString] = base64string.split(','); //splits string to data:datatype and the base64 string
+            const base64ContentType = contentTypeWithPrefix.replace("data:", "");// strip data
+            
+            setBase64(base64DataString); 
+            setBase64ContentType(base64ContentType); 
+            
+            console.log('Base64 Content Type:', base64ContentType);
+            console.log('Base64 Data:', base64DataString);
             console.log('Base64 String: ', base64string);
-
+    
         } catch (error) {
             console.error('Error converting file to Base64: ', error);
         }
@@ -116,4 +126,22 @@ function getCookie(name) {
   return cookieValue;
 }
 
-export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById}
+function getPostHostname(post) {
+  try {
+    const url = new URL(post.id);
+    return url.origin; // this pulls out the stuff like "http://localhost:8000"
+  } catch (error) {
+    // try using the fall back to the author's node instead id
+    try {
+      const authorUrl = new URL(post.author.id);
+      return authorUrl.origin;
+    } catch (e) {
+      console.error("Could not figure out hostname");
+      return "";
+    }
+  }
+}
+
+
+export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById,
+    getPostHostname}
