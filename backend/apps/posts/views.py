@@ -399,6 +399,11 @@ def post_like(author_id, object_url):
             return Response({"error": "what da flip are you liking lil bro?"},
                             status=status.HTTP_403_FORBIDDEN)
 
+
+    #ok the logic below basically checks for a friends-only post, if the author liking a comment/post is a friend of the author of the post.
+    if object_model.visibility == "FRIENDS" and not are_friends(author_id, object_model.author.id):
+        return Response({"error": "You are not allowed to like this object."}, status=status.HTTP_403_FORBIDDEN)
+
     created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
 
     if not created_success:
