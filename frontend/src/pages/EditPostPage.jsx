@@ -114,7 +114,7 @@ export default function EditPostPage(){
                 showNotification(
                     "success",
                     "Edited Post!",
-                    "Redirecting to your profile..."
+                    "Redirecting to your home feed..."
                     )
                 setTimeout(() => {navigate(`/home`)}, 1500);
             } else {
