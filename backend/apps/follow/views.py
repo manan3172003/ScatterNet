@@ -232,7 +232,10 @@ class FollowerDetailView(APIView):
                 built_follow_request = Follow.objects.get(actor=foreign_author, object=author)
                 built_follow_request.isPending = False
                 built_follow_request.save()
-                send_object(serializer.data, [author])
+                follow_request_dict = serializer.data
+                follow_request_dict['actor'] = AuthorSerializer(Author.objects.get(id=follow_request_dict.get('actor'))).data
+                follow_request_dict['object'] = AuthorSerializer(Author.objects.get(id=follow_request_dict.get('object'))).data
+                send_object(follow_request_dict, [author])
 
             return Response({
                 'message': 'Follow request successfully created',

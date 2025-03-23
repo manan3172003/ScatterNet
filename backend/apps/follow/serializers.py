@@ -15,7 +15,7 @@ class FollowSerializer(serializers.ModelSerializer):
         fields = ['type', 'summary', 'actor', 'object']
 
     def get_type(self, obj):
-        return 'Follow'
+        return 'follow'
 
     def get_summary(self, obj):
         return f"{obj.actor.displayName} -> {obj.object.displayName}"
@@ -53,7 +53,7 @@ class RemoteFollowSerializer(serializers.ModelSerializer):
         return follow
 
     def get_type(self, obj):
-        return 'Follow'
+        return 'follow'
 
     def get_summary(self, obj):
         return f"{obj.actor.displayName} -> {obj.object.displayName}"

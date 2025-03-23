@@ -41,7 +41,7 @@ export async function handleFollowRequest(user, otherAuthorId, authorsRelationsh
         let newRelationship = authorsRelationship;
         let method = authorsRelationship === "Following" ? "DELETE" : "PUT";
 
-        const response = await apiCall(`authors/${otherAuthorId}/followers/${user.id}`)
+        const response = await apiCall(`authors/${otherAuthorId}/followers/${user.id}`, method)
 
         if (response.ok) {
             newRelationship = authorsRelationship === "Following" ? "Not Following" : "Requested";
