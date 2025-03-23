@@ -418,6 +418,9 @@ class Inbox(CreateAPIView):
         if not author.is_node:
             return Response({'error': 'Not a node'}, status=status.HTTP_401_UNAUTHORIZED)
 
+        if not 'type' in request.data:
+            return Response({'error': 'No type'}, status=status.HTTP_400_BAD_REQUEST)
+
         if request.data['type'] == 'post':
             return remote_post(request)
         elif request.data['type'] == 'author':
