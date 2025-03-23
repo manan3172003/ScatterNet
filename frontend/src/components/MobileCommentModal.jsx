@@ -7,6 +7,7 @@ import "../assets/styles/mobile-comment-modal.css";
 import { motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import {apiCall} from "../utils/utils.js";
+import {fetchAllComments} from "../utils/commentApi.js";
 
 export default function MobileCommentModal({ post, onClose }) {
     const [newComment, setNewComment] = useState("");
@@ -29,15 +30,8 @@ export default function MobileCommentModal({ post, onClose }) {
     }, [comments]);
     
     async function fetchComments() {
-        try {
-            const response = await apiCall(`posts/${post.id}/comments`);
-            if (response.ok) {
-                const data = await response.json();
-                setComments(data.src || []);
-            }
-        } catch (error) {
-            console.error("Something went wrong:", error);
-        }
+        const allComments = await fetchAllComments(post);
+        setComments(allComments);
     }
     
     async function handleLike(commentId) {
