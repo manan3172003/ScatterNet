@@ -9,26 +9,6 @@ import {useNavigate} from 'react-router-dom';
 import {fetchUserData, apiCall,handleFile,validExtensions} from "../utils/utils.js";
 
 export default function PostingPage(){
-    const navigate = useNavigate();
-    const [notification, setNotification] = useState({
-    show: false,
-    type: "success",
-    title: "",
-    message: "",
-    });
-
-    const showNotification = (type, title, message) => {
-    setNotification({
-      show: true,
-      type,
-      title,
-      message,
-        });
-    };
-
-    const hideNotification = () => {
-        setNotification((prev) => ({ ...prev, show: false }));
-    };
 
     const [base64Data, setBase64] = useState(""); 
     const [base64ContentType, setBase64ContentType] = useState(""); 
