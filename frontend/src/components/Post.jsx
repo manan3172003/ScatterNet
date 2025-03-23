@@ -8,11 +8,12 @@ import {useNavigate} from 'react-router-dom';
 import {Calendar, Globe, Heart, Trash, Link, Lock, MessageCircle, Share2} from "lucide-react"
 import {getAuthorRelationship, handleFollowRequest} from "../utils/followApi.js";
 import {apiCall, getAuthorObject, getPostHostname} from "../utils/utils.js";
+import {fetchAllComments, fetchAllLikes} from "../utils/commentsAndLikesApi.js";
 
-export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh }) {
+export default function Post({ post, onPostClick, onCommentClick, hideCommentsButton = false, hideFollowButton = false, onRefresh, isCommentModalOpen }) {
   const { user } = useContext(AuthContext)
-  const [likeCount, setLikeCount] = useState(post.likes.count)
-  const [commentCount, setCommentCount] = useState(post.comments.count)
+  const [likeCount, setLikeCount] = useState(0)
+  const [commentCount, setCommentCount] = useState(0)
   const [hasLiked, setLikes] = useState(false) // Default to false
   const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
 
@@ -36,8 +37,10 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
     }
     if (user) {
       fetchLikeAndFollowStatus();
+
+      if (!isCommentModalOpen) fetchCommentAndLikesCount();
     }
-  }, []);
+  }, [isCommentModalOpen]);
   async function handleLike() {
     if (user === null) {
       // Not logged in so do nothing
@@ -70,7 +73,17 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
 
     if (onRefresh) {
       onRefresh();
+    }
   }
+
+  async function fetchCommentAndLikesCount() {
+    const allComments = await fetchAllComments(post);
+    const fetchedCommentsCount = allComments.length;
+    setCommentCount(fetchedCommentsCount);
+
+    const allLikes = await fetchAllLikes(post);
+    const fetchedLikesCount = allLikes.length;
+    setLikeCount(fetchedLikesCount);
   }
 
   function handleShare() {

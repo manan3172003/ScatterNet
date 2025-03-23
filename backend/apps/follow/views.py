@@ -310,7 +310,6 @@ class FollowingListView(APIView):
     URL:
         authors/{author_id}/following/
     """
-    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         responses={
