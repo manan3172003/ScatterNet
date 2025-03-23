@@ -1,41 +1,48 @@
+/*
+notification on edit and create post needs to be fixed
+*/
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, { useState } from "react";
-import {fetchUserData, apiCall, handleFile} from "../utils/utils.js";
-import Notification from "../components/Notification";
-import {useNavigate} from "react-router-dom";
+import Notification from "../components/Notification.jsx";
+import {useNavigate} from 'react-router-dom';
+import {fetchUserData, apiCall,handleFile,validExtensions} from "../utils/utils.js";
+
 export default function PostingPage(){
-    const navigate = useNavigate();
-    const [notification, setNotification] = useState({
-    show: false,
-    type: "success",
-    title: "",
-    message: "",
-    });
-
-    const showNotification = (type, title, message) => {
-    setNotification({
-      show: true,
-      type,
-      title,
-      message,
-        });
-    };
-
-    const hideNotification = () => {
-        setNotification((prev) => ({ ...prev, show: false }));
-    };
 
     const [base64Data, setBase64] = useState(""); 
+    const [base64ContentType, setBase64ContentType] = useState(""); 
     const [fileName, setFileName] = useState(""); 
+    const navigate = useNavigate(); 
+
+     const [notification, setNotification] = useState({
+        show: false,
+        type: "success",
+        title: "",
+        message: "",
+      });
 
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        contentType: "", //markdown, plain,img
+        contentType: "text/markdown", //markdown, plain,img
         content: "", //deets
-        visibility: "",
+        visibility: "PUBLIC",
     })
+
+    const showNotification = (type, title, message) => {
+        setNotification({
+          show: true,
+          type,
+          title,
+          message,
+        });
+      };
+
+      // Helper to hide notifications
+  const hideNotification = () => {
+    setNotification((prev) => ({ ...prev, show: false }));
+  };
 
     function handleChange(e){
       setFormData({
@@ -46,6 +53,17 @@ export default function PostingPage(){
       console.log(formData)
 
     }
+
+    function handleDropdownChange(e){
+        setFormData({
+          ...formData,
+          [e.target.name]:e.target.value,
+          content:""
+          
+        })
+        console.log(formData)
+  
+      }
     
     async function handlePost(e){
         e.preventDefault()
@@ -56,12 +74,20 @@ export default function PostingPage(){
             return;
           }
         try {
-            let content;
+            let content = "";
+            let contentType = "";
 
-            if (formData.contentType.includes("base64")) {
+            if (formData.contentType.includes("base64")) {//file input
                 content = base64Data; 
-            } else {
+                contentType = base64ContentType;
+                //checks if extension is valid
+                const extension = contentType.split("/")[1].split(";")[0];
+                if (!validExtensions.includes(extension)) {  
+                    contentType = 'application/base64';
+                }
+            } else {//text
                 content = formData.content;
+                contentType = formData.contentType;
             }
             
               console.log(formData)
@@ -75,7 +101,7 @@ export default function PostingPage(){
                 {
                     title: formData.title,
                     description: formData.description,
-                    contentType: formData.contentType || null,
+                    contentType: contentType || null,
                     content: content || null,
                     visibility: formData.visibility,
                 }
@@ -84,15 +110,15 @@ export default function PostingPage(){
             const data = await response.json()
             console.log(data)
             if (response.ok){
-                showNotification("success", "Create Successful!", "Uploaded Post!");
-                setFormData({
-                    title: "",
-                    description: "",
-                    contentType: "",
-                    content: "",
-                    visibility: "",
-                })
+                showNotification(
+                    "success",
+                    "Created Post!",
+                    "Redirecting to your home feed..."
+                    )
                 setTimeout(() => {navigate(`/home`)}, 1500);
+            }else{
+                console.error("Error creating post");
+                showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
             }
 
         }
@@ -103,13 +129,13 @@ export default function PostingPage(){
     }
 
     return <div className="posting-container">
-            <Notification
+     <Notification
             show={notification.show}
             type={notification.type}
             title={notification.title}
             message={notification.message}
             onClose={hideNotification}
-            />
+          />
             <header className="posting-header">
                 {<HeaderLogo/> }
             </header>
@@ -119,7 +145,6 @@ export default function PostingPage(){
                             <label className="form-label">Create Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
-                                <option value="">Select...</option> 
                                 <option value="PUBLIC">Public</option>
                                 <option value="FRIENDS">Friends-Only</option>
                                 <option value="UNLISTED">Unlisted</option>
@@ -131,13 +156,11 @@ export default function PostingPage(){
                             <textarea name="description" placeholder="Enter the description of your post" required onChange={handleChange} value={formData.description}/>
                             
                             <label className="form-label">Content Type</label>
-                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleChange}>
+                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
                                 {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
-                                 <option value="image/png;base64">Image (png)</option>
-                                <option value="image/jpeg;base64">Image (jpeg)</option>
-                                <option value="application/base64">Image </option>
+                                <option value="application/base64">Image </option> 
 
                             </select>
                               {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
@@ -147,13 +170,11 @@ export default function PostingPage(){
                                 </>
                             )}
 
-                            {(formData.contentType === 'image/png;base64' ||
-                                formData.contentType === 'image/jpeg;base64' ||
-                                formData.contentType === 'application/base64') && (
+                            {(formData.contentType === 'application/base64') && (
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64)} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64,setBase64ContentType)} value={formData.content} accept="image/*"/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
                                 </>
                             )}
