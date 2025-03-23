@@ -7,7 +7,28 @@ import React, { useState } from "react";
 import Notification from "../components/Notification.jsx";
 import {useNavigate} from 'react-router-dom';
 import {fetchUserData, apiCall,handleFile,validExtensions} from "../utils/utils.js";
+
 export default function PostingPage(){
+    const navigate = useNavigate();
+    const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+    });
+
+    const showNotification = (type, title, message) => {
+    setNotification({
+      show: true,
+      type,
+      title,
+      message,
+        });
+    };
+
+    const hideNotification = () => {
+        setNotification((prev) => ({ ...prev, show: false }));
+    };
 
     const [base64Data, setBase64] = useState(""); 
     const [base64ContentType, setBase64ContentType] = useState(""); 
@@ -68,7 +89,8 @@ export default function PostingPage(){
         e.preventDefault()
         // forces visibiity to be choses
         if ((e.visibility === "")||(e.contentType==="")) {
-            alert("Please select a valid option!");
+            showNotification("error", "Incorrect Option Selected",
+                "Please select a valid option!");
             return;
           }
         try {
@@ -121,7 +143,7 @@ export default function PostingPage(){
 
         }
         catch (error){
-            alert("Something went wrong. Please try again.");
+            showNotification("error", "Post Creation Failed", "Something went wrong. Please try again.");
             console.log(error)
         }
     }
@@ -134,7 +156,6 @@ export default function PostingPage(){
             message={notification.message}
             onClose={hideNotification}
           />
-        
             <header className="posting-header">
                 {<HeaderLogo/> }
             </header>
@@ -177,7 +198,7 @@ export default function PostingPage(){
                                  {fileName && <p>Selected File: {fileName}</p>} 
                                 </>
                             )}
-                           
+
                             <button id= "post-button">Post</button>
                         </form>
                 </div>
