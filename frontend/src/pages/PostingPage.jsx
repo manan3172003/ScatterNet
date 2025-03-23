@@ -2,7 +2,29 @@ import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, { useState } from "react";
 import {fetchUserData, apiCall, handleFile} from "../utils/utils.js";
+import Notification from "../components/Notification";
+import {useNavigate} from "react-router-dom";
 export default function PostingPage(){
+    const navigate = useNavigate();
+    const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+    });
+
+    const showNotification = (type, title, message) => {
+    setNotification({
+      show: true,
+      type,
+      title,
+      message,
+        });
+    };
+
+    const hideNotification = () => {
+        setNotification((prev) => ({ ...prev, show: false }));
+    };
 
     const [base64Data, setBase64] = useState(""); 
     const [fileName, setFileName] = useState(""); 
@@ -29,7 +51,8 @@ export default function PostingPage(){
         e.preventDefault()
         // forces visibiity to be choses
         if ((e.visibility === "")||(e.contentType==="")) {
-            alert("Please select a valid option!");
+            showNotification("error", "Incorrect Option Selected",
+                "Please select a valid option!");
             return;
           }
         try {
@@ -61,7 +84,7 @@ export default function PostingPage(){
             const data = await response.json()
             console.log(data)
             if (response.ok){
-                alert("Uploaded Post!")
+                showNotification("success", "Create Successful!", "Uploaded Post!");
                 setFormData({
                     title: "",
                     description: "",
@@ -69,17 +92,24 @@ export default function PostingPage(){
                     content: "",
                     visibility: "",
                 })
+                setTimeout(() => {navigate(`/home`)}, 1500);
             }
 
         }
         catch (error){
-            alert("Something went wrong. Please try again.");
+            showNotification("error", "Post Creation Failed", "Something went wrong. Please try again.");
             console.log(error)
         }
     }
 
     return <div className="posting-container">
-        
+            <Notification
+            show={notification.show}
+            type={notification.type}
+            title={notification.title}
+            message={notification.message}
+            onClose={hideNotification}
+            />
             <header className="posting-header">
                 {<HeaderLogo/> }
             </header>
@@ -107,7 +137,7 @@ export default function PostingPage(){
                                 <option value="text/plain">Plain</option>
                                  <option value="image/png;base64">Image (png)</option>
                                 <option value="image/jpeg;base64">Image (jpeg)</option>
-                                <option value="application/base64">Image </option> 
+                                <option value="application/base64">Image </option>
 
                             </select>
                               {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
@@ -127,7 +157,7 @@ export default function PostingPage(){
                                  {fileName && <p>Selected File: {fileName}</p>} 
                                 </>
                             )}
-                           
+
                             <button id= "post-button">Post</button>
                         </form>
                 </div>
