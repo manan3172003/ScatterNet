@@ -168,9 +168,8 @@ export default function EditPostPage(){
         message={notification.message}
         onClose={hideNotification}
       />
-            <header className="posting-header">
-                {<HeaderLogo/> }
-            </header>
+            <header className="header">{<HeaderLogo />}</header>
+            
             <main className="posting-main">
                 <div className="form-content" >
                         <form className="post-form" onSubmit={handleEdit}>
