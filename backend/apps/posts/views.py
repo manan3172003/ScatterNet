@@ -19,7 +19,7 @@ from ..utils.helper import *
 
 
 def send_post_to_remote_nodes(post_data, author_id, visibility=None):
-    author = Author.objects.filter(id=author_id)
+    author = Author.objects.get(id=author_id)
     post_visibility = visibility if visibility else post_data['visibility']
 
     if post_visibility == 'PUBLIC':

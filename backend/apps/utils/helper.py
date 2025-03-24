@@ -34,7 +34,6 @@ def fetch_remote_followers(author):
     return followers
 
 def fetch_remote_friends(author):
-    author = Author.objects.filter(object=author, state="ACTIVE")
     authors_following = Follow.objects.filter(actor=author, isPending=False).values_list('object', flat=True)
     authors_followers = Follow.objects.filter(object=author, isPending=False).values_list('actor', flat=True)
     authors_friends = set(authors_following).intersection(authors_followers)
