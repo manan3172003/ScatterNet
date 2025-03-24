@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from ....authors.models import Author
 from ....follow.models import Follow
 from ....posts.models import Post, Comment, Like
-from dodgerblue.settings import NODEHOSTNAME, DODGERBLUE_NODE_USERNAME, DODGERBLUE_NODE_PASSWORD
+from dodgerblue.settings import NODEHOSTNAME
 
 class Command(BaseCommand):
     help = 'Add initial user and author data to the database'
@@ -233,7 +233,7 @@ class Command(BaseCommand):
 
         user3_post_10 = Post.objects.create(
             title='Post 10',
-            id_url='http://localhost:8000/api/authors/2/posts/10',
+            id_url='{}/api/authors/{}/posts/10'.format(NODEHOSTNAME, user3_author.id),
             description='Post 10 description',
             contentType='text/markdown',
             content='# POST 10 \n' +
