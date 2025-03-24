@@ -62,18 +62,21 @@ export default function Post({
     if (user) {
       fetchLikeAndFollowStatus();
     }
-    if (post.content && post.content.length > characterLimit){
-      setIsTruncated(true)
-    } else {
-      checkContentHeight();
-    }
-  }, [post.content]);
+    setTimeout(() => {
+      if (post.content && post.content.length > characterLimit){
+        setIsTruncated(true)
+      } else {
+        checkContentHeight();
+      }
+    }, 100)
+    
+  }, []);
 
   const checkContentHeight = () => {
 
     if (contentRef.current){
       const contentHeight = contentRef.current.scrollHeight;
-      const maxHeight = 300;
+      const maxHeight = 150;
       setIsTruncated(contentHeight > maxHeight)
     }
   }
@@ -228,12 +231,7 @@ export default function Post({
 
     return false;
   }
-  // TODO: FIX LONG CONTENT STUFF PLEASE
-  const hasLongContent = post.content && post.content.length > 300;
-  // const displayContent = !expanded && hasLongContent
-  //   ? post.content.substring(0,300) + "....."
-  //   : post.content
-  const displayContent = post.content;
+  
 
   return (
     <div
@@ -326,12 +324,12 @@ export default function Post({
       <div className="post-content" onClick={onPostClick}>
         
         <div
-        ref={contentRef}
-        className={`post-content-text ${isExpanded ? `expanded` : `truncated`}`}
+          ref={contentRef}
+          className={`post-content-text ${isExpanded ? "expanded" : "truncated"}`}
         >
           <ContentRenderer
             contentType={post.contentType}
-            content={displayContent}
+            content={post.content}
           />
 
         </div>
