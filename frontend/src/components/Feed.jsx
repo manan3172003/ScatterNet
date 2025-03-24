@@ -126,6 +126,7 @@ export default function Feed(values) {
               onCommentClick={(e) => handleCommentClick(post, e)}
               hideFollowButton={true}
               isGrid={true}
+              isCommentModalOpen={showComments}
             />
           ))}
         </main>

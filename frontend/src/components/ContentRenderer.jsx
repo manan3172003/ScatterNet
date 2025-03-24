@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown"
 
 
 // eslint-disable-next-line react/prop-types
-export default function ContentRenderer({contentType, content}) {
+export default function ContentRenderer({contentType, content, postHostname, postId}) {
     const [imageError,setImageError] = useState(false) // State that simply keeps track of whether or not we ran into a issue rendering the image.
 
     const handleImageError = () => {
@@ -20,19 +20,12 @@ export default function ContentRenderer({contentType, content}) {
     
     if (isImageContent(contentType)){
         if (imageError){
-            return <p className="image-error">An error occured will loading the image.</p>
+            return <p className="image-error">An error occurred while loading the image.</p>
         }
-        let imgMimeType;
-        if (contentType === "application/base64"){
-            // As specified by course website a image without a explicit type so we need to try and render it as a image.
-
-            imgMimeType = "image"
-        } else {
-            imgMimeType = contentType
-        }
+        const imageEndpoint = `${postHostname}/api/posts/${postId}/image`;
         return (
             <img
-                src={`data:${imgMimeType}, ${content}`}
+                src={imageEndpoint}
                 className="post-image"
                 onError={handleImageError}
             />
