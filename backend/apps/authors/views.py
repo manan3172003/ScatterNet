@@ -396,8 +396,15 @@ def remote_follow(request):
     return Response(followserializer.data, status=status.HTTP_200_OK)
 
 
-class Inbox(CreateAPIView):
-    def create(self, request, *args, **kwargs):
+class Inbox(APIView):
+    """
+    This endpoint is the place to communicate with other remote nodes. Allows receiving different entities.
+
+    URL: /api/authors/{author_fqid}/inboox
+    Methods:
+        - POST
+    """
+    def post(self, request, *args, **kwargs):
         if "HTTP_AUTHORIZATION" not in request.META:
             return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
 
