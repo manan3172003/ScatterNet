@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/post.css";
 import ContentRenderer from "../components/ContentRenderer";
@@ -40,9 +40,10 @@ export default function Post({
   // This state is going keep track of whether the post has been expanded since by default we truncate excess text
  
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isTruncated, setIsTruncated] = useState(false)
+  const [isTruncated, setIsTruncated] = useState(false);
+  const contentRef = useRef(null);
   const navigate = useNavigate();
-
+  const characterLimit = 350;
   
  
   const formattedDate = new Date(post.published).toLocaleDateString("en-US", {
@@ -61,7 +62,27 @@ export default function Post({
     if (user) {
       fetchLikeAndFollowStatus();
     }
-  }, []);
+    if (post.content && post.content.length > characterLimit){
+      setIsTruncated(true)
+    } else {
+      checkContentHeight();
+    }
+  }, [post.content]);
+
+  const checkContentHeight = () => {
+
+    if (contentRef.current){
+      const contentHeight = contentRef.current.scrollHeight;
+      const maxHeight = 300;
+      setIsTruncated(contentHeight > maxHeight)
+    }
+  }
+  const toggleExpand = (e) => {
+
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+
+  }
   async function handleLike() {
     if (user === null) {
       // Not logged in so do nothing
@@ -303,22 +324,28 @@ export default function Post({
       </div>
 
       <div className="post-content" onClick={onPostClick}>
-        <ContentRenderer
-          contentType={post.contentType}
-          content={displayContent}
-        />
+        
+        <div
+        ref={contentRef}
+        className={`post-content-text ${isExpanded ? `expanded` : `truncated`}`}
+        >
+          <ContentRenderer
+            contentType={post.contentType}
+            content={displayContent}
+          />
 
-        {hasLongContent && (
+        </div>
+        
+        {isTruncated && (
           <button
             className="read-more-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(isExpanded);
-            }}
+            onClick={toggleExpand}
           >
-            {isExpanded ? "Show less" : "Read more"}
+              {isExpanded ? "Show less" : "Read more"}
           </button>
         )}
+
+        
       </div>
 
       <div className="post-footer">
