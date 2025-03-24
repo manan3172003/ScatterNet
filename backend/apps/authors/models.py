@@ -16,8 +16,9 @@ class Author(models.Model):
     github = models.URLField(default=None, blank=True, null=True)
     profileImage = models.URLField(default=None, blank=True, null=True)
     page = models.URLField(default=None, blank=True, null=True) #this too
-    # basically we'll use this in the future to identify whether or not our current Author is from another node
+    # basically we'll use this in the future to identify whether our current Author is from another node
     is_local = models.BooleanField(default=True)
+    is_node = models.BooleanField(default=False, null=False, blank=False)
     username = models.CharField(max_length=128, unique=True)
 
     #we'll use this to identify which authors haven't been onboarded into the system or soft deleted
@@ -27,4 +28,4 @@ class Author(models.Model):
         ('DELETED', 'DELETED')
     )
     state = models.CharField(max_length=7, choices=allowed_states, default='PENDING')
-    id_url = models.URLField()
+    id_url = models.URLField(unique=True)

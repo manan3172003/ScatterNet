@@ -10,6 +10,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from ..authors.serializers import AuthorSerializer
+from ..utils.helper import send_object
+
 
 # Create your views here.
 # We may have to move this somewhere else since a few requests use the same URL
@@ -223,7 +225,18 @@ class FollowerDetailView(APIView):
 
         serializer = FollowSerializer(data=data)
         if serializer.is_valid():
-            follow_request = serializer.save()
+            follow_request = serializer.save() #we assume that its a local author
+
+            #for a non local author we assume that we have already started following them
+            if not author.is_local:
+                built_follow_request = Follow.objects.get(actor=foreign_author, object=author)
+                built_follow_request.isPending = False
+                built_follow_request.save()
+                follow_request_dict = serializer.data
+                follow_request_dict['actor'] = AuthorSerializer(Author.objects.get(id=follow_request_dict.get('actor'))).data
+                follow_request_dict['object'] = AuthorSerializer(Author.objects.get(id=follow_request_dict.get('object'))).data
+                send_object(follow_request_dict, [author])
+
             return Response({
                 'message': 'Follow request successfully created',
                 'follow': f"{follow_request.actor.displayName} -> {follow_request.object.displayName}"

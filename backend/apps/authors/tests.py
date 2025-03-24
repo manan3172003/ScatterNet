@@ -4,6 +4,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from urllib.parse import quote
 from .models import Author
+from dodgerblue.settings import NODEHOSTNAME
 
 User = get_user_model()
 
@@ -13,9 +14,17 @@ def api_client():
 
 @pytest.fixture
 def create_author():
-    def _create_author(username, password, display_name, state='ACTIVE', is_staff=False):
+    def _create_author(username, password, display_name, state='ACTIVE', is_staff=False, is_local=True):
         user = User.objects.create_user(username=username, password=password, is_staff=is_staff)
-        author = Author.objects.create(username=username, displayName=display_name, state=state, user=user)
+        author = Author.objects.create(username=username,
+                                       displayName=display_name,
+                                       state=state,
+                                       user=user,
+                                       is_local=is_local)
+        author.id_url = f"{NODEHOSTNAME}/api/authors/{author.id}"
+        author.host = NODEHOSTNAME
+        author.page = f"{NODEHOSTNAME}/authors/{author.id}"
+        author.save()
         return user, author
     return _create_author
 
