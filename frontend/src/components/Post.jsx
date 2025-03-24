@@ -61,8 +61,6 @@ export default function Post({
     }
     if (user) {
       fetchLikeAndFollowStatus();
-
-      if (!isCommentModalOpen) fetchCommentAndLikesCount();
     }
     if (post.content && post.content.length > characterLimit){
       setIsTruncated(true)
@@ -119,17 +117,6 @@ export default function Post({
     if (onRefresh) {
       onRefresh();
     }
-    }
-  }
-
-  async function fetchCommentAndLikesCount() {
-    const allComments = await fetchAllComments(post);
-    const fetchedCommentsCount = allComments.length;
-    setCommentCount(fetchedCommentsCount);
-
-    const allLikes = await fetchAllLikes(post);
-    const fetchedLikesCount = allLikes.length;
-    setLikeCount(fetchedLikesCount);
   }
 
   function handleShare() {
