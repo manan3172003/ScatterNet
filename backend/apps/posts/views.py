@@ -379,10 +379,13 @@ class LikeRetrieveView(RetrieveAPIView):
             like_serial = self.kwargs.get('like_serial')
             return get_object_or_404(Like, author_id=author_serial, pk=like_serial)
 
-def send_like_to_remote_post_author(likes_data, object_model):
-    post_author = Author.objects.get(id_url=object_model.author.id_url) #we can like someones remote post on our node so we gotta propogate that
-    if not post_author.is_local:
+def send_like_to_remote_post_author(likes_data, post_model):
+    post_author = Author.objects.get(id_url=post_model.author.id_url) #we can like someones remote post on our node so we gotta propogate that
+    if not post_author.is_local: #if it is a remote author, then send it to remote's authors inbox
         send_object(likes_data, [post_author])
+    else: #otherwise, if it is a user liking a local post
+        send_post_to_remote_nodes(likes_data, post_author.id, post_model.visibility)
+
 
 
 def post_like(author_id, object_url):
@@ -390,18 +393,18 @@ def post_like(author_id, object_url):
 
     #we try to pull the post, if the object_url is already a post its fine, if its a comment, pull its parent post and send a like to the author of the parent post
     try:
-        object_model = Comment.objects.get(id_url=object_url)
-        object_model = Post.objects.get(id_url=object_model.post.id_url)
+        comment_model = Comment.objects.get(id_url=object_url)
+        post_model = Post.objects.get(id_url=comment_model.post.id_url)
     except Comment.DoesNotExist:
         try:
-            object_model = Post.objects.get(id_url=object_url)
+            post_model = Post.objects.get(id_url=object_url)
         except Post.DoesNotExist:
             return Response({"error": "what da flip are you liking lil bro?"},
                             status=status.HTTP_403_FORBIDDEN)
 
 
     #ok the logic below basically checks for a friends-only post, if the author liking a comment/post is a friend of the author of the post.
-    if (object_model.visibility == "FRIENDS" and not are_friends(author_id, object_model.author.id)) or object_model.visibility == "DELETED":
+    if (post_model.visibility == "FRIENDS" and not are_friends(author_id, post_model.author.id)) or post_model.visibility == "DELETED":
         return Response({"error": "You are not allowed to like this object."}, status=status.HTTP_403_FORBIDDEN)
 
     created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
@@ -415,7 +418,9 @@ def post_like(author_id, object_url):
     serializer = LikeSerializer(created_like)
     likes_data = serializer.data
 
-    send_like_to_remote_post_author(likes_data, object_model)
+    send_like_to_remote_post_author(likes_data, post_model)
+    #will send like based on the post author's stuff
+
 
     return Response({'message': 'Like created successfully'}, status=status.HTTP_201_CREATED)
 
