@@ -91,14 +91,13 @@ async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
         }
     }
 
-const nodeHost = import.meta.env.VITE_NODEHOSTNAME || "http://localhost:8000";
 async function apiCall(
     endpoint,
     httpmethod = "GET",
     body = null,
 ) {
     return await fetch(
-        `${nodeHost}/api/${endpoint}`,
+        `/api/${endpoint}`,
         {
             method: httpmethod,
             headers: {
