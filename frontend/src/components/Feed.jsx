@@ -5,7 +5,7 @@ import Post from "../components/Post";
 import InfiniteScroll from "react-infinite-scroll-component";
 import getCookie from "../context/Cookie.js";
 import "../assets/styles/profile-feed.css";
-import {apiCall} from "../utils/utils.js";
+import { apiCall } from "../utils/utils.js";
 export default function Feed(values) {
   async function fetchAuthorPosts() {
     const response = await apiCall(`authors/${values.author_id}/posts`);
@@ -125,6 +125,7 @@ export default function Feed(values) {
               onPostClick={() => handlePostClick(post)}
               onCommentClick={(e) => handleCommentClick(post, e)}
               hideFollowButton={true}
+              isGrid={true}
             />
           ))}
         </main>

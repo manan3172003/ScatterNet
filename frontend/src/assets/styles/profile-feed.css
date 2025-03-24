@@ -1,4 +1,4 @@
-/* .user-feed-container {
+.user-feed-container {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -19,10 +19,8 @@
   .infinite-scroll-component {
     max-width: 1200px !important;
   }
-  .post-container {
-    width: 90% !important;
-  }
-} */
+}
+
 /* TODO: This needs to be changed by have the class name
 .post-container for some reason its messing with the homepage.
 Suggested solution is to instead have some prop passed into the post 
