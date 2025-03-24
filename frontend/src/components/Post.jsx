@@ -17,9 +17,12 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
   const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
 
   // This state is going keep track of whether the post has been expanded since by default we truncate excess text
-  const [expanded, setExpanded] = useState(false)
+ 
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isTruncated, setIsTruncated] = useState(false)
   const navigate = useNavigate();
 
+  
  
   const formattedDate = new Date(post.published).toLocaleDateString("en-US", {
     year: "numeric",
@@ -261,10 +264,10 @@ export default function Post({ post, onPostClick, onCommentClick, hideCommentsBu
             className="read-more-button"
             onClick={(e) => {
               e.stopPropagation();
-              setExpanded(!expanded);
+              setIsExpanded(isExpanded);
             }}
           >
-            {expanded ? "Show less" : "Read more"}
+            {isExpanded ? "Show less" : "Read more"}
           </button>
         )}
       </div>
