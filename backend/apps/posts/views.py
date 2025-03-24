@@ -515,9 +515,11 @@ class CommentsListView(ListAPIView):
 
 def send_comment_to_remote_post_author(comment_instance, request):
     post_author = comment_instance.post.author
-    if not post_author.is_local:
-        comment_data = CommentSerializer(comment_instance, context={'request': request}).data
+    comment_data = CommentSerializer(comment_instance, context={'request': request}).data
+    if not post_author.is_local: #if post author is remote, then we send the comment straight to the author's inbox
         send_object(comment_data, [post_author])
+    else: #otherwise, if it is a local post that has been commented on
+        send_post_to_remote_nodes(comment_data, post_author.id, comment_instance.post.visibility)
 
 #TODO: response objects should be comment objects
 class CommentedListCreateView(ListCreateAPIView):
