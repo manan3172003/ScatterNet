@@ -29,6 +29,7 @@ DEBUG = bool(os.environ.get('DEBUG', default=True))
 # ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 ALLOWED_HOSTS = ['*'] #this is temp, gotta change that when we go prod
 
+NODEHOSTNAME = os.environ.get('NODEHOSTNAME', default="http://localhost:8000")
 
 # Application definition
 
@@ -156,3 +157,6 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False, #will override this later when our proper login/logout views are in place
     'LOGIN_URL': '/api/authors/login',
 }
+
+DODGERBLUE_NODE_USERNAME = os.environ.get('DODGERBLUE_NODE_USERNAME', 'node8000')
+DODGERBLUE_NODE_PASSWORD = os.environ.get('DODGERBLUE_NODE_PASSWORD', 'node8000')

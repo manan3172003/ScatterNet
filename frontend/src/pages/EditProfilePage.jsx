@@ -1,6 +1,6 @@
 import HeaderLogo from "../components/HeaderLogo";
 import React, {useState, useContext, useEffect} from "react";
-import { getCookie, fetchUserData } from "../utils/utils.js";
+import {getCookie, fetchUserData, apiCall} from "../utils/utils.js";
 import "../assets/styles/edit-profile.css";
 import { AuthContext } from "../context/AuthContext";
 import Notification from "../components/Notification";
@@ -47,12 +47,7 @@ export default function EditProfilePage() {
     let AUTHOR_SERIAL = resp.user.author_id;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}`, {
-        headers: {
-          "X-CSRFToken": csrfToken
-        },
-        credentials: "include",
-      });
+      const response = await apiCall(`authors/${AUTHOR_SERIAL}`);
       if (!response.ok) {
         throw new Error("Failed to fetch authors");
       }
@@ -82,18 +77,12 @@ export default function EditProfilePage() {
     let AUTHOR_SERIAL = resp.user.author_id;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/authors/${AUTHOR_SERIAL}`,
+      const response = await apiCall(
+          `authors/${AUTHOR_SERIAL}`,
+          'PUT',
           {
-            method: 'PUT',
-            headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-            body: JSON.stringify({
               displayName: formData.displayName || author.displayName,
               profileImageURL: formData.profilePicture || author.profileImageURL
-            }),
-            credentials: "include"
           }
       )
 

@@ -14,12 +14,11 @@ class Author(models.Model):
     displayName = models.CharField(max_length=256)
     host = models.URLField(default=None, blank=True, null=True) #this needs to be removed to be nullable later
     github = models.URLField(default=None, blank=True, null=True)
-    #not sure if this is gonna be just the url the frontend pulls or straight up the image, so it could be models.ImageField()
-    profileImageURL = models.URLField(default=None, blank=True, null=True)
+    profileImage = models.URLField(default=None, blank=True, null=True)
     page = models.URLField(default=None, blank=True, null=True) #this too
-
-    # basically we'll use this in the future to identify whether or not our current Author is from another node
+    # basically we'll use this in the future to identify whether our current Author is from another node
     is_local = models.BooleanField(default=True)
+    is_node = models.BooleanField(default=False, null=False, blank=False)
     username = models.CharField(max_length=128, unique=True)
 
     #we'll use this to identify which authors haven't been onboarded into the system or soft deleted
@@ -29,4 +28,4 @@ class Author(models.Model):
         ('DELETED', 'DELETED')
     )
     state = models.CharField(max_length=7, choices=allowed_states, default='PENDING')
-    id_url = models.URLField()
+    id_url = models.URLField(unique=True)

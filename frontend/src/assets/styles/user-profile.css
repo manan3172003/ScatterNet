@@ -4,11 +4,16 @@
   width: 100%;
   box-sizing: border-box;
 }
+.debug-text {
+  text-align: center;
+}
 .error-text {
   text-align: center;
+  margin-top: 5rem;
 }
 .content-area {
   padding: 0 !important;
 }
-@media screen and (min-width: 768px) {
+.user-feed-container {
+  padding-top: 2rem;
 }

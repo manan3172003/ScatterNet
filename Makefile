@@ -13,8 +13,16 @@ build-frontend:
 	cd .. && \
 	python ./backend/manage.py collectstatic --no-input
 
-build-backend: install-requirements migrations
+clean-db:
+	python ./backend/manage.py clear_db
+
+populate-db:
+	python ./backend/manage.py add_initial_data
+
+build-backend: install-requirements clean-db migrations populate-db
 	python ./backend/manage.py runserver
+
+reset-db: clean-db migrations populate-db
 
 run-app-local: build-frontend build-backend
 

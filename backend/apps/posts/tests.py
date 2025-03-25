@@ -243,7 +243,7 @@ def test_create_comment_success(api_client, create_author, create_post):
 
 
 @pytest.mark.django_db
-def test_create_comment_missing_fields(api_client, create_author):
+def test_create_comment_missing_post(api_client, create_author):
     user, author = create_author("commenter2", "password", "Commenter 2")
 
     url = f"/api/authors/{author.id}/commented"
@@ -255,8 +255,8 @@ def test_create_comment_missing_fields(api_client, create_author):
     api_client.force_authenticate(user=user)
     response = api_client.post(url, data)
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "post" in response.data
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert 'Post' in response.data['detail']
 
 
 @pytest.mark.django_db
@@ -275,9 +275,10 @@ def test_get_single_comment(api_client, create_author, create_post, create_comme
 @pytest.mark.django_db
 def test_get_likes_list(api_client, create_author, create_post, create_like):
     user, author = create_author("liker", "password", "Liker")
+    user_2, author_2 = create_author("liker2", "password", "liker2")
     post = create_post(author)
     create_like(author, post)
-    create_like(author, post)
+    create_like(author_2, post)
 
     url = f"/api/authors/{author.id}/posts/{post.id}/likes"
     response = api_client.get(url)

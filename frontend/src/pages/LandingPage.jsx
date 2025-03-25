@@ -5,6 +5,8 @@ import { AuthContext } from "../context/AuthContext"
 import "../assets/styles/landing-page.css"
 import {useNavigate } from "react-router-dom"
 import Notification from "../components/Notification"
+import { apiCall } from "../utils/utils.js";
+
 export default function LandingPage(){
     const {login} = useContext(AuthContext)
     const navigate = useNavigate()
@@ -14,7 +16,7 @@ export default function LandingPage(){
         username: "",
         password: "",
         confirmPassword: "",
-        profileImageURL: null, 
+        profileImage: null,
         displayName:""
     })    
     // State for keeping track of notifications
@@ -62,20 +64,17 @@ export default function LandingPage(){
         }
 
         try {
-            const response = await fetch("http://localhost:8000/api/authors/signup",{
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+            const response = await apiCall(
+                "authors/signup",
+                "POST",
+                {
                     username: formData.username,
                     password: formData.password,
                     github: formData.github || null,
                     displayName: formData.displayName,
-                    profileImageURL: formData.profileImageURL || `https://robohash.org/${formData.displayName}.png`,
-                }),
-                credentials: "include"
-            })
+                    profileImage: formData.profileImage || `https://robohash.org/${formData.displayName}.png`
+                }
+                )
 
             const data = await response.json()
             
@@ -87,7 +86,7 @@ export default function LandingPage(){
                     email: "",
                     password: "",
                     confirmPassword: "",
-                    profileImageURL: null,
+                    profileImage: null,
                     displayName: "",
                 })
             } else if (response.status === 400 && data.username) {
@@ -195,7 +194,7 @@ export default function LandingPage(){
                             <input type="url" name="github" placeholder="A link to your Github Profile" onChange={handleChange} value={formData.github}/>
 
                             <label className="form-label">Profile Image Url</label>
-                            <input type="url" name="profileImageURL" placeholder="A link to your Profile picture" onChange={handleChange} value={formData.profileImageURL}/>
+                            <input type="url" name="profileImage" placeholder="A link to your Profile picture" onChange={handleChange} value={formData.profileImage}/>
                             
                             <label className="form-label">Password</label>
                             <input type="password" name="password" required onChange={handleChange} value={formData.password}/>

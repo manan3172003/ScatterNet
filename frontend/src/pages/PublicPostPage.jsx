@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import Post from "../components/Post";
 import { useParams } from "react-router-dom";
+import "../assets/styles/public-post-page.css";
+import {apiCall} from "../utils/utils.js";
 
 export default function PublicPostPage() {
   const { authorId, postId } = useParams();
@@ -10,9 +12,7 @@ export default function PublicPostPage() {
   useEffect(() => {
     async function fetchPost() {
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/authors/${authorId}/posts/${postId}`
-        );
+        const response = await apiCall(`authors/${authorId}/posts/${postId}`);
         if (!response.ok) throw new Error("Post not found");
         const data = await response.json();
         setPost(data);
@@ -28,7 +28,13 @@ export default function PublicPostPage() {
 
   return (
     <div className="post-page-container">
-      {loading ? <p>Loading...</p> : post ? <Post post={post} onCommentClick={null} onPostClick={null} /> : <p>Post not found</p>}
+      {loading ? (
+        <p className="debug-text">Loading...</p>
+      ) : post ? (
+        <Post post={post} onCommentClick={null} onPostClick={null} />
+      ) : (
+        <p className="error-text">Post not found</p>
+      )}
     </div>
   );
 }

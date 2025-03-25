@@ -4,19 +4,11 @@ import MobileCommentModal from "../components/MobileCommentModal";
 import Post from "../components/Post";
 import InfiniteScroll from "react-infinite-scroll-component";
 import getCookie from "../context/Cookie.js";
+import "../assets/styles/profile-feed.css";
+import {apiCall} from "../utils/utils.js";
 export default function Feed(values) {
   async function fetchAuthorPosts() {
-    const response = await fetch(
-      `http://localhost:8000/api/authors/${values.author_id}/posts`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        "X-CSRFToken": csrfToken,
-      }
-    );
+    const response = await apiCall(`authors/${values.author_id}/posts`);
     if (response.ok) {
       const posts_object = await response.json();
       const posts = posts_object.src;
@@ -83,11 +75,6 @@ export default function Feed(values) {
     try {
       let url = pagination.next;
 
-      if (!url) {
-        const nextPage = pagination.currentPage + 1;
-        url = `http://localhost:8000/api/authors/${values.author_id}/posts?page=${nextPage}&page=1&size=${POSTS_PER_PAGE}`;
-      }
-
       const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
@@ -127,10 +114,10 @@ export default function Feed(values) {
       <InfiniteScroll
         dataLength={posts.length}
         next={fetchMorePosts}
-        loader={<p>Loading more posts...</p>}
-        endMessage={<p>No more posts to show.</p>}
+        loader={<p className="error-text">Loading more posts...</p>}
+        endMessage={<p className="error-text">No more posts to show.</p>}
       >
-        <main className="feed-container">
+        <main className="user-feed-container">
           {posts.map((post) => (
             <Post
               key={post.id}
@@ -138,6 +125,7 @@ export default function Feed(values) {
               onPostClick={() => handlePostClick(post)}
               onCommentClick={(e) => handleCommentClick(post, e)}
               hideFollowButton={true}
+              isCommentModalOpen={showComments}
             />
           ))}
         </main>

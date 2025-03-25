@@ -4,30 +4,22 @@
 import { useState,useEffect } from "react";
 import PropTypes from "prop-types";
 import { AuthContext } from "./AuthContext";
-import getCookie from "../context/Cookie";
+import { apiCall } from "../utils/utils.js"
+
 export const AuthProvider = ({ children }) => {
     AuthProvider.propTypes = {
-        children: PropTypes.node.isRequired, 
-      };  
-    const csrfToken = getCookie('csrftoken')
+        children: PropTypes.node.isRequired,
+      };
     const [user, setUser] = useState(null);
     const fetchUserData = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/authors/current-user", {
-                method: "GET",
-                credentials: "include", 
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-            });
-            
+            const response = await apiCall("authors/current-user");
 
             if (response.ok) {
                 const data = await response.json();
-                setUser(data.user); 
+                setUser(data.user);
             } else {
-                setUser(null); 
+                setUser(null);
             }
         } catch (error) {
             console.error("Error fetching user data:", error);
@@ -42,23 +34,18 @@ export const AuthProvider = ({ children }) => {
         try {
             fetchUserData()
             console.log("sending login request....")
-            const response = await fetch("http://localhost:8000/api/authors/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken
-                },
-                credentials: "include",
-                body : JSON.stringify({
+            const response = await apiCall("authors/login",
+                "POST",
+                {
                     "username": username,
                     "password":password
-                }),
-                
-            });
+                }
+                );
 
             const data = await response.json();
             
             if (response.ok) {
+                fetchUserData();
                 if (data.user.is_node_admin) {
                      document.cookie = "isAdmin=true; path=/;";
                 } else {
