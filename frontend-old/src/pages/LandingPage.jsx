@@ -77,7 +77,7 @@ export default function LandingPage(){
                 )
 
             const data = await response.json()
-            
+
             if (response.ok){
                 showNotification("warning", "Account Created", "Your account has been created! Please wait to be approved by the node admin.")
                 setFormData({
@@ -102,9 +102,7 @@ export default function LandingPage(){
         }
         catch (error){
             showNotification("error", "Sign Up Failed", error || "Something went wrong. Please try again.")
-            
         }
-
 
     }
 
