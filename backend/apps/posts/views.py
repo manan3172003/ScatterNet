@@ -178,8 +178,13 @@ def author_post(request, auth_id, post_id):
 Helper function which returns the list of posts belonging to author with id AUTHOR_SERIAL
 Shows the posts of author with id AUTHOR_SERIAL to the caller if the caller has permissions
 """
-def filter_author_post(request, auth_id):
+def filter_author_post(request, auth_id, is_local=False):
     queryset = Post.objects.filter(author_id=auth_id)
+
+    #this will filter to only local posts
+    if is_local:
+        queryset = queryset.filter(id_url__contains=NODEHOSTNAME)
+
     queryset = queryset.exclude(visibility='DELETED')
     queryset = queryset.order_by('-published')
 
@@ -241,12 +246,21 @@ class StreamListView(ListAPIView):
     pagination_class = PostsPaginator
 
     def get_queryset(self):
-        authors = Author.objects.filter(state="ACTIVE")
+        authors = Author.objects.filter(state="ACTIVE", is_local=True)
         author_posts = []
         for author in authors:
-            author_posts.append(list(filter_author_post(self.request, author.id)))
+            author_posts.append(list(filter_author_post(self.request, author.id, is_local=True))) #we only want local posts to be retrieved here
 
-        merged_posts = list(merge_sorted_post_lists(*author_posts))
+        local_merged_posts = list(merge_sorted_post_lists(*author_posts))
+
+        #only show user the posts they have been given in the inbox
+        if self.request.user.is_authenticated:
+            current_author = self.request.user.author_profile
+            remote_posts = list(Post.objects.filter(inbox__author=current_author).exclude(visibility='DELETED'))
+        else:
+            remote_posts = []
+
+        merged_posts = list(merge_sorted_post_lists(local_merged_posts, remote_posts))
         return merged_posts
 
 """

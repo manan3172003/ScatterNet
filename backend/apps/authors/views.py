@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import BasePermission
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.utils.decorators import method_decorator
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from urllib.parse import unquote
@@ -301,7 +302,7 @@ def get_current_user(request):
     else:
         return Response({'error': "User is not logged in."}, status=status.HTTP_401_UNAUTHORIZED)
 
-def remote_post(request):
+def remote_post(request, local_author):
     if 'comments' not in request.data or 'src' not in request.data['comments']:
         return Response({'error': 'No comments object'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -322,9 +323,12 @@ def remote_post(request):
         postserializer = RemotePostSerializer(post, data=request.data, partial=True)
         if not postserializer.is_valid():
             return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        postserializer.save()
+        post = postserializer.save()
     except Post.DoesNotExist:
-        postserializer.save()
+        post = postserializer.save()
+
+    #this creates the mapping if it doesn't exist, otherwise nothing
+    Inbox.objects.get_or_create(author=local_author, post=post)
 
     return Response(postserializer.data, status=status.HTTP_200_OK)
 
@@ -400,7 +404,7 @@ class Inbox(APIView):
     """
     This endpoint is the place to communicate with other remote nodes. Allows receiving different entities.
 
-    URL: /api/authors/{author_fqid}/inboox
+    URL: /api/authors/{author_fqid}/inbox
     Methods:
         - POST
     """
@@ -417,19 +421,22 @@ class Inbox(APIView):
         if user is None:
             return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        author = user.author_profile
+        node_author = user.author_profile
 
-        if not (author.state == 'ACTIVE'):
+        if not (node_author.state == 'ACTIVE'):
             return Response({'error': 'This user cannot login to the system.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if not author.is_node:
+        if not node_author.is_node:
             return Response({'error': 'Not a node'}, status=status.HTTP_401_UNAUTHORIZED)
 
         if not 'type' in request.data:
             return Response({'error': 'No type'}, status=status.HTTP_400_BAD_REQUEST)
 
+        local_auth_fqid = self.kwargs.get('author_fqid')
+        local_author = get_object_or_404(Author, id_url=local_auth_fqid)
+
         if request.data['type'] == 'post':
-            return remote_post(request)
+            return remote_post(request, local_author)
         elif request.data['type'] == 'author':
             return remote_author(request)
         elif request.data['type'] == 'like':

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from ..posts.models import Post
 # Create your models here.
 
 class Author(models.Model):
@@ -29,3 +30,8 @@ class Author(models.Model):
     )
     state = models.CharField(max_length=7, choices=allowed_states, default='PENDING')
     id_url = models.URLField(unique=True)
+
+#maintain a author:post mapping, whatever an author receives on inbox is the only thing we show them
+class Inbox(models.Model):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
