@@ -39,3 +39,9 @@ class Like(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['author', 'object'], name='unique_like')]
+
+
+#maintain a author:post mapping, whatever an author receives on inbox is the only thing we show them
+class Inbox(models.Model):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
