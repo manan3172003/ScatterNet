@@ -2,7 +2,7 @@ import React from "react";
 
 export type User = {
   username: string;
-  displayname: string;
+  displayName: string;
   author_id: string;
   is_node_admin: boolean | null;
 }
@@ -15,6 +15,7 @@ export type LoginResponse = {
 export type AuthContextType = {
   user: User | null;
   login: (username: string, password: string) => Promise<LoginResponse>;
+  isLoading: boolean;
 }
 
 export type AuthProviderProps = {
