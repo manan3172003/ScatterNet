@@ -1,24 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import { apiCall } from "../utils/ApiCall.tsx";
-
-
-export interface User {
-  username: string;
-  displayname: string;
-  author_id: string;
-  is_node_admin: boolean | null;
-  // Add other user properties as needed
-}
-
-export interface LoginResponse {
-  success: boolean;
-  status?: string;
-}
-
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
+import { AuthProviderProps, LoginResponse, User } from "@/types/AuthTypes.tsx";
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -40,7 +23,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchUserData();
+      fetchUserData();
   }, []);
 
   const login = async (username: string, password: string): Promise<LoginResponse> => {

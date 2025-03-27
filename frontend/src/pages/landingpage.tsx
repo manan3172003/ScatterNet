@@ -2,7 +2,7 @@ import { AuthForm } from "@/components/login-form"
 import { Header } from "@/components/header"
 
 
-export function Page() {
+export function LandingPage() {
     return (
       <div className="min-h-screen flex flex-col">
           <Header />

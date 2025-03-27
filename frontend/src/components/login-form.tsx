@@ -16,33 +16,58 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import {AuthContext} from "@/context/AuthContext.tsx";
+import {apiCall} from "@/utils/ApiCall.tsx";
+import {useNavigate} from "react-router-dom";
 
 export function AuthForm() {
-  // Login state
+  const navigate = useNavigate();
+
   const authContext = useContext(AuthContext);
   const [loginUsername, setLoginUsername] = useState("")
   const [loginPassword, setLoginPassword] = useState("")
 
-  // Signup state
   const [signupUsername, setSignupUsername] = useState("")
   const [signupDisplayName, setSignupDisplayName] = useState("")
   const [signupPassword, setSignupPassword] = useState("")
 
-  // Login handler
-  const handleLogin = () => {
-    let response = authContext?.login(loginUsername, loginPassword);
-    response?.then((loginresponse) => {
-      if (loginresponse.success) {
-        // TODO: Route to home page or show notification error
-        console.log("Logged In!");
-      } else {
-        console.log("Failed!");
-      }
-    })
+  async function handleLogin () {
+    let response = await authContext?.login(loginUsername, loginPassword);
+    if (response?.success) {
+      // TODO: Route to home page or show notification error
+      console.log("Logged In!");
+      setTimeout(() => {navigate('/home')})
+    } else {
+      console.log("Failed!");
+    }
   }
 
-  // Signup handler
-  const handleSignup = () => {
+  async function handleSignup () {
+    let response = await apiCall(
+        "authors/signup",
+        "POST",
+        {
+          username: signupUsername,
+          password: signupPassword,
+          displayName: signupDisplayName,
+          profileImage: `https://robohash.org/${signupDisplayName}.png`
+        }
+    );
+
+    const data = await response.json()
+
+    if (response.ok) {
+      // TODO: Notification
+      console.log("Account created! Wait for admin approval before logging in...");
+      setSignupUsername("");
+      setSignupPassword("");
+      setSignupDisplayName("");
+    } else if (response.status === 400 && data.username) {
+      // TODO: Notification
+      console.log("Author with this username already exists");
+    } else {
+      // TODO: Notification
+      console.log("Sign up failed");
+    }
 
   }
 

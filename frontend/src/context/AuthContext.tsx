@@ -1,9 +1,4 @@
 import { createContext } from "react";
-import { User, LoginResponse } from "@/context/AuthProvider.tsx"
+import { AuthContextType } from "@/types/AuthTypes.tsx";
 
-export const AuthContext = createContext<AuthContextType | null>(null);
-
-interface AuthContextType {
-  user: User | null;
-  login: (username: string, password: string) => Promise<LoginResponse>;
-}
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType);

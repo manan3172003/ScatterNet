@@ -1,10 +1,11 @@
 import { ThemeProvider } from "@/components/theme-provider"
-import { Page } from "@/pages/loginpage.tsx"
+import { RouterProvider } from "react-router-dom";
+import {router} from "@/components/router.tsx";
 
 function App() {
   return (
       <ThemeProvider>
-        <Page/>
+        <RouterProvider router={router} />
       </ThemeProvider>
   )
 }
