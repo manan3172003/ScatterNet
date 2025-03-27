@@ -15,7 +15,7 @@ from .models import Author
 from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
 from ..follow.models import Follow
 from ..follow.serializers import RemoteFollowSerializer
-from ..posts.models import Like, Comment, Post
+from ..posts.models import Like, Comment, Post, Inbox
 from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer, PostSerializer
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
@@ -400,7 +400,7 @@ def remote_follow(request):
     return Response(followserializer.data, status=status.HTTP_200_OK)
 
 
-class Inbox(APIView):
+class AuthorInbox(APIView):
     """
     This endpoint is the place to communicate with other remote nodes. Allows receiving different entities.
 

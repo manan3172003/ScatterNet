@@ -40,7 +40,7 @@ urlpatterns = [
 
     path("/<path:author_fqid>/liked", posts_views.LikesListView.as_view(), name="author-id_url-liked"),
     path("/<path:author_fqid>/commented", posts_views.CommentedListCreateView.as_view(), name="author-id_url-commented"),
-    path("/<path:author_fqid>/inbox", authors_views.Inbox.as_view(), name="author-inbox"),
+    path("/<path:author_fqid>/inbox", authors_views.AuthorInbox.as_view(), name="author-inbox"),
 
     path('/<path:id_url>', authors_views.get_author_fqid, name='author-list-fqid'),
 ]
