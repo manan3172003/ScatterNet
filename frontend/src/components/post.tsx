@@ -80,8 +80,9 @@ import {
   Globe,
   EyeOff
 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import { cn } from "@/lib/utils";
+import MarkdownRenderer from "@/components/markdown.tsx";
+// import remarkGfm from "remark-gfm";
 
 interface ContentCardProps {
   type: 'text' | 'markdown' | 'image';
@@ -128,9 +129,9 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
       case 'markdown':
         return (
-          <div className="prose prose-sm dark:prose-invert">
-            <ReactMarkdown>{content}</ReactMarkdown>
-          </div>
+            <div className={cn("dark:prose !prose-invert break-words", className)}>
+              <MarkdownRenderer>{content}</MarkdownRenderer>
+            </div>
         );
 
       case 'image':
@@ -187,9 +188,11 @@ const ContentCard: React.FC<ContentCardProps> = ({
             <CardTitle>{user.username}</CardTitle>
             {renderPrivacyIcon()}
           </div>
+          <div className="mx-auto">
           {description && (
-            <CardDescription>{description}</CardDescription>
+            <CardDescription >{description}</CardDescription>
           )}
+        </div>
         </div>
         {!user.isCurrentUser && onFollow && (
           <Button
