@@ -15,7 +15,24 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIV
 from .validations import has_post_access, can_access_comment
 from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
-from ..utils.helper import are_friends, follows, merge_sorted_post_lists
+from ..utils.helper import *
+
+
+def send_post_to_remote_nodes(post_data, author_id, visibility=None):
+    author = Author.objects.get(id=author_id)
+    post_visibility = visibility if visibility else post_data['visibility']
+
+    if post_visibility == 'PUBLIC':
+        all_remote_authors = fetch_all_remote_users()
+        send_object(post_data, all_remote_authors)
+
+    elif post_visibility == 'UNLISTED':
+        remote_followers = fetch_remote_followers(author)
+        send_object(post_data, remote_followers)
+
+    elif post_visibility == 'FRIENDS':
+        remote_friends = fetch_remote_friends(author)
+        send_object(post_data, remote_friends)
 
 @swagger_auto_schema(
     method='get',
@@ -91,6 +108,7 @@ def put_author_post(request, auth_id, post_id):
     serializer = PostSerializer(post, data=request.data, partial=True, context=context)
     if serializer.is_valid():
         serializer.save()
+        send_post_to_remote_nodes(serializer.data, auth_id)
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -109,8 +127,14 @@ def delete_author_post(request, auth_id, post_id):
         return Response({'error': 'You cannot edit this post unless you made it or you are a Node Admin'}, status=status.HTTP_403_FORBIDDEN)
 
     post = get_object_or_404(Post, id=post_id)
+    old_visibility = post.visibility #caching it so i can pull it later
     post.visibility = 'DELETED'
     post.save()
+
+    serializer = PostSerializer(post, context={'request': request})
+    post_data = serializer.data
+
+    send_post_to_remote_nodes(post_data=post_data, author_id=auth_id, visibility=old_visibility)
 
     return Response({'message': 'Post deleted'}, status=status.HTTP_200_OK)
 
@@ -198,6 +222,8 @@ class PostListCreateView(ListAPIView):
             serializer = PostSerializer(data=request.data, context=context)
             if serializer.is_valid():
                 serializer.save()
+                #TODO: this is currently a shitty fucking sync operation, which will hold response. Rewrite to async (queue) if time allows
+                send_post_to_remote_nodes(serializer.data, auth_id)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -328,7 +354,7 @@ class LikesListView(ListAPIView):
 
         if post_fqid:
             post = get_object_or_404(Post, id_url=post_fqid)
-            queryset = Like.objects.filter(object=post.id)
+            queryset = Like.objects.filter(object=post.id_url)
             return queryset
 
 class LikeRetrieveView(RetrieveAPIView):
@@ -353,9 +379,33 @@ class LikeRetrieveView(RetrieveAPIView):
             like_serial = self.kwargs.get('like_serial')
             return get_object_or_404(Like, author_id=author_serial, pk=like_serial)
 
+def send_like_to_remote_post_author(likes_data, post_model):
+    post_author = Author.objects.get(id_url=post_model.author.id_url) #we can like someones remote post on our node so we gotta propogate that
+    if not post_author.is_local: #if it is a remote author, then send it to remote's authors inbox
+        send_object(likes_data, [post_author])
+    else: #otherwise, if it is a user liking a local post
+        send_post_to_remote_nodes(likes_data, post_author.id, post_model.visibility)
+
+
 
 def post_like(author_id, object_url):
     author = get_object_or_404(Author, id=author_id)
+
+    #we try to pull the post, if the object_url is already a post its fine, if its a comment, pull its parent post and send a like to the author of the parent post
+    try:
+        comment_model = Comment.objects.get(id_url=object_url)
+        post_model = Post.objects.get(id_url=comment_model.post.id_url)
+    except Comment.DoesNotExist:
+        try:
+            post_model = Post.objects.get(id_url=object_url)
+        except Post.DoesNotExist:
+            return Response({"error": "what da flip are you liking lil bro?"},
+                            status=status.HTTP_403_FORBIDDEN)
+
+
+    #ok the logic below basically checks for a friends-only post, if the author liking a comment/post is a friend of the author of the post.
+    if (post_model.visibility == "FRIENDS" and not are_friends(author_id, post_model.author.id)) or post_model.visibility == "DELETED":
+        return Response({"error": "You are not allowed to like this object."}, status=status.HTTP_403_FORBIDDEN)
 
     created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
 
@@ -364,6 +414,13 @@ def post_like(author_id, object_url):
 
     created_like.id_url = "{}/api/authors/{}/liked/{}".format(NODEHOSTNAME, author.id, created_like.id)
     created_like.save()
+
+    serializer = LikeSerializer(created_like)
+    likes_data = serializer.data
+
+    send_like_to_remote_post_author(likes_data, post_model)
+    #will send like based on the post author's stuff
+
 
     return Response({'message': 'Like created successfully'}, status=status.HTTP_201_CREATED)
 
@@ -456,10 +513,19 @@ class CommentsListView(ListAPIView):
 
 # TODO: URL: ://service/api/authors/{AUTHOR_SERIAL}/post/{POST_SERIAL}/comment/{REMOTE_COMMENT_FQID}
 
+def send_comment_to_remote_post_author(comment_instance, request):
+    post_author = comment_instance.post.author
+    comment_data = CommentSerializer(comment_instance, context={'request': request}).data
+    if not post_author.is_local: #if post author is remote, then we send the comment straight to the author's inbox
+        send_object(comment_data, [post_author])
+    else: #otherwise, if it is a local post that has been commented on
+        send_post_to_remote_nodes(comment_data, post_author.id, comment_instance.post.visibility)
+
+#TODO: response objects should be comment objects
 class CommentedListCreateView(ListCreateAPIView):
     """
     APIView to both, list a collection and create a comment on that endpoint
-    Method:
+    Method:`
         GET
         POST
     URL:
@@ -496,20 +562,28 @@ class CommentedListCreateView(ListCreateAPIView):
 
         if request.user.is_authenticated:
             if request.user.is_staff or post.visibility in ["PUBLIC", "UNLISTED"]:
-                return super().post(request, *args, **kwargs)
+                response = super().post(request, *args, **kwargs)
+                if response.status_code == status.HTTP_201_CREATED:
+                    comment_obj = Comment.objects.get(id_url=response.data.get('id'))
+                    send_comment_to_remote_post_author(comment_obj, request)
+                return response
+
             elif post.visibility == "DELETED":
                 return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
             elif (request.user.author_profile.id == post.author.id or
                   are_friends(request.user.author_profile.id, post.author.id)):
-                return super().post(request, *args, **kwargs)
+                response = super().post(request, *args, **kwargs)
+                if response.status_code == status.HTTP_201_CREATED:
+                    comment_obj = Comment.objects.get(id_url=response.data.get('id'))
+                    send_comment_to_remote_post_author(comment_obj, request)
+                return response
+
             else:
                 return Response({'error': 'You are not allowed to comment on this post.'},
                                 status=status.HTTP_403_FORBIDDEN)
         else:
             return Response({'error': 'You are not logged in to comment.'},
                             status=status.HTTP_403_FORBIDDEN)
-
-        return super().post(request, *args, **kwargs)
 
 
 class CommentRetrieveView(RetrieveAPIView):

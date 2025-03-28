@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView,CreateAPIView
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -11,8 +11,14 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from urllib.parse import unquote
 from .models import Author
-from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer
+from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
+from ..follow.models import Follow
+from ..follow.serializers import RemoteFollowSerializer
+from ..posts.models import Like, Comment, Post
+from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer, PostSerializer
 from ..utils.paginators import AuthorsPaginator
+from base64 import b64decode
+
 
 # Create your views here.
 class AuthorLoginView(APIView):
@@ -135,6 +141,11 @@ class AuthorSignUpView(APIView):
                 'displayName': openapi.Schema(
                     type=openapi.TYPE_STRING,
                     description="String that is to be displayed on an author's profile"
+                ),
+                'is_node': openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description="Whether a user is being registered or a node",
+                    default=False
                 )
             }
         )
@@ -171,7 +182,7 @@ class AuthorsView(ListAPIView):
 
         #filters to it such that only node admins can see all the users and everyone else just gets the active list
         if not (user and user.is_authenticated and user.is_staff):
-            queryset = queryset.filter(state='ACTIVE')
+            queryset = queryset.filter(state='ACTIVE', is_node=False)
 
         state = self.request.query_params.get('state')
         if state:
@@ -290,4 +301,142 @@ def get_current_user(request):
     else:
         return Response({'error': "User is not logged in."}, status=status.HTTP_401_UNAUTHORIZED)
 
+def remote_post(request):
+    if 'comments' not in request.data or 'src' not in request.data['comments']:
+        return Response({'error': 'No comments object'}, status=status.HTTP_400_BAD_REQUEST)
 
+    for comment in list(request.data.get('comments').get('src')):
+        comment['likes'] = comment['likes']['src']
+
+    if 'likes' not in request.data or 'src' not in request.data['likes']:
+        return Response({'error': 'No likes object'}, status=status.HTTP_400_BAD_REQUEST)
+
+    request.data['comments'] = request.data['comments']['src']
+    request.data['likes'] = request.data['likes']['src']
+    postserializer = RemotePostSerializer(data=request.data)
+    if not postserializer.is_valid():
+        return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        post = Post.objects.get(id_url=request.data.get('id'))
+        postserializer = RemotePostSerializer(post, data=request.data, partial=True)
+        if not postserializer.is_valid():
+            return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        postserializer.save()
+    except Post.DoesNotExist:
+        postserializer.save()
+
+    return Response(postserializer.data, status=status.HTTP_200_OK)
+
+def remote_author(request):
+    authorserializer = RemoteAuthorSerializer(data=request.data)
+    if not authorserializer.is_valid():
+        return Response(authorserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        author = Author.objects.get(id_url=request.data['id'])
+        authorserializer = RemoteAuthorSerializer(author, data=request.data, partial=True)
+        if not authorserializer.is_valid():
+            return Response(authorserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        authorserializer.save()
+    except Author.DoesNotExist:
+        authorserializer.save()
+
+    return Response(authorserializer.data, status=status.HTTP_200_OK)
+
+def remote_comment(request):
+
+    if 'likes' not in request.data or 'src' not in request.data['likes']:
+            return Response({'message': 'No likes'}, status=status.HTTP_400_BAD_REQUEST)
+
+    request.data['likes'] = request.data['likes']['src']
+
+    commentserializer = RemoteCommentSerializer(data=request.data)
+    if not commentserializer.is_valid():
+        return Response(commentserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        Comment.objects.get(id_url=request.data['id'])
+        return Response({'message': 'Comment already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except Comment.DoesNotExist:
+        commentserializer.save()
+
+    return Response(commentserializer.data, status=status.HTTP_200_OK)
+
+def remote_like(request):
+    likeserializer = RemoteLikeSerializer(data=request.data)
+    if not likeserializer.is_valid():
+        return Response(likeserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        author = Author.objects.get(id_url=request.data['author']['id'])
+        Like.objects.get(author=author, object=request.data['object'])
+        return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except (Like.DoesNotExist, Author.DoesNotExist) as e:
+        likeserializer.save()
+
+    return Response(likeserializer.data, status=status.HTTP_200_OK)
+
+def remote_follow(request):
+    followserializer = RemoteFollowSerializer(data=request.data)
+    if not followserializer.is_valid():
+        return Response(followserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        actor_author = Author.objects.get(id_url=request.data['actor']['id'])
+        object_author = Author.objects.get(id_url=request.data['object']['id'])
+        Follow.objects.get(
+            actor=actor_author,
+            object=object_author,
+        )
+        return Response({'message': 'Follow already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    except (Follow.DoesNotExist, Author.DoesNotExist) as e:
+        followserializer.save()
+
+    return Response(followserializer.data, status=status.HTTP_200_OK)
+
+
+class Inbox(APIView):
+    """
+    This endpoint is the place to communicate with other remote nodes. Allows receiving different entities.
+
+    URL: /api/authors/{author_fqid}/inboox
+    Methods:
+        - POST
+    """
+    def post(self, request, *args, **kwargs):
+        if "HTTP_AUTHORIZATION" not in request.META:
+            return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        auth = request.META['HTTP_AUTHORIZATION'].split()
+        if len(auth) != 2 or auth[0].lower() != "basic":
+            return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        username, password = b64decode(auth[1]).decode('utf-8').split(':')
+        user = authenticate(username=username, password=password)
+        if user is None:
+            return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        author = user.author_profile
+
+        if not (author.state == 'ACTIVE'):
+            return Response({'error': 'This user cannot login to the system.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not author.is_node:
+            return Response({'error': 'Not a node'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not 'type' in request.data:
+            return Response({'error': 'No type'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.data['type'] == 'post':
+            return remote_post(request)
+        elif request.data['type'] == 'author':
+            return remote_author(request)
+        elif request.data['type'] == 'like':
+            return remote_like(request)
+        elif request.data['type'] == 'comment':
+            return remote_comment(request)
+        elif request.data['type'] == 'follow':
+            return remote_follow(request)
+        else:
+            return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)

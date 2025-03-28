@@ -50,7 +50,7 @@ async function getAuthorObject(user) {
 
 async function getAuthorObjectById(author_serial) {
         try {
-            const response = await fetch(`http://localhost:8000/api/authors/${author_serial}`);
+            const response = await apiCall(`authors/${author_serial}`);
 
             if (!response.ok) {
                 throw new Error(`Error fetching author: ${response.status}`);
@@ -61,26 +61,6 @@ async function getAuthorObjectById(author_serial) {
             console.error("Failed to fetch author:", error);
             return null;
         }
-}
-
-async function apiCall(
-    endpoint,
-    httpmethod = "GET",
-    body = null,
-    node = "localhost:8000"
-) {
-    return await fetch(
-        `http://${node}/api/${endpoint}`,
-        {
-            method: httpmethod,
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie('csrftoken')
-            },
-            body: (body !== null) ? JSON.stringify(body) : body,
-            credentials: "include"
-        }
-    );
 }
 
 async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
@@ -110,6 +90,25 @@ async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
             console.error('Error converting file to Base64: ', error);
         }
     }
+
+async function apiCall(
+    endpoint,
+    httpmethod = "GET",
+    body = null,
+) {
+    return await fetch(
+        `/api/${endpoint}`,
+        {
+            method: httpmethod,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken')
+            },
+            body: (body !== null) ? JSON.stringify(body) : body,
+            credentials: "include"
+        }
+    );
+}
 
 function getCookie(name) {
   let cookieValue = null;

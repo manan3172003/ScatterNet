@@ -110,11 +110,7 @@ export default function Post({
   // WE DON'T HAVE A WAY TO CANCEL FOLLOW REQS, not in spec either
   async function handleFollow() {
     const userAuthor = await getAuthorObject(user);
-    const newRelationship = await handleFollowRequest(
-      userAuthor,
-      post.author,
-      authorsRelationship
-    );
+    const newRelationship = await handleFollowRequest(userAuthor, post.author.serial, authorsRelationship);
     setAuthorsRelationship(newRelationship);
 
     if (onRefresh) {
