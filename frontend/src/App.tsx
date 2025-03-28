@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@/components/theme-provider"
 import { RouterProvider } from "react-router-dom";
-import {router} from "@/components/router.tsx";
+import {router} from "@/routes/router.tsx";
 
 function App() {
   return (

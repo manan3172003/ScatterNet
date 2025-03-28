@@ -1,11 +1,11 @@
 import {SidebarLayout} from "@/components/sidebar-layout.tsx";
 
 
-export function Homepage() {
+export function Postingpage() {
   return (
       <SidebarLayout>
         <div>
-          HomePage
+          PostingPage
         </div>
       </SidebarLayout>
   )
