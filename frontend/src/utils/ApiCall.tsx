@@ -4,7 +4,7 @@ async function apiCall(
     body: Record<string, any> | null = null
 ): Promise<Response> {
     return await fetch(
-        `/api/${endpoint}`,
+        `http://localhost:8000/api/${endpoint}`,
         {
             method: httpmethod,
             headers: {
