@@ -50,7 +50,7 @@ def send_object(payload, remote_authors):
     print("payload:", payload)
     headers = {'Content-Type': 'application/json'}
     for remote_author in remote_authors:
-        inbox_url = f"{remote_author.host}/api/authors/{remote_author.id_url}/inbox"
+        inbox_url = f"{remote_author.id_url}/inbox"
         print("URL the request was made to:", inbox_url)
         try:
             resp = request(method="POST",
