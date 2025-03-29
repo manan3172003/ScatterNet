@@ -3,7 +3,7 @@ import React from "react";
 export type User = {
   username: string;
   displayName: string;
-  author_id: string;
+  author_id: number;
   is_node_admin: boolean | null;
 }
 

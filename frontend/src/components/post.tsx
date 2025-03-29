@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useState, useRef, useEffect, useContext} from 'react';
 import { Card, CardHeader, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,51 +17,27 @@ import {
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import MarkdownRenderer from "@/components/markdown.tsx";
+import {Post} from "@/types/ModelTypes.tsx";
+import {AuthContext} from "@/context/AuthContext.tsx";
 
 interface ContentCardProps {
-  id: string;
-  type: 'text/plain' | 'text/markdown' | 'image/png;base64' | 'image/jpeg;base64' | 'application/base64';
-  title: string;
-  content: string;
-  description?: string;
+  post: Post;
   className?: string;
-  user: {
-    id: string;
-    username: string;
-    profilePicture?: string;
-    isCurrentUser?: boolean;
-  };
-  visibility: 'PUBLIC' | 'FRIENDS' | 'UNLISTED' | 'DELETED';
-  stats?: {
-    likes?: number;
-    comments?: number;
-  };
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onFollow?: () => void;
   maxHeight?: number;
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({
-  id,
-  type,
-  title,
-  content,
-  description,
+  post,
   className,
-  user,
-  visibility,
-  stats = { likes: 0, comments: 0 },
-  onEdit,
-  onDelete,
-  onFollow,
   maxHeight = 300 // Default max height in pixels before showing "Read more"
 }) => {
   const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(stats.likes || 0);
+  const [likes, setLikes] = useState(post.likes.count || 0);
   const [expanded, setExpanded] = useState(false);
   const [shouldShowReadMore, setShouldShowReadMore] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isCurrentUser, setIsCurrentUser] = useState<boolean | null>(null);
+  const { user } = useContext(AuthContext);
 
   // Check if content exceeds max height on mount and on window resize
   useEffect(() => {
@@ -74,41 +50,58 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
     // Run on initial render and whenever content changes
     checkHeight();
+    if (user!.author_id != post.author.serial) {
+      setIsCurrentUser(false);
+    } else {
+      setIsCurrentUser(true);
+    }
 
     // Add resize listener
     window.addEventListener('resize', checkHeight);
 
     // Clean up
     return () => window.removeEventListener('resize', checkHeight);
-  }, [content, maxHeight, type]);
+  }, [post.content, maxHeight, post.contentType]);
+
+  const onFollow = () => {
+
+  }
+
+  const onEdit = () => {
+
+  }
+
+  const onDelete = () => {
+
+  }
 
   const renderContent = () => {
     const contentStyle = shouldShowReadMore && !expanded
       ? { maxHeight: `${maxHeight}px`, overflow: 'hidden' }
       : {};
 
-    if (type === 'text/plain') {
+    if (post.contentType === 'text/plain') {
       return (
         <div ref={contentRef} style={contentStyle} className="text-sm text-muted-foreground break-words w-full">
-          {content}
+          {post.content}
         </div>
       );
-    } else if (type === 'text/markdown') {
+    } else if (post.contentType === 'text/markdown') {
       return (
         <div
           ref={contentRef}
           style={contentStyle}
           className={cn("dark:prose !prose-invert break-words w-full", className)}
         >
-          <MarkdownRenderer>{content}</MarkdownRenderer>
+          <MarkdownRenderer>{post.content}</MarkdownRenderer>
         </div>
       );
-    } else if (type === "image/png;base64" || type === "image/jpeg;base64" || type === "application/base64") {
+    } else if (post.contentType === "image/png;base64" || post.contentType === "image/jpeg;base64" || post.contentType === "application/base64") {
       return (
         <div className="w-full aspect-video relative">
           <img
-            src={`${id}/image`}
-            alt={title}
+            src={`${post.id}/image`}
+            alt={post.title}
             className="object-contain rounded-md w-full h-full"
             loading="lazy"
           />
@@ -120,7 +113,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   };
 
   const renderPrivacyIcon = () => {
-    switch (visibility) {
+    switch (post.visibility) {
       case 'PUBLIC':
         return <Globe className="w-4 h-4 text-green-500" />;
       case 'FRIENDS':
@@ -148,25 +141,25 @@ const ContentCard: React.FC<ContentCardProps> = ({
       <CardHeader className="flex flex-row items-center space-x-4">
         <Avatar>
           <AvatarImage
-            src={user.profilePicture}
-            alt={`${user.username}'s profile`}
+            src={post.author.profileImage}
+            alt={`${post.author.displayName}'s profile`}
           />
           <AvatarFallback>
-            {user.username.charAt(0).toUpperCase()}
+            {post.author.displayName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <CardTitle>{user.username}</CardTitle>
+            <CardTitle>{post.author.displayName}</CardTitle>
             {renderPrivacyIcon()}
           </div>
           <div className="mx-auto">
-            {description && (
-              <CardDescription>{description}</CardDescription>
+            {post.description && (
+              <CardDescription>{post.description}</CardDescription>
             )}
           </div>
         </div>
-        {!user.isCurrentUser && onFollow && (
+        {!isCurrentUser && onFollow && (
           <Button
             variant="outline"
             size="sm"
@@ -217,13 +210,13 @@ const ContentCard: React.FC<ContentCardProps> = ({
               </Button>
               <Button variant="ghost" size="sm" className="flex items-center gap-2">
                 <MessageCircle className="w-4 h-4" />
-                {stats.comments || 0}
+                {post.comments.count || 0}
               </Button>
               <Button variant="ghost" size="sm">
                 <Share2 className="w-4 h-4" />
               </Button>
             </div>
-            {user.isCurrentUser && (
+            {isCurrentUser && (
               <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
