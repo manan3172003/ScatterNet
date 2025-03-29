@@ -17,6 +17,10 @@
   overflow-x: hidden;
   box-sizing: border-box;
 }
+
+.post-in-modal, .post-container {
+  overflow-y: scroll;
+}
 .profile-post-container {
   width: 90% !important;
 }
@@ -332,7 +336,7 @@
   margin-right: 0;
 }
 .post-content-text.truncated {
-  max-height: 150px; 
+  max-height: 400px; 
   overflow: hidden;
   position: relative;
 }
@@ -346,6 +350,10 @@
   height: 70px; 
   background: linear-gradient(transparent, #1f2937); 
   pointer-events: none;
+  display:  none;
+}
+.post-content-text.truncated.needs-gradient::after {
+  display: block;
 }
 
 

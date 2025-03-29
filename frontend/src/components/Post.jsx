@@ -36,14 +36,15 @@ export default function Post({
   const [commentCount, setCommentCount] = useState(post.comments.count);
   const [hasLiked, setLikes] = useState(false); // Default to false
   const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
-
+  const [needsGradient, setNeedsGradient] = useState(false)
   // This state is going keep track of whether the post has been expanded since by default we truncate excess text
  
   const [isExpanded, setIsExpanded] = useState(false);
   const [isTruncated, setIsTruncated] = useState(false);
   const contentRef = useRef(null);
   const navigate = useNavigate();
-  const characterLimit = 350;
+ 
+  const maxHeight = 400; // Max Height in pixels
   
  
   const formattedDate = new Date(post.published).toLocaleDateString("en-US", {
@@ -62,24 +63,45 @@ export default function Post({
     if (user) {
       fetchLikeAndFollowStatus();
     }
-    setTimeout(() => {
-      if (post.content && post.content.length > characterLimit){
-        setIsTruncated(true)
-      } else {
-        checkContentHeight();
+    function checkTruncation(){
+      if (!contentRef.current){
+        return
       }
-    }, 100)
-    
+      const contentHeight = contentRef.current.scrollHeight
+      const contentElement = contentRef.current
+      const hasOverflow = contentHeight > maxHeight
+      setIsTruncated(hasOverflow)
+      if (hasOverflow){
+        setNeedsGradient(true)
+      }
+    }
+    checkTruncation()
+    // Images load slower so we have to check again as might change content heigh
+    const images = contentRef.current?.querySelectorAll('img') || []
+    if (images.length > 0){
+      let loadedCount = 0
+      const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target
+            img.onload = () => {
+              loadedCount++
+              if (loadedCount === images.length) {
+                checkTruncation()
+              }
+            }
+            imageObserver.unobserve(img)
+          }
+        })
+      })
+      
+      images.forEach(img => imageObserver.observe(img))
+    }
+    window.addEventListener("resize", checkTruncation) 
+    return () => window.removeEventListener("resize", checkTruncation)
   }, []);
 
-  const checkContentHeight = () => {
-
-    if (contentRef.current){
-      const contentHeight = contentRef.current.scrollHeight;
-      const maxHeight = 150;
-      setIsTruncated(contentHeight > maxHeight)
-    }
-  }
+ 
   const toggleExpand = (e) => {
 
     e.stopPropagation();
@@ -321,7 +343,7 @@ export default function Post({
         
         <div
           ref={contentRef}
-          className={`post-content-text ${isExpanded ? "expanded" : "truncated"}`}
+          className={`post-content-text ${isExpanded ? "expanded" : "truncated"} ${needsGradient ? "needs-gradient" : ""}`}
         >
           <ContentRenderer
             contentType={post.contentType}

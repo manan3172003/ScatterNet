@@ -37,7 +37,6 @@
   .desktop-modal-content {
     display: flex;
     width: 100%;
-    height: 100%;
   }
   
   
@@ -45,7 +44,7 @@
     flex: 1.2;
     background-color: #121212;
     border-right: 1px solid #333;
-    overflow: hidden;
+
     box-sizing: border-box;
   }
 
