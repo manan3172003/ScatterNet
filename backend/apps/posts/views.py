@@ -228,13 +228,14 @@ class PostListCreateView(ListAPIView):
 
                 #get inbox posts -> get all inbox records for request author, get posts which request author has access to made by auth_id
                 user_request_id = self.request.user.author_profile
-                inbox_post_ids = Inbox.objects.filter(author=user_request_id).values('post', flat=True)
+                inbox_post_ids = Inbox.objects.filter(author=user_request_id).values_list('post', flat=True)
 
                 # Combine public posts and inbox posts from the remote author,
                 # distinct makes sure we dont double count.
-                queryset = (Post.objects.filter(author=auth_id)
-                            .filter(Q(visibility="PUBLIC") | Q(id__in=inbox_post_ids)).exclude(visibility='DELETED')
-                            .distinct())
+                queryset = Post.objects.filter(
+                    Q(visibility="PUBLIC") | Q(id__in=inbox_post_ids)
+                ).exclude(visibility="DELETED")
+                queryset = queryset.distinct().order_by('-published')
 
         except Author.DoesNotExist:
             pass
