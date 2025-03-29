@@ -218,6 +218,9 @@ class PostListCreateView(ListAPIView):
         auth_id = self.kwargs.get('auth_id')
         queryset = filter_author_post(self.request, auth_id)
 
+        if self.request.user.is_authenticated and self.request.user.is_staff:
+            return queryset
+
         #if its a public post, all my authors on this node that they know about, will get the public posts
         #for a author accessing another authors page, they should see all public posts from the author + whatever user has access to
         try:
@@ -269,28 +272,12 @@ class StreamListView(ListAPIView):
     serializer_class = PostSerializer
     pagination_class = PostsPaginator
 
-    # def get_queryset(self):
-    #     authors = Author.objects.filter(state="ACTIVE", is_local=True)
-    #     author_posts = []
-    #     for author in authors:
-    #         author_posts.append(list(filter_author_post(self.request, author.id, is_local=True))) #we only want local posts to be retrieved here
-    #
-    #     local_merged_posts = list(merge_sorted_post_lists(*author_posts))
-    #
-    #     #only show user the posts they have been given in the inbox
-    #     if self.request.user.is_authenticated:
-    #         current_author = self.request.user.author_profile
-    #         inbox_post_ids = Inbox.objects.filter(author=current_author).values('post', flat=True)
-    #         queryset = (Post.objects.filter(Q(visibility="PUBLIC") | Q(id__in=inbox_post_ids)).distinct())
-    #
-    #         remote_posts = list(Post.objects.filter(inbox__author=current_author).exclude(visibility='DELETED'))
-    #     else:
-    #         remote_posts = []
-    #
-    #     merged_posts = list(merge_sorted_post_lists(local_merged_posts, remote_posts))
-    #     return merged_posts
-
     def get_queryset(self):
+
+        #if admin, show him everything
+        if self.request.user.is_authenticated and self.request.user.is_staff:
+            return Post.objects.all().order_by('-published')
+
         local_qs = Post.objects.none()
         active_local_authors = Author.objects.filter(state="ACTIVE", is_local=True)
         for author in active_local_authors:
