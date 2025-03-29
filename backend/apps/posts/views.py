@@ -22,11 +22,7 @@ def send_post_to_remote_nodes(post_data, author_id, visibility=None):
     author = Author.objects.get(id=author_id)
     post_visibility = visibility if visibility else post_data['visibility']
 
-    if post_visibility == 'PUBLIC':
-        all_remote_authors = fetch_all_remote_users()
-        send_object(post_data, all_remote_authors)
-
-    elif post_visibility == 'UNLISTED':
+    if post_visibility in ['UNLISTED', 'PUBLIC']:
         remote_followers = fetch_remote_followers(author)
         send_object(post_data, remote_followers)
 
