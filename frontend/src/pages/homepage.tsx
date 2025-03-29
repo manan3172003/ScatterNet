@@ -19,7 +19,7 @@ export function Homepage() {
         setError(null);
 
         // Make the API call
-        const response = await apiCall('authors/2/posts/2');
+        const response = await apiCall('authors/2/posts/3');
         const responseData = await response.json();
 
         // Update state with fetched data
