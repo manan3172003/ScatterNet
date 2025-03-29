@@ -12,7 +12,7 @@ class Author(models.Model):
     )
 
     displayName = models.CharField(max_length=256)
-    host = models.URLField() #this needs to be removed to be nullable later
+    host = models.URLField(default=None) #this needs to be removed to be nullable later
     profileImage = models.URLField(default=None, blank=True, null=True)
     page = models.URLField(default=None, blank=True, null=True) #this too
     # basically we'll use this in the future to identify whether our current Author is from another node
