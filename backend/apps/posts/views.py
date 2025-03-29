@@ -300,9 +300,9 @@ class StreamListView(ListAPIView):
                 Q(visibility="PUBLIC") | Q(id__in=inbox_post_ids)
             ).exclude(visibility="DELETED")
         else:
-            remote_qs = Post.objects.none()
+            remote_qs = Post.objects.filter(visibility="PUBLIC")
 
-        final_qs = (local_qs & remote_qs).distinct().order_by("-published")
+        final_qs = (local_qs | remote_qs).distinct().order_by("-published")
         return final_qs
 
 """
