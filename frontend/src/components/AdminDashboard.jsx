@@ -72,7 +72,6 @@ const AdminDashboard = () => {
 
     const payload = {
       displayName: author.displayName,
-      github: author.github,
       profileImage: author.profileImage,
       state: author.state,
     };
@@ -138,18 +137,6 @@ const AdminDashboard = () => {
                   />
                 )}
                 <div className="author-info">
-                  <div className="form-group">
-                    <label>GitHub URL:</label>
-                    <input
-                      type="text"
-                      value={author.github || ""}
-                      onChange={(e) =>
-                        handleInputChange(index, "github", e.target.value)
-                      }
-                      placeholder="GitHub URL"
-                      className="desktop-input-field"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
