@@ -30,6 +30,7 @@ urlpatterns = [
     path("/<int:author_serial>/posts/<int:post_serial>/image", posts_views.ImagePostsView.as_view(), name="author-post-image"),
     path("/<int:author_serial>/liked", posts_views.LikesListView.as_view(), name="author-liked"),
     path("/<int:author_serial>/commented", posts_views.CommentedListCreateView.as_view(), name="author-commented"),
+    path("/<int:author_serial>/inbox", authors_views.Inbox.as_view(), name="author-inbox"),
 
 
     # Post app endpoints
@@ -40,7 +41,6 @@ urlpatterns = [
 
     path("/<path:author_fqid>/liked", posts_views.LikesListView.as_view(), name="author-id_url-liked"),
     path("/<path:author_fqid>/commented", posts_views.CommentedListCreateView.as_view(), name="author-id_url-commented"),
-    path("/<path:author_fqid>/inbox", authors_views.Inbox.as_view(), name="author-inbox"),
 
     path('/<path:id_url>', authors_views.get_author_fqid, name='author-list-fqid'),
 ]

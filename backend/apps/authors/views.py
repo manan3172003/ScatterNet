@@ -400,7 +400,7 @@ class Inbox(APIView):
     """
     This endpoint is the place to communicate with other remote nodes. Allows receiving different entities.
 
-    URL: /api/authors/{author_fqid}/inboox
+    URL: /api/authors/{author_serial}/inbox
     Methods:
         - POST
     """
