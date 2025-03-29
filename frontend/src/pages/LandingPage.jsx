@@ -12,7 +12,6 @@ export default function LandingPage(){
     const navigate = useNavigate()
     const [activeTab,setActiveTab] = useState("login")
     const [formData, setFormData] = useState({
-        github: "",
         username: "",
         password: "",
         confirmPassword: "",
@@ -70,7 +69,6 @@ export default function LandingPage(){
                 {
                     username: formData.username,
                     password: formData.password,
-                    github: formData.github || null,
                     displayName: formData.displayName,
                     profileImage: formData.profileImage || `https://robohash.org/${formData.displayName}.png`
                 }
@@ -81,7 +79,6 @@ export default function LandingPage(){
             if (response.ok){
                 showNotification("warning", "Account Created", "Your account has been created! Please wait to be approved by the node admin.")
                 setFormData({
-                    github: "",
                     username: "",
                     email: "",
                     password: "",
@@ -189,9 +186,6 @@ export default function LandingPage(){
 
                             <label className="form-label">Display Name</label>
                             <input type="text" name="displayName" placeholder="Enter a desired display name" required onChange={handleChange} value={formData.displayName}/>
-
-                            <label className="form-label">Github Url</label>
-                            <input type="url" name="github" placeholder="A link to your Github Profile" onChange={handleChange} value={formData.github}/>
 
                             <label className="form-label">Profile Image Url</label>
                             <input type="url" name="profileImage" placeholder="A link to your Profile picture" onChange={handleChange} value={formData.profileImage}/>
