@@ -207,7 +207,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         <>
           {renderContent()}
           <div className="flex justify-between items-center mt-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -235,7 +235,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
             </div>
             {user.isCurrentUser && (
               <div className="flex items-center space-x-2">
-                {onEdit && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -243,8 +242,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
-                )}
-                {onDelete && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -253,7 +250,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
-                )}
               </div>
             )}
           </div>
