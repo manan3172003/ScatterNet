@@ -6,6 +6,7 @@ from ..follow import views as follows_views
 app_name = "authors"
 urlpatterns = [
     # Author fixed endpoints
+    path('/discover', authors_views.DiscoverRemoteAuthor.as_view(), name='discover-authors'),
     path('/login', authors_views.AuthorLoginView.as_view(), name='author-login'),
     path('/logout', authors_views.AuthorLogoutView.as_view(), name='author-logout'),
     path('/signup', authors_views.AuthorSignUpView.as_view(), name='author-signup'),
