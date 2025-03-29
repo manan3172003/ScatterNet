@@ -89,7 +89,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
     if (type === 'text/plain') {
       return (
-        <div ref={contentRef} style={contentStyle} className="text-sm text-muted-foreground break-words">
+        <div ref={contentRef} style={contentStyle} className="text-sm text-muted-foreground break-words w-full">
           {content}
         </div>
       );
@@ -98,7 +98,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
         <div
           ref={contentRef}
           style={contentStyle}
-          className={cn("dark:prose !prose-invert break-words", className)}
+          className={cn("dark:prose !prose-invert break-words w-full", className)}
         >
           <MarkdownRenderer>{content}</MarkdownRenderer>
         </div>
@@ -109,7 +109,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
           <img
             src={`${id}/image`}
             alt={title}
-            className="object-cover rounded-md w-full h-full"
+            className="object-contain rounded-md w-full h-full"
             loading="lazy"
           />
         </div>
@@ -144,7 +144,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   };
 
   return (
-    <Card className={cn("w-full max-w-md mx-auto", className)}>
+    <Card className={cn("w-full mx-auto max-w-full lg:max-w-2xl", className)}>
       <CardHeader className="flex flex-row items-center space-x-4">
         <Avatar>
           <AvatarImage
@@ -177,8 +177,8 @@ const ContentCard: React.FC<ContentCardProps> = ({
           </Button>
         )}
       </CardHeader>
-      <CardContent>
-        <>
+      <CardContent className="w-full">
+        <div className="w-full">
           {renderContent()}
 
           {shouldShowReadMore && (
@@ -243,7 +243,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
               </div>
             )}
           </div>
-        </>
+        </div>
       </CardContent>
     </Card>
   );
