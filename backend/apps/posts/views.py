@@ -306,7 +306,7 @@ class StreamListView(ListAPIView):
         else:
             remote_qs = Post.objects.none()
 
-        final_qs = (local_qs & remote_qs).distinct().order_by("-published_date")
+        final_qs = (local_qs & remote_qs).distinct().order_by("-published")
         return final_qs
 
 """
