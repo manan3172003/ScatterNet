@@ -3,13 +3,14 @@ from urllib.parse import unquote
 from django.http import Http404, HttpResponse
 from dodgerblue.settings import NODEHOSTNAME
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Post, Like, Comment
+from .models import Post, Like, Comment, Inbox
 from .serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentCreateSerializer
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
 from .validations import has_post_access, can_access_comment
@@ -211,7 +212,30 @@ class PostListCreateView(ListAPIView):
 
     def get_queryset(self):
         auth_id = self.kwargs.get('auth_id')
-        return filter_author_post(self.request, auth_id)
+        queryset = filter_author_post(self.request, auth_id)
+
+        #if its a public post, all my authors on this node that they know about, will get the public posts
+        #for a author accessing another authors page, they should see all public posts from the author + whatever user has access to
+        try:
+            author = Author.objects.get(id=auth_id)
+            if not author.is_local and self.request.user.is_authenticated:
+                #get all public posts for that author, get inbox posts, do intersection, this way, ALL public posts show up
+                #and only the ones that have access to
+
+                #get inbox posts -> get all inbox records for request author, get posts which request author has access to made by auth_id
+                user_request_id = self.request.user.author_profile
+                inbox_post_ids = Inbox.objects.filter(author=user_request_id).values('post', flat=True)
+
+                # Combine public posts and inbox posts from the remote author,
+                # distinct makes sure we dont double count.
+                queryset = (Post.objects.filter(author=auth_id)
+                            .filter(Q(visibility="PUBLIC") | Q(id__in=inbox_post_ids))
+                            .distinct())
+
+        except Author.DoesNotExist:
+            pass
+
+        return queryset
 
     def post(self, request, *args, **kwargs):
         auth_id = self.kwargs.get('auth_id')
