@@ -43,7 +43,7 @@ class Command(BaseCommand):
         admin_author = Author.objects.create(
             user=admin_user,
             displayName='admin',
-            profileImage='',
+            profileImage="https://robohash.org/admin.png",
             page='{}/authors/{}'.format(NODEHOSTNAME, admin_user.id),
             host=NODEHOSTNAME,
             is_local=True,
@@ -55,7 +55,7 @@ class Command(BaseCommand):
         user1_author = Author.objects.create(
             user=user1_user,
             displayName='John Doe',
-            profileImage='',
+            profileImage="https://robohash.org/JohnDoe.png",
             page='{}/authors/{}'.format(NODEHOSTNAME, user1_user.id),
             host=NODEHOSTNAME,
             is_local=True,
@@ -67,7 +67,7 @@ class Command(BaseCommand):
         user2_author = Author.objects.create(
             user=user2_user,
             displayName='Jane Doe',
-            profileImage='',
+            profileImage="https://robohash.org/JaneDoe.png",
             page='{}/authors/{}'.format(NODEHOSTNAME, user2_user.id),
             host=NODEHOSTNAME,
             is_local=True,
@@ -79,7 +79,7 @@ class Command(BaseCommand):
         user3_author = Author.objects.create(
             user=user3_user,
             displayName='Jacob',
-            profileImage='',
+            profileImage="https://robohash.org/Jacob.png",
             page='{}/authors/{}'.format(NODEHOSTNAME, user3_user.id),
             host=NODEHOSTNAME,
             is_local=True,
