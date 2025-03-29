@@ -229,7 +229,7 @@ class PostListCreateView(ListAPIView):
                 # Combine public posts and inbox posts from the remote author,
                 # distinct makes sure we dont double count.
                 queryset = Post.objects.filter(visibility="PUBLIC", author=auth_id)
-                inbox_queryset = Post.objects.filter(id_url__in=inbox_post_ids, author=auth_id).exclude(visibility='DELETED')
+                inbox_queryset = Post.objects.filter(id__in=inbox_post_ids, author=auth_id).exclude(visibility='DELETED')
                 queryset = (queryset | inbox_queryset).distinct().order_by('-published')
 
         except Author.DoesNotExist:
