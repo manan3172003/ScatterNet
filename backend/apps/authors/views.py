@@ -432,8 +432,8 @@ class AuthorInbox(APIView):
         if not 'type' in request.data:
             return Response({'error': 'No type'}, status=status.HTTP_400_BAD_REQUEST)
 
-        local_auth_fqid = self.kwargs.get('author_fqid')
-        local_author = get_object_or_404(Author, id_url=local_auth_fqid)
+        local_auth_fqid = self.kwargs.get('author_serial')
+        local_author = get_object_or_404(Author, id=local_auth_fqid)
 
         if request.data['type'] == 'post':
             return remote_post(request, local_author)
