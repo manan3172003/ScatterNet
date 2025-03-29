@@ -175,30 +175,84 @@ def author_post(request, auth_id, post_id):
 Helper function which returns the list of posts belonging to author with id AUTHOR_SERIAL
 Shows the posts of author with id AUTHOR_SERIAL to the caller if the caller has permissions
 """
-def filter_author_post(request, auth_id, is_local=False):
+def filter_author_post(request, auth_id):
+    # Try to get author, if it does not exist return empty queryset
+    try:
+        author = Author.objects.get(id=auth_id)
+    except Author.DoesNotExist:
+        return Post.objects.none()
+
+    # Get all non-deleted posts made by author where author serial = auth_id in order Latest->Oldest
+    # [PUBLIC, UNLISTED, FRIENDS]
     queryset = Post.objects.filter(author_id=auth_id)
-
-    #this will filter to only local posts
-    if is_local:
-        queryset = queryset.filter(id_url__contains=NODEHOSTNAME)
-
     queryset = queryset.exclude(visibility='DELETED')
     queryset = queryset.order_by('-published')
 
+    # Non authenticated users can get all public posts
+    # [PUBLIC]
     if not request.user.is_authenticated:
         return queryset.filter(visibility='PUBLIC')
 
-    elif request.user.author_profile.id == auth_id and not request.user.is_staff:
-        return queryset
-    elif request.user.is_staff:
+    # Admins can see all posts made by author where serial = auth_id in order Latest->Oldest
+    # [PUBLIC, UNLISTED, FRIENDS, DELETED]
+    if request.user.is_staff:
         return Post.objects.filter(author_id=auth_id).order_by('-published')
-    elif request.user.author_profile.id != auth_id:
-        if are_friends(request.user.author_profile.id, auth_id):
+
+    # For local authors
+    if author.is_local:
+
+        # If the user is the author then show all non-deleted posts
+        # [PUBLIC, UNLISTED, FRIENDS]
+        if request.user.author_profile.id == auth_id:
             return queryset
-        elif follows(request.user.author_profile.id, auth_id):
-            return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
-        else:
-            return queryset.filter(visibility='PUBLIC')
+
+        # If the user is not the author
+        elif request.user.author_profile.id != auth_id:
+            # But are friends then show all non-deleted posts
+            # [PUBLIC, UNLISTED, FRIENDS]
+            if are_friends(request.user.author_profile.id, auth_id):
+                return queryset
+
+            # But user follows author then show public and unlisted posts
+            # [PUBLIC, UNLISTED]
+            elif follows(request.user.author_profile.id, auth_id):
+                return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
+
+            # User is neither friend nor follower of author
+            # [PUBLIC]
+            else:
+                return queryset.filter(visibility='PUBLIC')
+
+    # For remote authors on our DB
+    else:
+        # If the user is not the author (this is always the case hence no else statement)
+        # All posts made by author where serial = auth_id from user's inbox
+        # [PUBLIC, UNLISTED, FRIENDS, DELETED]
+        if request.user.author_profile.id != auth_id:
+            user_inbox = Inbox.objects.filter(author=request.user.author_profile).values_list('post')
+            inbox_posts_from_author = Post.objects.filter(id__in=user_inbox)
+            inbox_posts_from_author = inbox_posts_from_author.filter(author_id=auth_id)
+            # If user is friends with author
+            # Union public posts from posts_post table and friends+unlisted posts from inbox
+            # [PUBLIC, UNLISTED, FRIENDS]
+            if are_friends(request.user.author_profile.id, auth_id):
+                inbox_posts_from_author = inbox_posts_from_author.filter(visibility__in=['UNLISTED', 'FRIENDS'])
+                queryset = queryset.filter(visibility='PUBLIC')
+                queryset = queryset.union(inbox_posts_from_author)
+                return queryset
+            # If user follows author
+            # Union public posts from posts_post table and unlisted posts from inbox
+            # [PUBLIC, UNLISTED]
+            elif follows(request.user.author_profile.id, auth_id):
+                inbox_posts_from_author = inbox_posts_from_author.filter(visibility='UNLISTED')
+                queryset = queryset.filter(visibility='PUBLIC')
+                queryset = queryset.union(inbox_posts_from_author)
+                return queryset
+            # If user is neither friend nor follower of author
+            # Just public posts from posts_post table
+            # [PUBLIC]
+            else:
+                return queryset.filter(visibility='PUBLIC')
 
 """
 http://{node}/api/authors/{AUTHOR_SERIAL}/posts
@@ -212,33 +266,7 @@ class PostListCreateView(ListAPIView):
 
     def get_queryset(self):
         auth_id = self.kwargs.get('auth_id')
-        queryset = filter_author_post(self.request, auth_id)
-
-        if self.request.user.is_authenticated and self.request.user.is_staff:
-            return queryset
-
-        #if its a public post, all my authors on this node that they know about, will get the public posts
-        #for a author accessing another authors page, they should see all public posts from the author + whatever user has access to
-        try:
-            author = Author.objects.get(id=auth_id)
-            if not author.is_local and self.request.user.is_authenticated:
-                #get all public posts for that author, get inbox posts, do intersection, this way, ALL public posts show up
-                #and only the ones that have access to
-
-                #get inbox posts -> get all inbox records for request author, get posts which request author has access to made by auth_id
-                user_request_id = self.request.user.author_profile
-                inbox_post_ids = Inbox.objects.filter(author=user_request_id).values_list('post', flat=True)
-
-                # Combine public posts and inbox posts from the remote author,
-                # distinct makes sure we dont double count.
-                queryset = Post.objects.filter(visibility="PUBLIC", author=auth_id)
-                inbox_queryset = Post.objects.filter(id__in=inbox_post_ids, author=auth_id).exclude(visibility='DELETED')
-                queryset = (queryset | inbox_queryset).distinct().order_by('-published')
-
-        except Author.DoesNotExist:
-            pass
-
-        return queryset
+        return filter_author_post(self.request, auth_id)
 
     def post(self, request, *args, **kwargs):
         auth_id = self.kwargs.get('auth_id')
@@ -269,28 +297,13 @@ class StreamListView(ListAPIView):
     pagination_class = PostsPaginator
 
     def get_queryset(self):
+        authors = Author.objects.filter(state="ACTIVE")
+        author_posts = []
+        for author in authors:
+            author_posts.append(list(filter_author_post(self.request, author.id)))
 
-        #if admin, show him everything
-        if self.request.user.is_authenticated and self.request.user.is_staff:
-            return Post.objects.all().order_by('-published')
-
-        local_qs = Post.objects.none()
-        active_local_authors = Author.objects.filter(state="ACTIVE", is_local=True)
-        for author in active_local_authors:
-
-            local_qs = local_qs | filter_author_post(self.request, author.id, is_local=True)
-
-        if self.request.user.is_authenticated:
-            current_author = self.request.user.author_profile
-            inbox_post_ids = Inbox.objects.filter(author=current_author).values_list('post', flat=True)
-            remote_qs = Post.objects.filter(
-                Q(visibility="PUBLIC") | Q(id__in=inbox_post_ids)
-            ).exclude(visibility="DELETED")
-        else:
-            remote_qs = Post.objects.filter(visibility="PUBLIC")
-
-        final_qs = (local_qs | remote_qs).distinct().order_by("-published")
-        return final_qs
+        merged_posts = list(merge_sorted_post_lists(*author_posts))
+        return merged_posts
 
 """
 http://{node}/api/posts/{post_fqid}/image
