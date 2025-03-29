@@ -1,8 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useContext, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { X, Heart } from "lucide-react";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { X, Heart, Plus } from "lucide-react";
 import "../assets/styles/desktop-comment-modal.css";
 import { AuthContext } from "../context/AuthContext";
 import Post from "./Post";
@@ -17,6 +16,7 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
   const [nextCommentsUrl, setNextCommentsUrl] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [likedComments, setLikedComments] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useContext(AuthContext);
 
@@ -93,10 +93,10 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
 
   async function fetchComments() {
     try {
+      setIsLoading(true);
       const response = await apiCall(`posts/${post.id}/comments`);
       if (response.ok) {
         const data = await response.json();
-        // Initialize likes object if missing
         const processedComments = (data.src || []).map(comment => ({
           ...comment,
           likes: comment.likes || { count: 0 }
@@ -104,51 +104,99 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
         setComments(processedComments);
         setNextCommentsUrl(data.next || null);
         setHasMore(!!data.next);
+        
+        // Load more comments to get to initial 10
+        if (processedComments.length < 10 && data.next) {
+          await loadMoreComments();
+        }
       }
     } catch (error) {
       console.error("Error fetching comments:", error);
       setHasMore(false);
+    } finally {
+      setIsLoading(false);
     }
   }
   
-  async function fetchMoreComments() {
-    if (!nextCommentsUrl) {
-      setHasMore(false);
+  async function loadMoreComments() {
+    if (!nextCommentsUrl || isLoading) {
       return;
     }
+    
     try {
-      const nextUrl = new URL(nextCommentsUrl);
-      let path = nextUrl.pathname;
-      const apiPrefix = '/api/';
+      setIsLoading(true);
       
-      if (path.includes(apiPrefix)) {
-        path = path.substring(path.indexOf(apiPrefix) + apiPrefix.length);
-      } else if (path.startsWith('/')) {
-        path = path.substring(1);
+      // Extract just the endpoint path
+      let apiPath;
+      
+      // Handle full URL case
+      if (nextCommentsUrl.includes('://')) {
+        try {
+          // Parse the URL
+          const url = new URL(nextCommentsUrl);
+          
+          // Extract just the path and search parameters
+          const pathWithSearch = url.pathname + url.search;
+          
+          // Remove /api/ prefix if present
+          apiPath = pathWithSearch.replace(/^\/api\//, '');
+        } catch (e) {
+          console.error("Error parsing URL:", e);
+          apiPath = nextCommentsUrl;
+        }
+      } else if (nextCommentsUrl.startsWith('/api/')) {
+        // Handle relative URL with /api/ prefix
+        apiPath = nextCommentsUrl.substring(5); // Remove the /api/ prefix
+      } else {
+        // It's already a clean relative path
+        apiPath = nextCommentsUrl;
       }
       
-      const apiPath = path + nextUrl.search;
+      // Log for debugging
+      console.log("Fetching from cleaned path:", apiPath);
       
+      // Make the API call directly with the clean path
       const response = await apiCall(apiPath);
+      
       if (response.ok) {
         const data = await response.json();
-        // Initialize likes object if missing for new comments
-        const newComments = (data.src || []).map(comment => ({
-          ...comment,
-          likes: comment.likes || { count: 0 }
-        }));
-        setComments(prevComments => [...prevComments, ...newComments]);
-        setNextCommentsUrl(data.next || null);
-        setHasMore(!!data.next);
+        
+        if (!data || !data.src || data.src.length === 0) {
+          setHasMore(false);
+        } else {
+          // Process and add the new comments
+          const newComments = (data.src || []).map(comment => ({
+            ...comment,
+            id: comment.id || `comment-${comment.serial}`,
+            likes: comment.likes || { count: 0 }
+          }));
+          
+          setComments(prevComments => [...prevComments, ...newComments]);
+          
+          // Update the pagination state
+          if (data.next) {
+            console.log("Next URL set to:", data.next);
+            setNextCommentsUrl(data.next);
+            setHasMore(true);
+          } else {
+            console.log("No more pages available");
+            setNextCommentsUrl(null);
+            setHasMore(false);
+          }
+        }
       } else {
+        console.error("API response not OK:", response.status);
         setHasMore(false);
       }
     } catch (error) {
       console.error("Error loading more comments:", error);
       setHasMore(false);
+    } finally {
+      setIsLoading(false);
     }
   }
-
+  
+  
   async function handleLike(commentId) {
     if (!user) return;
     if (likedComments[commentId]) return;
@@ -200,6 +248,7 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
 
       if (response.ok) {
         setNewComment("");
+        // Refresh the comments to show the new comment
         fetchComments(); 
       }
     } catch (error) {
@@ -240,16 +289,7 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
               ref={commentListRef}
             >
               {comments.length > 0 ? (
-                <InfiniteScroll
-                  dataLength={comments.length}
-                  next={fetchMoreComments}
-                  hasMore={hasMore}
-                  loader={<div className="loader-message">Loading more comments...</div>}
-                  endMessage={<p className="end-message">No more comments to show.</p>}
-                  scrollThreshold={0.8}
-                  scrollableTarget="desktop-comments-list"
-                  className="infinite-scroll-container"
-                >
+                <>
                   {comments.map((comment) => (
                     <div key={comment.id} className="desktop-comment-item">
                       <img
@@ -291,10 +331,31 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
                       </button>
                     </div>
                   ))}
-                </InfiniteScroll>
+                  
+                  {hasMore && (
+                    <div className="load-more-container">
+                      <button 
+                        className="load-more-btn" 
+                        onClick={loadMoreComments}
+                        disabled={isLoading}
+                      >
+                        <Plus size={24} />
+                      </button>
+                      {isLoading && <span>Loading comments...</span>}
+                    </div>
+                  )}
+                  
+                  {!hasMore && (
+                    <p className="end-message">No more comments to show.</p>
+                  )}
+                </>
               ) : (
                 <div className="desktop-no-comments">
-                  <p>No comments yet. Be the first to comment!</p>
+                  {isLoading ? (
+                    <p>Loading comments...</p>
+                  ) : (
+                    <p>No comments yet. Be the first to comment!</p>
+                  )}
                 </div>
               )}
             </div>
