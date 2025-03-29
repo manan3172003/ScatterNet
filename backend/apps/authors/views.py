@@ -183,7 +183,7 @@ class AuthorsView(ListAPIView):
 
         #filters to it such that only node admins can see all the users and everyone else just gets the active list
         if not (user and user.is_authenticated and user.is_staff):
-            queryset = queryset.filter(state='ACTIVE', is_node=False)
+            queryset = queryset.filter(state='ACTIVE', is_node=False, is_local=True)
 
         state = self.request.query_params.get('state')
         if state:
