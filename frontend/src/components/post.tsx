@@ -85,7 +85,8 @@ import MarkdownRenderer from "@/components/markdown.tsx";
 // import remarkGfm from "remark-gfm";
 
 interface ContentCardProps {
-  type: 'text' | 'markdown' | 'image';
+  id: string;
+  type: 'text/plain' | 'text/markdown' | 'image/png;base64' | 'image/jpeg;base64' | 'application/base64';
   title: string;
   content: string;
   description?: string;
@@ -96,7 +97,7 @@ interface ContentCardProps {
     profilePicture?: string;
     isCurrentUser?: boolean;
   };
-  privacy?: 'public' | 'friends' | 'unlisted' | 'deleted';
+  visibility: 'PUBLIC' | 'FRIENDS' | 'UNLISTED' | 'DELETED';
   stats?: {
     likes?: number;
     comments?: number;
@@ -107,13 +108,14 @@ interface ContentCardProps {
 }
 
 const ContentCard: React.FC<ContentCardProps> = ({
+  id,
   type,
   title,
   content,
   description,
   className,
   user,
-  privacy = 'public',
+  visibility,
   stats = { likes: 0, comments: 0 },
   onEdit,
   onDelete,
@@ -123,43 +125,39 @@ const ContentCard: React.FC<ContentCardProps> = ({
   const [likes, setLikes] = useState(stats.likes || 0);
 
   const renderContent = () => {
-    switch (type) {
-      case 'text':
+      if (type === 'text/plain') {
         return <p className="text-sm text-muted-foreground break-words">{content}</p>;
-
-      case 'markdown':
+      } else if (type === 'text/markdown') {
         return (
             <div className={cn("dark:prose !prose-invert break-words", className)}>
               <MarkdownRenderer>{content}</MarkdownRenderer>
             </div>
         );
-
-      case 'image':
+      } else if (type === "image/png;base64" || type === "image/jpeg;base64" || type === "application/base64") {
         return (
-          <div className="w-full aspect-video relative">
-            <img
-              src={content}
-              alt={title}
-              className="object-cover rounded-md w-full h-full"
-              loading="lazy"
-            />
-          </div>
+            <div className="w-full aspect-video relative">
+              <img
+                  src={`${id}/image`}
+                  alt={title}
+                  className="object-cover rounded-md w-full h-full"
+                  loading="lazy"
+              />
+            </div>
         );
-
-      default:
+      } else {
         return null;
-    }
+      }
   };
 
   const renderPrivacyIcon = () => {
-    switch (privacy) {
-      case 'public':
+    switch (visibility) {
+      case 'PUBLIC':
         return <Globe className="w-4 h-4 text-green-500" />;
-      case 'friends':
+      case 'FRIENDS':
         return <Lock className="w-4 h-4 text-yellow-500" />;
-      case 'unlisted':
+      case 'UNLISTED':
         return <EyeOff className="w-4 h-4 text-gray-500" />;
-      case 'deleted':
+      case 'DELETED':
         return <Trash2 className="w-4 h-4 text-red-500" />;
       default:
         return null;
@@ -206,64 +204,60 @@ const ContentCard: React.FC<ContentCardProps> = ({
         )}
       </CardHeader>
       <CardContent>
-        {privacy === 'deleted' ? (
-          <p className="text-red-500 italic">This content has been deleted.</p>
-        ) : (
-          <>
-            {renderContent()}
-            <div className="flex justify-between items-center mt-4">
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLike}
+        <>
+          {renderContent()}
+          <div className="flex justify-between items-center mt-4">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLike}
+                className={cn(
+                  "flex items-center gap-2",
+                  liked && "text-red-500"
+                )}
+              >
+                <Heart
                   className={cn(
-                    "flex items-center gap-2",
-                    liked && "text-red-500"
+                    "w-4 h-4",
+                    liked ? "fill-current" : "stroke-current"
                   )}
-                >
-                  <Heart
-                    className={cn(
-                      "w-4 h-4",
-                      liked ? "fill-current" : "stroke-current"
-                    )}
-                  />
-                  {likes}
-                </Button>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4" />
-                  {stats.comments || 0}
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-              </div>
-              {user.isCurrentUser && (
-                <div className="flex items-center space-x-2">
-                  {onEdit && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onEdit}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  )}
-                  {onDelete && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={onDelete}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              )}
+                />
+                {likes}
+              </Button>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                {stats.comments || 0}
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Share2 className="w-4 h-4" />
+              </Button>
             </div>
-          </>
-        )}
+            {user.isCurrentUser && (
+              <div className="flex items-center space-x-2">
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onEdit}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onDelete}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </>
       </CardContent>
     </Card>
   );

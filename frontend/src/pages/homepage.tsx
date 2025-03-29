@@ -87,14 +87,17 @@ export function Homepage() {
   //   visibility: "PUBLIC"
   // };
   interface PostData {
+    id: string;
     title: string;
     description: string;
+    contentType: 'text/plain' | 'text/markdown' | 'image/png;base64' | 'image/jpeg;base64' | 'application/base64';
     content:string;
     author: {
       id: string,
       displayName: string,
       profileImage: string,
-    }
+    };
+    visibility: 'PUBLIC' | 'FRIENDS' | 'UNLISTED' | 'DELETED';
 
   }
 
@@ -144,7 +147,8 @@ export function Homepage() {
       <SidebarLayout>
         <div className="p-6">
           <ContentCard
-              type = 'markdown'
+              id ={data!.id}
+              type ={data!.contentType}
               title ={data!.title}
               content ={data!.content}
               description = {data!.description}
@@ -154,7 +158,7 @@ export function Homepage() {
                 profilePicture: data!.author.profileImage,
                 isCurrentUser: true
               }}
-              privacy = 'public'
+              visibility = {data!.visibility}
           />
         </div>
       </SidebarLayout>
