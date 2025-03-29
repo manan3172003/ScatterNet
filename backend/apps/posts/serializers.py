@@ -303,7 +303,7 @@ class RemotePostSerializer(serializers.ModelSerializer):
     author = RemoteAuthorSerializer()
     comments = RemoteCommentSerializer(many=True)
     likes = RemoteLikeSerializer(many=True)
-    page = serializers.URLField(read_only=True)
+    page = serializers.URLField()
 
     class Meta:
         model = Post
