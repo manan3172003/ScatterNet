@@ -450,10 +450,8 @@ class AuthorInbox(APIView):
         else:
             return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)
 
-class DiscoverRemoteAuthor(ListAPIView):
-    serializer_class = RemoteAuthorSerializer
-    pagination_class = AuthorsPaginator
-    def get_queryset(self):
+class DiscoverRemoteAuthor(APIView):
+    def get(self, request):
         nodes = Author.objects.filter(state='ACTIVE', is_node=True).values_list('host', flat=True)
         full_endpoints = [f'{node}/api/authors' for node in nodes]
         authors_object_allnodes = []
@@ -462,18 +460,23 @@ class DiscoverRemoteAuthor(ListAPIView):
 
         remote_authors = []
         for authors in authors_object_allnodes:
-            for author in authors.authors:
+            for author in authors["authors"]:
                 remote_authors.append(author)
 
-        serialized_authors = RemoteAuthorSerializer(remote_authors, many=True).data
-        return serialized_authors
+        return Response({"authors": remote_authors}, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        elif self.request.user.author_profile.id == request.data['actor']['id']:
+        elif self.request.user.author_profile.id_url == request.data['actor']['id']:
             response = remote_follow(request)
-            send_object(request, Author.objects.get(id=request.data['object']['id']))
+            request_author = Author.objects.get(id_url=request.data['actor']['id'])
+            object_author = Author.objects.get(id_url=request.data['object']['id'])
+            if response.status_code == status.HTTP_200_OK:
+                follow_request_object = Follow.objects.get(actor=request_author, object=object_author)
+                follow_request_object.is_pending = False
+                follow_request_object.save()
+                send_object(request.data, [object_author])
             return response
 
 

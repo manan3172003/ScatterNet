@@ -76,6 +76,7 @@ def get_remote_authors(endpoint):
             method="GET",
             url=endpoint,
         )
+        print(response.json)
         return response.json()
     except Exception as e:
         print(f'getting authors from {endpoint} failed. This is the reason: {e}')
