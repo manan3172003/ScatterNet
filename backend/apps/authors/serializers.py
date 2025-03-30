@@ -36,11 +36,11 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
             user=created_user,
             state='PENDING', #by default, we'll keep it pending until accepted by node admin
             is_local=True,
-            host = NODEHOSTNAME,
+            host = f'{NODEHOSTNAME}api/',
             **validated_data)
 
-        author.id_url = "{}/api/authors/{}".format(NODEHOSTNAME, author.id)
-        author.page = "{}/authors/{}".format(NODEHOSTNAME, author.id)
+        author.id_url = "{}api/authors/{}".format(NODEHOSTNAME, author.id)
+        author.page = "{}authors/{}".format(NODEHOSTNAME, author.id)
 
         if not author.profileImage:
             author.profileImage = f"https://robohash.org/{author.displayName}.png"

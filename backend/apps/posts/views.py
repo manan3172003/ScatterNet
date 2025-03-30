@@ -1,7 +1,6 @@
 import base64
 from urllib.parse import unquote
 from django.http import Http404, HttpResponse
-from dodgerblue.settings import NODEHOSTNAME
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
@@ -14,7 +13,6 @@ from .models import Post, Like, Comment, Inbox
 from .serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentCreateSerializer
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
 from .validations import has_post_access, can_access_comment
-from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
 from ..utils.helper import *
 
@@ -468,7 +466,7 @@ def post_like(author_id, object_url):
     if not created_success:
         return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-    created_like.id_url = "{}/api/authors/{}/liked/{}".format(NODEHOSTNAME, author.id, created_like.id)
+    created_like.id_url = "{}/liked/{}".format(author.id_url, created_like.id)
     created_like.save()
 
     serializer = LikeSerializer(created_like)

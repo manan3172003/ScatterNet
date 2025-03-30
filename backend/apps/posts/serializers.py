@@ -29,8 +29,8 @@ class PostSerializer(serializers.ModelSerializer):
         post = Post.objects.create(author=author, **validated_data)
 
         # Update the post's id_url and page fields
-        post.id_url = f"{NODEHOSTNAME}/api/authors/{author.id}/posts/{post.id}"
-        post.page = f"{NODEHOSTNAME}/authors/{author.id}/posts/{post.id}"
+        post.id_url = f"{author.id_url}/posts/{post.id}"
+        post.page = f"{author.id_url}/posts/{post.id}"
         post.save()
         return post
 
@@ -182,7 +182,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
             post=post,
             **validated_data
         )
-        comment.id_url = f"{NODEHOSTNAME}/api/authors/{author.id}/commented/{comment.id}"
+        comment.id_url = f"{author.id_url}/commented/{comment.id}"
         comment.save()
         return comment
 
