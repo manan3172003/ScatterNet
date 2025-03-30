@@ -28,3 +28,9 @@ class Author(models.Model):
     )
     state = models.CharField(max_length=7, choices=allowed_states, default='PENDING')
     id_url = models.URLField(unique=True)
+
+class Host(models.Model):
+    host=models.URLField(null=False, blank=False, unique=True)
+    username=models.CharField(max_length=128, unique=True)
+    password=models.CharField(max_length=128)
+    is_active = models.BooleanField(default=False)

@@ -1,9 +1,8 @@
 from ..follow.models import Follow
-from ..authors.models import Author
+from ..authors.models import Author, Host
 from requests import request
 from requests.auth import HTTPBasicAuth
 import threading
-from dodgerblue.settings import DODGERBLUE_NODE_PASSWORD, DODGERBLUE_NODE_USERNAME
 import json
 import heapq
 
@@ -52,13 +51,15 @@ def send_object(payload, remote_authors):
             print("payload:", payload)
             headers = {'Content-Type': 'application/json'}
             for remote_author in remote_authors:
+                remote_host = Host.objects.get(host=remote_author.host)
+
                 inbox_url = f"{remote_author.id_url}/inbox"
                 print("URL the request was made to:", inbox_url)
                 resp = request(
                     method="POST",
                     url=inbox_url,
                     data=payload,
-                    auth=HTTPBasicAuth(DODGERBLUE_NODE_USERNAME, DODGERBLUE_NODE_PASSWORD),
+                    auth=HTTPBasicAuth(remote_host.username, remote_host.password),
                     headers=headers
                 )
                 print("This is the response:")
