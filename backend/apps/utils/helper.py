@@ -53,7 +53,7 @@ def send_object(payload, remote_authors):
             for remote_author in remote_authors:
                 remote_host = Host.objects.get(host=remote_author.host)
 
-                inbox_url = f"{remote_author.id_url}/inbox"
+                inbox_url = f"{remote_author.id_url}/inbox/"
                 print("URL the request was made to:", inbox_url)
                 resp = request(
                     method="POST",
@@ -72,11 +72,12 @@ def send_object(payload, remote_authors):
 
 def get_remote_authors(endpoint):
     try:
+        print(endpoint)
         response = request(
             method="GET",
             url=endpoint,
         )
-        print(response.json)
+        print(response.text)
         return response.json()
     except Exception as e:
         print(f'getting authors from {endpoint} failed. This is the reason: {e}')

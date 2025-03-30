@@ -453,7 +453,7 @@ class AuthorInbox(APIView):
 class DiscoverRemoteAuthor(APIView):
     def get(self, request):
         nodes = Author.objects.filter(state='ACTIVE', is_node=True).values_list('host', flat=True)
-        full_endpoints = [f'{node}/api/authors' for node in nodes]
+        full_endpoints = [f'{node}api/authors/' for node in nodes]
         authors_object_allnodes = []
         for endpoint in full_endpoints:
             authors_object_allnodes.append(get_remote_authors(endpoint))
@@ -474,7 +474,7 @@ class DiscoverRemoteAuthor(APIView):
             object_author = Author.objects.get(id_url=request.data['object']['id'])
             if response.status_code == status.HTTP_200_OK:
                 follow_request_object = Follow.objects.get(actor=request_author, object=object_author)
-                follow_request_object.is_pending = False
+                follow_request_object.isPending = False
                 follow_request_object.save()
                 send_object(request.data, [object_author])
             return response
