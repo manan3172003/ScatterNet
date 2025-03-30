@@ -1,8 +1,9 @@
 import { SidebarLayout } from "@/components/sidebar-layout.tsx";
-import ContentCard from "@/components/post.tsx"
+// import ContentCard from "@/components/post.tsx"
 import {apiCall} from "@/utils/ApiCall.tsx";
 import {useEffect, useState} from "react";
 import {Post} from "@/types/ModelTypes.tsx";
+import InfiniteScroll from "@/components/infinite-scroll.tsx";
 
 export function Homepage() {
   // Use state to manage the data and loading state
@@ -50,9 +51,7 @@ export function Homepage() {
   return (
       <SidebarLayout>
         <div className="p-6">
-          <ContentCard
-            post={data!}
-          />
+          <InfiniteScroll/>
         </div>
       </SidebarLayout>
   )
