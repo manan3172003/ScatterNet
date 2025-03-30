@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Heart,
-  // MessageCircle,
   Share2,
   Edit,
   Trash2,
@@ -15,13 +14,11 @@ import {
   ChevronUp, Link
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import MarkdownRenderer from "@/components/markdown.tsx";
 import {Post} from "@/types/ModelTypes.tsx";
 import {AuthContext} from "@/context/AuthContext.tsx";
-// import {Dialog} from "@radix-ui/react-dialog";
-// import {DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx";
 import CommentModal from "@/components/comment-modal.tsx";
 import {useMediaQuery} from "@mantine/hooks";
+import PostContent from "@/components/post-content.tsx";
 
 interface ContentCardProps {
   post: Post;
@@ -78,43 +75,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
   }
 
-  const renderContent = () => {
-    const contentStyle = shouldShowReadMore && !expanded
-      ? { maxHeight: `${maxHeight}px`, overflow: 'hidden' }
-      : {};
-
-    if (post.contentType === 'text/plain') {
-      return (
-        <div ref={contentRef} style={contentStyle} className="text-sm text-muted-foreground break-words w-full">
-          {post.content}
-        </div>
-      );
-    } else if (post.contentType === 'text/markdown') {
-      return (
-        <div
-          ref={contentRef}
-          style={contentStyle}
-          className={cn("dark:prose !prose-invert break-words w-full", className)}
-        >
-          <MarkdownRenderer>{post.content}</MarkdownRenderer>
-        </div>
-      );
-    } else if (post.contentType === "image/png;base64" || post.contentType === "image/jpeg;base64" || post.contentType === "application/base64") {
-      return (
-        <div className="w-full aspect-video relative">
-          <img
-            src={`${post.id}/image`}
-            alt={post.title}
-            className="object-contain rounded-md w-full h-full"
-            loading="lazy"
-          />
-        </div>
-      );
-    } else {
-      return null;
-    }
-  };
-
   const renderPrivacyIcon = () => {
     switch (post.visibility) {
       case 'PUBLIC':
@@ -140,7 +100,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   };
 
   return (
-    <Card className={cn("w-full mx-auto max-w-full lg:max-w-2xl", className)}>
+    <Card className={cn("w-full mx-auto max-w-xl", className)}>
       <CardHeader className="flex flex-row items-center space-x-4">
         <Avatar>
           <AvatarImage
@@ -175,7 +135,12 @@ const ContentCard: React.FC<ContentCardProps> = ({
       </CardHeader>
       <CardContent className="w-full">
         <div className="w-full">
-          {renderContent()}
+          <PostContent
+            post={post}
+            maxHeight={maxHeight}
+            expanded={expanded}
+            setShouldShowReadMore={setShouldShowReadMore}
+          />
 
           {shouldShowReadMore && (
             <Button

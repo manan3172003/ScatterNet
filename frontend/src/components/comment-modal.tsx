@@ -4,6 +4,28 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
 import { useMediaQuery } from '@mantine/hooks'; // Hook for media queries
 import { Post } from "@/types/ModelTypes"
+import {Card} from "@/components/ui/card.tsx";
+
+// Desktop modal component
+const DesktopModal: React.FC = () => (
+  <DialogContent className="[&>button]:hidden">
+    <Card className="p-6"></Card>
+  </DialogContent>
+);
+
+// Mobile modal component
+const MobileModal: React.FC = () => (
+  <DialogContent className="p-4 w-full rounded-t-md">
+    <DialogHeader>
+      <DialogTitle>Comments (Mobile View)</DialogTitle>
+      <DialogDescription>Leave a comment below (mobile)</DialogDescription>
+    </DialogHeader>
+    <div className="p-4">
+      <textarea className="w-full p-2 border rounded-md" placeholder="Write a comment..." />
+      <Button className="mt-2 w-full">Post Comment</Button>
+    </div>
+  </DialogContent>
+);
 
 interface CommentModalProps {
   post: Post;
@@ -21,25 +43,8 @@ const CommentModal: React.FC<CommentModalProps> = ({ post }) => {
           {post.comments.count}
         </Button>
       </DialogTrigger>
-      <DialogContent
-        className={isMobile ? "p-4 w-full rounded-t-md" : "p-4 w-[500px] mx-auto"} // Mobile: full width, larger screens: centered modal
-      >
-        <DialogHeader>
-          <DialogTitle>{isMobile ? 'Comments (Mobile View)' : 'Comments'}</DialogTitle>
-          <DialogDescription>
-            {isMobile ? 'Leave a comment below (mobile)' : 'Leave a comment below'}
-          </DialogDescription>
-        </DialogHeader>
-        {/* Add your comment form or comment section here */}
-        <div className="p-4">
-          {/* Comment input form */}
-          <textarea
-            className="w-full p-2 border rounded-md"
-            placeholder="Write a comment..."
-          />
-          <Button className="mt-2 w-full">Post Comment</Button>
-        </div>
-      </DialogContent>
+      {/* Render DesktopModal or MobileModal based on the screen size */}
+      {isMobile ? <MobileModal /> : <DesktopModal />}
     </Dialog>
   );
 };
