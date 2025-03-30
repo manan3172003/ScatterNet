@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from dodgerblue.settings import NODEHOSTNAME
-from .models import Author
+from .models import Author, Host
 from hashlib import sha256
 
 class AuthorSignUpSerializer(serializers.ModelSerializer):
@@ -139,3 +139,13 @@ class RemoteAuthorSerializer(serializers.ModelSerializer):
 
     def get_type(self, obj):
         return "author"
+
+class HostSerializer(serializers.ModelSerializer):
+    is_active = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Host
+        fields = ('host', 'username', 'password', 'is_active')
+
+    def get_is_active(self, obj):
+        return obj.is_active

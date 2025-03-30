@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView,CreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView, ListCreateAPIView
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -11,12 +11,13 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from urllib.parse import unquote
-from .models import Author
-from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
+from .models import Author, Host
+from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer, \
+    HostSerializer
 from ..follow.models import Follow
-from ..follow.serializers import RemoteFollowSerializer, FollowSerializer
+from ..follow.serializers import RemoteFollowSerializer
 from ..posts.models import Like, Comment, Post, Inbox
-from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer, PostSerializer
+from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer
 from ..utils.helper import get_remote_authors, send_object
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
@@ -474,3 +475,49 @@ class DiscoverRemoteAuthor(ListAPIView):
             response = remote_follow(request)
             send_object(request, Author.objects.get(id=request.data['object']['id']))
             return response
+
+
+class RegisterOnRemoteNode(ListCreateAPIView):
+    serializer_class = HostSerializer
+
+    def get_queryset(self):
+        queryset = Host.objects.all()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        elif request.user.is_staff:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            if 'host' not in request.data:
+                return Response({'error': 'Missing host'}, status=status.HTTP_400_BAD_REQUEST)
+            host = Host.objects.get(host=request.data['host'])
+
+            if 'username' in request.data:
+                host.username = request.data['username']
+
+            if 'password' in request.data:
+                host.password = request.data['password']
+
+            if 'is_active' in request.data:
+                host.is_active = True if request.data['is_active'] == 'true' else False
+
+            host.save()
+            serializer = self.get_serializer(host)
+            return Response({"host": serializer.data}, status=status.HTTP_200_OK)
