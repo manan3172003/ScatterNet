@@ -453,7 +453,7 @@ class AuthorInbox(APIView):
 class DiscoverRemoteAuthor(APIView):
     def get(self, request):
         nodes = Author.objects.filter(state='ACTIVE', is_node=True).values_list('host', flat=True)
-        full_endpoints = [f'{node}api/authors/' for node in nodes]
+        full_endpoints = [f'{node}authors/' for node in nodes]
         authors_object_allnodes = []
         for endpoint in full_endpoints:
             authors_object_allnodes.append(get_remote_authors(endpoint))
