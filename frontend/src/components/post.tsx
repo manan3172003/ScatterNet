@@ -11,9 +11,8 @@ import {
   UserPlus,
   Lock,
   Globe,
-  EyeOff,
   ChevronDown,
-  ChevronUp
+  ChevronUp, Link
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import MarkdownRenderer from "@/components/markdown.tsx";
@@ -119,7 +118,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
       case 'FRIENDS':
         return <Lock className="w-4 h-4 text-yellow-500" />;
       case 'UNLISTED':
-        return <EyeOff className="w-4 h-4 text-gray-500" />;
+        return <Link className="w-4 h-4 text-gray-500" />;
       case 'DELETED':
         return <Trash2 className="w-4 h-4 text-red-500" />;
       default:

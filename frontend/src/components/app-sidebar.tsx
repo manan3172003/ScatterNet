@@ -12,7 +12,6 @@ import {useContext} from "react";
 import {AuthContext} from "@/context/AuthContext.tsx";
 import {getCookie} from "@/utils/ApiCall.tsx";
 
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const { user } = useContext(AuthContext);
@@ -59,7 +58,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarRail />
+      <SidebarRail/>
     </Sidebar>
   )
 }
