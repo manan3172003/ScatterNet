@@ -61,7 +61,6 @@ export default function InfiniteScroll() {
           <div
             ref={lastPostElementRef}
             key={post.id}
-            className="p-6"
           >
             <ContentCard
                 post={post}
@@ -70,7 +69,7 @@ export default function InfiniteScroll() {
         );
       } else {
         return (
-          <div key={post.id} className="p-6">
+          <div key={post.id} className="pb-6">
             <ContentCard
                 post={post}
             />

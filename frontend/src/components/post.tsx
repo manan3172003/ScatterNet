@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Heart,
-  MessageCircle,
+  // MessageCircle,
   Share2,
   Edit,
   Trash2,
@@ -18,6 +18,10 @@ import { cn } from "@/lib/utils";
 import MarkdownRenderer from "@/components/markdown.tsx";
 import {Post} from "@/types/ModelTypes.tsx";
 import {AuthContext} from "@/context/AuthContext.tsx";
+// import {Dialog} from "@radix-ui/react-dialog";
+// import {DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx";
+import CommentModal from "@/components/comment-modal.tsx";
+import {useMediaQuery} from "@mantine/hooks";
 
 interface ContentCardProps {
   post: Post;
@@ -30,6 +34,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
   className,
   maxHeight = 300 // Default max height in pixels before showing "Read more"
 }) => {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(post.likes.count || 0);
   const [expanded, setExpanded] = useState(false);
@@ -57,7 +62,6 @@ const ContentCard: React.FC<ContentCardProps> = ({
 
     // Add resize listener
     window.addEventListener('resize', checkHeight);
-
     // Clean up
     return () => window.removeEventListener('resize', checkHeight);
   }, [post.content, maxHeight, post.contentType]);
@@ -165,7 +169,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
             onClick={onFollow}
             className="flex items-center gap-2"
           >
-            <UserPlus className="w-4 h-4" /> Follow
+            <UserPlus className="w-4 h-4" /> { isMobile? null : "follow" }
           </Button>
         )}
       </CardHeader>
@@ -207,10 +211,7 @@ const ContentCard: React.FC<ContentCardProps> = ({
                 />
                 {likes}
               </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                <MessageCircle className="w-4 h-4" />
-                {post.comments.count || 0}
-              </Button>
+              <CommentModal post={post} />
               <Button variant="ghost" size="sm">
                 <Share2 className="w-4 h-4" />
               </Button>
