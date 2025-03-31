@@ -453,3 +453,18 @@ class FriendDetailView(APIView):
 
         else:
             return Response({"error": "Not friends"}, status=status.HTTP_404_NOT_FOUND)
+
+class RemoteAuthorFollowingView(APIView):
+    """
+    Methods:
+        GET
+
+    URL:
+        authors/discover/{author_fqid}/following
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, author_fqid):
+        """
+        Returns author details if current user is following the author related to the given fqid.
+        """
