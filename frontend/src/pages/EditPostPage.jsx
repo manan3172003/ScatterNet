@@ -156,6 +156,28 @@ export default function EditPostPage(){
     setLoading(false);
   };
 
+  // set large at start
+  document.addEventListener('DOMContentLoaded', () => {
+    const textareas = document.querySelectorAll('.post-form textarea');
+
+    textareas.forEach(textarea => {
+        if (textarea) {
+          textarea.style.height = `${Math.min(textarea.scrollHeight, parseInt(getComputedStyle(textarea).maxHeight))}px`; 
+        }
+    });
+});
+//dynamic resizing
+  const textareas = document.querySelectorAll('.post-form textarea');
+
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = "auto";
+            this.style.height = `${Math.min(this.scrollHeight, parseInt(getComputedStyle(this).maxHeight))}px`; 
+        });
+    });
+
+  
+
   if (loading) {
     return <div>Loading author...</div>
   }

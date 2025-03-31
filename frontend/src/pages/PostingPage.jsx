@@ -128,6 +128,15 @@ export default function PostingPage(){
         }
     }
 
+    //dynamic resizing
+    const textareas = document.querySelectorAll('.post-form textarea');
+
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto'; 
+            this.style.height = `${Math.min(this.scrollHeight, parseInt(getComputedStyle(this).maxHeight))}px`; 
+        });
+    });
     return <div className="posting-container">
      <Notification
             show={notification.show}
