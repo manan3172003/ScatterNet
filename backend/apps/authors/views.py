@@ -1,21 +1,24 @@
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView,CreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView, ListCreateAPIView
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.utils.decorators import method_decorator
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from urllib.parse import unquote
-from .models import Author
-from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer
+from .models import Author, Host
+from .serializers import AuthorSignUpSerializer, AuthorSerializer, AuthorUpdateSerializer, RemoteAuthorSerializer, \
+    HostSerializer
 from ..follow.models import Follow
 from ..follow.serializers import RemoteFollowSerializer
-from ..posts.models import Like, Comment, Post
-from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer, PostSerializer
+from ..posts.models import Like, Comment, Post, Inbox
+from ..posts.serializers import RemoteLikeSerializer, RemoteCommentSerializer, RemotePostSerializer
+from ..utils.helper import get_remote_authors, send_object
 from ..utils.paginators import AuthorsPaginator
 from base64 import b64decode
 
@@ -182,7 +185,7 @@ class AuthorsView(ListAPIView):
 
         #filters to it such that only node admins can see all the users and everyone else just gets the active list
         if not (user and user.is_authenticated and user.is_staff):
-            queryset = queryset.filter(state='ACTIVE', is_node=False)
+            queryset = queryset.filter(state='ACTIVE', is_node=False, is_local=True)
 
         state = self.request.query_params.get('state')
         if state:
@@ -301,7 +304,7 @@ def get_current_user(request):
     else:
         return Response({'error': "User is not logged in."}, status=status.HTTP_401_UNAUTHORIZED)
 
-def remote_post(request):
+def remote_post(request, local_author):
     if 'comments' not in request.data or 'src' not in request.data['comments']:
         return Response({'error': 'No comments object'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -322,9 +325,12 @@ def remote_post(request):
         postserializer = RemotePostSerializer(post, data=request.data, partial=True)
         if not postserializer.is_valid():
             return Response({'error': postserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        postserializer.save()
+        post = postserializer.save()
     except Post.DoesNotExist:
-        postserializer.save()
+        post = postserializer.save()
+
+    #this creates the mapping if it doesn't exist, otherwise nothing
+    Inbox.objects.get_or_create(author=local_author, post=post)
 
     return Response(postserializer.data, status=status.HTTP_200_OK)
 
@@ -396,11 +402,11 @@ def remote_follow(request):
     return Response(followserializer.data, status=status.HTTP_200_OK)
 
 
-class Inbox(APIView):
+class AuthorInbox(APIView):
     """
     This endpoint is the place to communicate with other remote nodes. Allows receiving different entities.
 
-    URL: /api/authors/{author_fqid}/inboox
+    URL: /api/authors/{author_serial}/inbox
     Methods:
         - POST
     """
@@ -417,19 +423,22 @@ class Inbox(APIView):
         if user is None:
             return Response({'error': 'Need to be authenticated to make request to inbox'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        author = user.author_profile
+        node_author = user.author_profile
 
-        if not (author.state == 'ACTIVE'):
+        if not (node_author.state == 'ACTIVE'):
             return Response({'error': 'This user cannot login to the system.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if not author.is_node:
+        if not node_author.is_node:
             return Response({'error': 'Not a node'}, status=status.HTTP_401_UNAUTHORIZED)
 
         if not 'type' in request.data:
             return Response({'error': 'No type'}, status=status.HTTP_400_BAD_REQUEST)
 
+        local_auth_fqid = self.kwargs.get('author_serial')
+        local_author = get_object_or_404(Author, id=local_auth_fqid)
+
         if request.data['type'] == 'post':
-            return remote_post(request)
+            return remote_post(request, local_author)
         elif request.data['type'] == 'author':
             return remote_author(request)
         elif request.data['type'] == 'like':
@@ -440,3 +449,89 @@ class Inbox(APIView):
             return remote_follow(request)
         else:
             return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)
+
+class DiscoverRemoteAuthor(APIView):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return Response({'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        nodes = Author.objects.filter(state='ACTIVE', is_node=True).values_list('host', flat=True)
+        full_endpoints = [f'{node}authors/' for node in nodes]
+        authors_object_allnodes = []
+        for endpoint in full_endpoints:
+            authors_object_allnodes.append(get_remote_authors(endpoint))
+
+        remote_authors = []
+        user_author = request.user.author_profile
+        for authors in authors_object_allnodes:
+            for author in authors["authors"]:
+                try:
+                    remote_author = Author.objects.get(id_url=author['id'])
+                    try:
+                        follows = Follow.objects.get(actor=user_author, object=remote_author, isPending=False)
+                    except Follow.DoesNotExist:
+                        remote_authors.append(author)
+                except Author.DoesNotExist:
+                    remote_authors.append(author)
+
+        return Response({"authors": remote_authors}, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        elif self.request.user.author_profile.id_url == request.data['actor']['id']:
+            response = remote_follow(request)
+            request_author = Author.objects.get(id_url=request.data['actor']['id'])
+            object_author = Author.objects.get(id_url=request.data['object']['id'])
+            if response.status_code == status.HTTP_200_OK:
+                follow_request_object = Follow.objects.get(actor=request_author, object=object_author)
+                follow_request_object.isPending = False
+                follow_request_object.save()
+                send_object(request.data, [object_author])
+            return response
+
+
+class RegisterOnRemoteNode(ListCreateAPIView):
+    serializer_class = HostSerializer
+
+    def get_queryset(self):
+        queryset = Host.objects.all()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        elif request.user.is_staff:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            if 'host' not in request.data:
+                return Response({'error': 'Missing host'}, status=status.HTTP_400_BAD_REQUEST)
+            host = Host.objects.get(host=request.data['host'])
+
+            if 'username' in request.data:
+                host.username = request.data['username']
+
+            if 'password' in request.data:
+                host.password = request.data['password']
+
+            if 'is_active' in request.data:
+                host.is_active = True if request.data['is_active'] == 'true' else False
+
+            host.save()
+            serializer = self.get_serializer(host)
+            return Response({"host": serializer.data}, status=status.HTTP_200_OK)

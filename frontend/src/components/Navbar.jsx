@@ -1,6 +1,6 @@
 
 import { Home, User, SquarePlus, Shield } from "lucide-react";
-import { AiOutlineNotification } from "react-icons/ai";
+import { AiOutlineNotification, AiOutlineSearch } from "react-icons/ai";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router";
@@ -16,6 +16,7 @@ export default function Navbar() {
     { icon: SquarePlus, label: "Post", path: "/post" },
     { icon: User, label: "Profile", path: "/profile" },
     { icon: AiOutlineNotification, label: "Requests", path: "/requests "},
+    { icon: AiOutlineSearch, label: "Discover", path: "/discover "},
     ...(isAdminFromCookie ? [{ icon: Shield, label: "Admin", path: "/admin" }] : []),
   ];
   // hook that runs when component is mounted

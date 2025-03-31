@@ -1,8 +1,8 @@
 from ..follow.models import Follow
-from ..authors.models import Author
+from ..authors.models import Author, Host
 from requests import request
 from requests.auth import HTTPBasicAuth
-from dodgerblue.settings import DODGERBLUE_NODE_PASSWORD, DODGERBLUE_NODE_USERNAME
+import threading
 import json
 import heapq
 
@@ -46,21 +46,38 @@ def fetch_all_remote_users():
 
 def send_object(payload, remote_authors):
     payload = json.dumps(payload)
-    print(payload)
-    print("payload:", payload)
-    headers = {'Content-Type': 'application/json'}
-    for remote_author in remote_authors:
-        inbox_url = f"{remote_author.host}/api/authors/{remote_author.id_url}/inbox"
-        print("URL the request was made to:", inbox_url)
+    def worker():
         try:
-            resp = request(method="POST",
-                url=inbox_url,
-                data=payload,
-                auth=HTTPBasicAuth(DODGERBLUE_NODE_USERNAME,DODGERBLUE_NODE_PASSWORD),
-                headers=headers
-            )
-            print("This is the response:")
-            print()
-            print(resp.text)
+            print("payload:", payload)
+            headers = {'Content-Type': 'application/json'}
+            for remote_author in remote_authors:
+                remote_host = Host.objects.get(host=remote_author.host)
+
+                inbox_url = f"{remote_author.id_url}/inbox/"
+                print("URL the request was made to:", inbox_url)
+                resp = request(
+                    method="POST",
+                    url=inbox_url,
+                    data=payload,
+                    auth=HTTPBasicAuth(remote_host.username, remote_host.password),
+                    headers=headers
+                )
+                print("This is the response:")
+                print(resp.text)
         except Exception as e:
-            print("sending an object to a node failed. This is the reason: ", e)
+            print("Sending an object to a node failed. Reason:", e)
+
+    thread = threading.Thread(target=worker, daemon=True)
+    thread.start()
+
+def get_remote_authors(endpoint):
+    try:
+        print(endpoint)
+        response = request(
+            method="GET",
+            url=endpoint,
+        )
+        print(response.text)
+        return response.json()
+    except Exception as e:
+        print(f'getting authors from {endpoint} failed. This is the reason: {e}')

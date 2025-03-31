@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from dodgerblue.settings import NODEHOSTNAME
-from .models import Author
+from .models import Author, Host
 from hashlib import sha256
 
 class AuthorSignUpSerializer(serializers.ModelSerializer):
@@ -10,11 +10,10 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('username', 'password', 'displayName', 'host', 'github', 'profileImage', 'page', 'is_node')
+        fields = ('username', 'password', 'displayName', 'host', 'profileImage', 'page', 'is_node')
         #this will also need to be cleaned up later when we finalize the host stuff
         extra_kwargs = {
-            'host': {'required': False, 'allow_null': True},
-            'github': {'required': False, 'allow_null': True},
+            'host': {'required': False},
             'profileImage': {'required': False, 'allow_null': True},
             'page': {'required': False, 'allow_null': True},
         }
@@ -37,11 +36,15 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
             user=created_user,
             state='PENDING', #by default, we'll keep it pending until accepted by node admin
             is_local=True,
+            host = f'{NODEHOSTNAME}api/',
             **validated_data)
 
-        author.id_url = "{}/api/authors/{}".format(NODEHOSTNAME, author.id)
-        author.host = NODEHOSTNAME
-        author.page = "{}/authors/{}".format(NODEHOSTNAME, author.id)
+        author.id_url = "{}api/authors/{}".format(NODEHOSTNAME, author.id)
+        author.page = "{}authors/{}".format(NODEHOSTNAME, author.id)
+
+        if not author.profileImage:
+            author.profileImage = f"https://robohash.org/{author.displayName}.png"
+
         author.save()
 
         return author
@@ -56,7 +59,7 @@ class AuthorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('serial', 'type', 'id', 'host', 'displayName', 'github', 'profileImage', 'page', 'state', 'username')
+        fields = ('serial', 'type', 'id', 'host', 'displayName', 'profileImage', 'page', 'state', 'username')
 
     def get_id(self, obj):
         return obj.id_url
@@ -85,7 +88,7 @@ class AuthorUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('type', 'id', 'username', 'host', 'displayName', 'github', 'profileImage', 'page', 'state')
+        fields = ('type', 'id', 'username', 'host', 'displayName', 'profileImage', 'page', 'state')
         extra_kwargs = {
             'displayName': {'required': False}, #not necessary to update it p much
             'state': {'required': False} #so users can also update other stuff
@@ -104,14 +107,13 @@ class RemoteAuthorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('serial', 'type', 'id', 'host', 'displayName', 'github', 'profileImage', 'page')
+        fields = ('serial', 'type', 'id', 'host', 'displayName', 'profileImage', 'page')
 
     def create(self, validated_data):
         author = Author.objects.create(
             id_url=validated_data.get('id'),
             host=validated_data.get('host'),
             displayName=validated_data.get('displayName'),
-            github=None,
             profileImage=validated_data.get('profileImage'),
             page=validated_data.get('page'),
             is_local=False,
@@ -137,3 +139,13 @@ class RemoteAuthorSerializer(serializers.ModelSerializer):
 
     def get_type(self, obj):
         return "author"
+
+class HostSerializer(serializers.ModelSerializer):
+    is_active = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Host
+        fields = ('host', 'username', 'password', 'is_active')
+
+    def get_is_active(self, obj):
+        return obj.is_active

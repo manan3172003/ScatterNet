@@ -358,9 +358,7 @@ export default function Post({
               size={20}
               className={`action-icon ${hasLiked ? "liked" : ""}`}
             />
-            {post.visibility !== "FRIENDS" && (
               <span className="action-count">{likeCount}</span>
-            )}
           </button>
 
           <button
