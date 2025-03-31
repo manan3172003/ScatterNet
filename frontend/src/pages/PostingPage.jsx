@@ -142,7 +142,7 @@ export default function PostingPage(){
                         <form className="post-form" onSubmit={handlePost}>
                             <label className="form-label">Create Post</label>
                             <label className="form-label">Visibility</label>
-                            <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
+                            <select className="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
                                 <option value="PUBLIC">Public</option>
                                 <option value="FRIENDS">Friends-Only</option>
                                 <option value="UNLISTED">Unlisted</option>
@@ -154,7 +154,7 @@ export default function PostingPage(){
                             <textarea name="description" placeholder="Enter the description of your post" required onChange={handleChange} value={formData.description}/>
                             
                             <label className="form-label">Content Type</label>
-                            <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
+                            <select className="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
                                 {/* <option value="">Select...</option> */}
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>

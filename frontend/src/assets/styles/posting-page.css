@@ -47,10 +47,11 @@ body {
     border: 1px solid #2d3748;
     background: #171923;
     color: white;
+    font-size: 12px;
     font-family: "Inter", sans-serif;
-    transition: all 0.2s ease;
   }
   .post-form textarea {
+    font-size: 12px;
     padding: 14px;
     margin-bottom: 20px;
     border-radius: 6px;
@@ -101,6 +102,33 @@ body {
   .form-label {
     font-size: 1rem;
   }
+  .dropdown {
+    padding: 12px; 
+    margin-bottom: 15px; 
+    border-radius: 5px; 
+    border: 1px solid #2d3748; /* Dark border for consistency */
+    background: #1e293b; /* Matches other form elements */
+    color: #e2e8f0; /* Light text color */
+    font-family: "Inter", sans-serif; /* Consistent typography */
+    font-size: 14px; 
+    outline: none; 
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.dropdown:focus {
+    border-color: #57659E; /* Highlight with a soft blue border */
+    background: #171923; /* Slightly darker for focus */
+}
+
+.dropdown:hover {
+    background: #2d3748; /* Slight hover effect */
+}
+
+.dropdown option {
+    padding: 10px; 
+    background: #1e293b; 
+    color: #e2e8f0; /* Matches dropdown text color */
+}
 
   @media screen and (min-width: 768px) {
 
