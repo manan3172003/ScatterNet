@@ -355,6 +355,31 @@ class RemotePostSerializer(serializers.ModelSerializer):
         instance.content = validated_data.get('content', instance.content)
         instance.visibility = validated_data.get('visibility', instance.visibility)
 
+        for comment in validated_data.get('comments'):
+            try:
+                Comment.objects.get(id_url=comment.get("id"))
+                for like in comment.get('likes'):
+                    try:
+                        like_author = Author.objects.get(id_url=like.get('author').get('id'))
+                        Like.objects.get(author=like_author, object=like.get('object'))
+                    except (Like.DoesNotExist, Author.DoesNotExist) as e:
+                        like_obj = RemoteLikeSerializer(data=like)
+                        like_obj.is_valid(raise_exception=True)
+                        like_obj.save()
+            except Comment.DoesNotExist:
+                comment_obj = RemoteCommentSerializer(data=comment)
+                comment_obj.is_valid(raise_exception=True)
+                comment_obj.save()
+
+        for like in validated_data.get('likes'):
+            try:
+                like_author = Author.objects.get(id_url=like.get('author').get('id'))
+                Like.objects.get(author=like_author, object=like.get('object'))
+            except (Like.DoesNotExist, Author.DoesNotExist) as e:
+                like_obj = RemoteLikeSerializer(data=like)
+                like_obj.is_valid(raise_exception=True)
+                like_obj.save()
+
         instance.published = timezone.now()
         instance.save()
         return instance
