@@ -6,7 +6,6 @@ import "../assets/styles/homepage.css";
 import getCookie from "../context/Cookie";
 import DesktopCommentModal from "../components/DesktopCommentModal";
 import HeaderLogo from "../components/HeaderLogo";
-
 import {apiCall} from "../utils/utils.js";
 export default function HomePage() {
     const [posts, setPosts] = useState([]);
@@ -58,6 +57,7 @@ export default function HomePage() {
     
     function handleCommentClick(post, e) {
         e.stopPropagation();
+        console.log(post)
         setSelectedPost(post);
         setShowComments(true);
     }
@@ -158,6 +158,7 @@ export default function HomePage() {
                   post={post}
                   onPostClick={() => handlePostClick(post)}
                   onCommentClick={(e) => handleCommentClick(post, e)}
+                  isCommentModalOpen={showComments}
                   onRefresh={refreshFeed}
                 />
               ))

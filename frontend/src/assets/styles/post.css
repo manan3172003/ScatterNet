@@ -1,19 +1,33 @@
 .post-container {
   overflow: hidden;
   border-radius: 0.75rem;
-  background-color: #1F2937;
+  background-color: #1f2937;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   width: 100%;
   transition: transform 0.2s, box-shadow 0.2s;
   margin-bottom: 1.5rem;
 }
-
-.post-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+.post-in-modal {
+  transform: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
-
+.post-in-modal, .post-container {
+  overflow-y: scroll;
+}
+.profile-post-container {
+  width: 90% !important;
+}
+.post-in-modal:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
 .post-header {
   padding: 1.25rem 1.25rem 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -31,7 +45,7 @@
   font-size: 1.5rem;
   line-height: 1.75rem;
   font-weight: 700;
-  color: #F3F4F6;
+  color: #f3f4f6;
 }
 
 .post-visibility {
@@ -40,14 +54,14 @@
 }
 
 .visibility-icon {
-  color: #9CA3AF;
+  color: #9ca3af;
 }
 
 .visibility-icon.public {
-  color: #10B981;
+  color: #10b981;
 }
 .visibility-icon.unlisted {
-  color: #F59E0B; 
+  color: #f59e0b;
 }
 
 .post-author {
@@ -72,14 +86,14 @@
 
 .post-author-name {
   font-weight: 600;
-  color: #E5E7EB;
+  color: #e5e7eb;
   margin-bottom: 0.25rem;
 }
 
 .post-meta {
   display: flex;
   align-items: center;
-  color: #9CA3AF;
+  color: #9ca3af;
   font-size: 0.875rem;
 }
 
@@ -89,11 +103,10 @@
 
 .post-description {
   margin: 0.5rem 0 0;
-  color: #D1D5DB;
+  color: #d1d5db;
   font-size: 0.95rem;
   line-height: 1.5;
 }
-
 
 .post-content {
   padding: 1.25rem;
@@ -101,18 +114,20 @@
 
 .plain-text {
   white-space: pre-wrap;
-  color: #E5E7EB;
+  color: #e5e7eb;
   line-height: 1.6;
   margin: 0;
 }
 
 .markdown {
-  color: #E5E7EB;
+  color: #e5e7eb;
   line-height: 1.6;
 }
 
-.markdown h1, .markdown h2, .markdown h3 {
-  color: #F3F4F6;
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  color: #f3f4f6;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
 }
@@ -122,7 +137,7 @@
 }
 
 .markdown a {
-  color: #60A5FA;
+  color: #60a5fa;
   text-decoration: none;
 }
 
@@ -149,7 +164,6 @@
   max-height: 500px;
   object-fit: contain;
   border-radius: 0.5rem;
-  margin: 0.5rem 0;
 }
 
 .file-attachment {
@@ -162,7 +176,7 @@
 
 .download-button {
   display: inline-block;
-  background-color: #3B82F6;
+  background-color: #3b82f6;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
@@ -173,11 +187,12 @@
 }
 
 .download-button:hover {
-  background-color: #2563EB;
+  background-color: #2563eb;
 }
 
-.image-error, .unsupported-content {
-  color: #EF4444;
+.image-error,
+.unsupported-content {
+  color: #ef4444;
   text-align: center;
   padding: 1rem;
   background-color: rgba(239, 68, 68, 0.1);
@@ -187,7 +202,7 @@
 .read-more-button {
   background: none;
   border: none;
-  color: #60A5FA;
+  color: #60a5fa;
   font-size: 0.9rem;
   padding: 0.5rem 0;
   cursor: pointer;
@@ -217,7 +232,7 @@
   align-items: center;
   background: none;
   border: none;
-  color: #9CA3AF;
+  color: #9ca3af;
   padding: 0.5rem 0.75rem;
   margin-right: 1rem;
   cursor: pointer;
@@ -230,7 +245,7 @@
 }
 
 .action-button.liked {
-  color: #EF4444;
+  color: #ef4444;
 }
 
 .action-icon {
@@ -238,8 +253,8 @@
 }
 
 .action-icon.liked {
-  fill: #EF4444;
-  color: #EF4444;
+  fill: #ef4444;
+  color: #ef4444;
 }
 
 .action-count {
@@ -250,7 +265,7 @@
 .view-comments-button {
   background: none;
   border: none;
-  color: #9CA3AF;
+  color: #9ca3af;
   font-size: 0.9rem;
   padding: 0;
   cursor: pointer;
@@ -259,7 +274,7 @@
 }
 
 .view-comments-button:hover {
-  color: #D1D5DB;
+  color: #d1d5db;
 }
 
 .post-follow-button {
@@ -302,7 +317,7 @@
   margin-left: auto;
   border: none;
   padding: 0.5rem 1rem;
-  background-color: #EF4444;
+  background-color: #ef4444;
   color: white;
   border-radius: 5px;
   cursor: pointer;
@@ -315,9 +330,48 @@
 
 .button-container {
   display: flex;
-  justify-content: flex-end; 
+  justify-content: flex-end;
   gap: 0.5rem;
-  margin-left: auto; 
+  margin-left: auto;
   margin-right: 0;
 }
+.post-content-text.truncated {
+  max-height: 400px; 
+  overflow: hidden;
+  position: relative;
+}
 
+.post-content-text.truncated::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px; 
+  background: linear-gradient(transparent, #1f2937); 
+  pointer-events: none;
+  display:  none;
+}
+.post-content-text.truncated.needs-gradient::after {
+  display: block;
+}
+
+
+.post-content-text.expanded {
+  max-height: none;
+}
+
+.read-more-button {
+  background: none;
+  border: none;
+  color: #0095f6;
+  font-weight: 600;
+  padding: 5px 0;
+  cursor: pointer;
+  margin-top: 8px;
+  display: block;
+}
+
+.read-more-button:hover {
+  text-decoration: underline;
+}
