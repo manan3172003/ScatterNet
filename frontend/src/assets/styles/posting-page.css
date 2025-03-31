@@ -1,3 +1,10 @@
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #0f1117; 
+  margin: 0;
+  padding: 0;
+}
+
 .posting-header{
     background-color: #57659E;
     text-align: center;
@@ -22,35 +29,53 @@
     font-size: 0.9rem;
     color: #888; /* Light gray to de-emphasize */
     margin-left: 5px; 
+    font-family: "Inter", sans-serif;
   }
   
   .post-form label {
-    color: white;
-    margin-bottom: 5px;
+    color: #e2e8f0;
+    margin-bottom: 8px;
     font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
   }
   
   .post-form input {
-   
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    border: none;
+    padding: 14px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid #2d3748; 
     background: #1e293b;
-    color: white;
-  }
-  .post-form textarea {
-   
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    border: none;
-    background: #1e293b;
-    color: white;
-    resize: none; 
-    height: 3em;
+    color: #e2e8f0; 
+    font-size: 12px;
+    font-family: "Inter", sans-serif;
+    transition: border-color 0.3s, background-color 0.3s; 
 
   }
+  .post-form textarea {
+    font-size: 12px;
+    padding: 14px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid #2d3748; 
+    background: #1e293b;
+    color: #e2e8f0; 
+    resize: none; 
+    min-height: 3em; 
+    max-height: 8em; 
+    overflow-y: auto; 
+    font-family: "Inter", sans-serif; 
+    transition: border-color 0.3s, background-color 0.3s; 
+}
+
+.post-form textarea:focus {
+    border-color: #57659E; 
+    background: #171923; 
+}
+.post-form input:focus {
+  border-color: #57659E; 
+  background: #171923; 
+}
 
   input[type='file'] {
     color:  #1e293b
@@ -90,6 +115,33 @@
   .form-label {
     font-size: 1rem;
   }
+  .dropdown {
+    padding: 12px; 
+    margin-bottom: 15px; 
+    border-radius: 5px; 
+    border: 1px solid #2d3748; 
+    background: #1e293b; 
+    color: #e2e8f0; 
+    font-family: "Inter", sans-serif;
+    font-size: 14px; 
+    outline: none; 
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.dropdown:focus {
+    border-color: #57659E; 
+    background: #171923; 
+}
+
+.dropdown:hover {
+    background: #2d3748;
+}
+
+.dropdown option {
+    padding: 10px; 
+    background: #1e293b; 
+    color: #e2e8f0; 
+}
 
   @media screen and (min-width: 768px) {
 
