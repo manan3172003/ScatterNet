@@ -452,6 +452,9 @@ class AuthorInbox(APIView):
 
 class DiscoverRemoteAuthor(APIView):
     def get(self, request):
+        if not request.user.is_authenticated:
+            return Response({'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+
         nodes = Author.objects.filter(state='ACTIVE', is_node=True).values_list('host', flat=True)
         full_endpoints = [f'{node}authors/' for node in nodes]
         authors_object_allnodes = []
@@ -459,9 +462,17 @@ class DiscoverRemoteAuthor(APIView):
             authors_object_allnodes.append(get_remote_authors(endpoint))
 
         remote_authors = []
+        user_author = request.user.author_profile
         for authors in authors_object_allnodes:
             for author in authors["authors"]:
-                remote_authors.append(author)
+                try:
+                    remote_author = Author.objects.get(id_url=author['id'])
+                    try:
+                        follows = Follow.objects.get(actor=user_author, object=remote_author, isPending=False)
+                    except Follow.DoesNotExist:
+                        remote_authors.append(author)
+                except Author.DoesNotExist:
+                    remote_authors.append(author)
 
         return Response({"authors": remote_authors}, status=status.HTTP_200_OK)
 
