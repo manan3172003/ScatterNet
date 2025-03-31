@@ -1,19 +1,18 @@
 import base64
 from urllib.parse import unquote
 from django.http import Http404, HttpResponse
-from dodgerblue.settings import NODEHOSTNAME
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Post, Like, Comment
+from .models import Post, Like, Comment, Inbox
 from .serializers import PostSerializer, LikeSerializer, CommentSerializer, CommentCreateSerializer
 from rest_framework.generics import ListAPIView, RetrieveAPIView, ListCreateAPIView
 from .validations import has_post_access, can_access_comment
-from ..authors.models import Author
 from ..utils.paginators import PostsPaginator, LikesPaginator, CommentsPaginator
 from ..utils.helper import *
 
@@ -22,11 +21,7 @@ def send_post_to_remote_nodes(post_data, author_id, visibility=None):
     author = Author.objects.get(id=author_id)
     post_visibility = visibility if visibility else post_data['visibility']
 
-    if post_visibility == 'PUBLIC':
-        all_remote_authors = fetch_all_remote_users()
-        send_object(post_data, all_remote_authors)
-
-    elif post_visibility == 'UNLISTED':
+    if post_visibility in ['UNLISTED', 'PUBLIC']:
         remote_followers = fetch_remote_followers(author)
         send_object(post_data, remote_followers)
 
@@ -179,24 +174,83 @@ Helper function which returns the list of posts belonging to author with id AUTH
 Shows the posts of author with id AUTHOR_SERIAL to the caller if the caller has permissions
 """
 def filter_author_post(request, auth_id):
+    # Try to get author, if it does not exist return empty queryset
+    try:
+        author = Author.objects.get(id=auth_id)
+    except Author.DoesNotExist:
+        return Post.objects.none()
+
+    # Get all non-deleted posts made by author where author serial = auth_id in order Latest->Oldest
+    # [PUBLIC, UNLISTED, FRIENDS]
     queryset = Post.objects.filter(author_id=auth_id)
     queryset = queryset.exclude(visibility='DELETED')
     queryset = queryset.order_by('-published')
 
+    # Non authenticated users can get all public posts
+    # [PUBLIC]
     if not request.user.is_authenticated:
         return queryset.filter(visibility='PUBLIC')
 
-    elif request.user.author_profile.id == auth_id and not request.user.is_staff:
-        return queryset
-    elif request.user.is_staff:
+    # Admins can see all posts made by author where serial = auth_id in order Latest->Oldest
+    # [PUBLIC, UNLISTED, FRIENDS, DELETED]
+    if request.user.is_staff:
         return Post.objects.filter(author_id=auth_id).order_by('-published')
-    elif request.user.author_profile.id != auth_id:
-        if are_friends(request.user.author_profile.id, auth_id):
+
+    # For local authors
+    if author.is_local:
+
+        # If the user is the author then show all non-deleted posts
+        # [PUBLIC, UNLISTED, FRIENDS]
+        if request.user.author_profile.id == auth_id:
             return queryset
-        elif follows(request.user.author_profile.id, auth_id):
-            return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
-        else:
-            return queryset.filter(visibility='PUBLIC')
+
+        # If the user is not the author
+        elif request.user.author_profile.id != auth_id:
+            # But are friends then show all non-deleted posts
+            # [PUBLIC, UNLISTED, FRIENDS]
+            if are_friends(request.user.author_profile.id, auth_id):
+                return queryset
+
+            # But user follows author then show public and unlisted posts
+            # [PUBLIC, UNLISTED]
+            elif follows(request.user.author_profile.id, auth_id):
+                return queryset.filter(visibility__in=['PUBLIC', 'UNLISTED'])
+
+            # User is neither friend nor follower of author
+            # [PUBLIC]
+            else:
+                return queryset.filter(visibility='PUBLIC')
+
+    # For remote authors on our DB
+    else:
+        # If the user is not the author (this is always the case hence no else statement)
+        # All posts made by author where serial = auth_id from user's inbox
+        # [PUBLIC, UNLISTED, FRIENDS, DELETED]
+        if request.user.author_profile.id != auth_id:
+            user_inbox = Inbox.objects.filter(author=request.user.author_profile).values_list('post')
+            inbox_posts_from_author = Post.objects.filter(id__in=user_inbox)
+            inbox_posts_from_author = inbox_posts_from_author.filter(author_id=auth_id)
+            # If user is friends with author
+            # Union public posts from posts_post table and friends+unlisted posts from inbox
+            # [PUBLIC, UNLISTED, FRIENDS]
+            if are_friends(request.user.author_profile.id, auth_id):
+                inbox_posts_from_author = inbox_posts_from_author.filter(visibility__in=['UNLISTED', 'FRIENDS'])
+                queryset = queryset.filter(visibility='PUBLIC')
+                queryset = queryset.union(inbox_posts_from_author)
+                return queryset
+            # If user follows author
+            # Union public posts from posts_post table and unlisted posts from inbox
+            # [PUBLIC, UNLISTED]
+            elif follows(request.user.author_profile.id, auth_id):
+                inbox_posts_from_author = inbox_posts_from_author.filter(visibility='UNLISTED')
+                queryset = queryset.filter(visibility='PUBLIC')
+                queryset = queryset.union(inbox_posts_from_author)
+                return queryset
+            # If user is neither friend nor follower of author
+            # Just public posts from posts_post table
+            # [PUBLIC]
+            else:
+                return queryset.filter(visibility='PUBLIC')
 
 """
 http://{node}/api/authors/{AUTHOR_SERIAL}/posts
@@ -403,16 +457,17 @@ def post_like(author_id, object_url):
                             status=status.HTTP_403_FORBIDDEN)
 
 
-    #ok the logic below basically checks for a friends-only post, if the author liking a comment/post is a friend of the author of the post.
-    if (post_model.visibility == "FRIENDS" and not are_friends(author_id, post_model.author.id)) or post_model.visibility == "DELETED":
-        return Response({"error": "You are not allowed to like this object."}, status=status.HTTP_403_FORBIDDEN)
+    if author_id != post_model.author.id:
+        #ok the logic below basically checks for a friends-only post, if the author liking a comment/post is a friend of the author of the post.
+        if (post_model.visibility == "FRIENDS" and not are_friends(author_id, post_model.author.id)) or post_model.visibility == "DELETED":
+            return Response({"error": "You are not allowed to like this object."}, status=status.HTTP_403_FORBIDDEN)
 
     created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
 
     if not created_success:
         return Response({'message': 'Like already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-    created_like.id_url = "{}/api/authors/{}/liked/{}".format(NODEHOSTNAME, author.id, created_like.id)
+    created_like.id_url = "{}/liked/{}".format(author.id_url, created_like.id)
     created_like.save()
 
     serializer = LikeSerializer(created_like)
@@ -469,6 +524,7 @@ def create_or_delete_like(request):
         return Response({'error': 'No object url present in request, cannot identify what was liked.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
+    author_id = int(author_id)
     if request.method == "POST":
         return post_like(author_id, object_url)
     else:

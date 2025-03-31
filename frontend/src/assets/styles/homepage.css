@@ -7,17 +7,19 @@ body {
   padding: 1.5rem 0;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   background-color: #111827;
+  width: 100%;
+
 }
 .home-page-wrapper {
+  overflow-x: hidden;
   width: 100%;
-  padding: 1rem;
   box-sizing: border-box;
 }
 
 .feed-container {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: 90%;
   align-items: center;
   row-gap: 2rem;
   max-width: 500px;

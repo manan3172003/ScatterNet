@@ -156,6 +156,28 @@ export default function EditPostPage(){
     setLoading(false);
   };
 
+  // set large at start
+  document.addEventListener('DOMContentLoaded', () => {
+    const textareas = document.querySelectorAll('.post-form textarea');
+
+    textareas.forEach(textarea => {
+        if (textarea) {
+          textarea.style.height = `${Math.min(textarea.scrollHeight, parseInt(getComputedStyle(textarea).maxHeight))}px`; 
+        }
+    });
+});
+//dynamic resizing
+  const textareas = document.querySelectorAll('.post-form textarea');
+
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = "auto";
+            this.style.height = `${Math.min(this.scrollHeight, parseInt(getComputedStyle(this).maxHeight))}px`; 
+        });
+    });
+
+  
+
   if (loading) {
     return <div>Loading author...</div>
   }
@@ -168,13 +190,12 @@ export default function EditPostPage(){
         message={notification.message}
         onClose={hideNotification}
       />
-            <header className="posting-header">
-                {<HeaderLogo/> }
-            </header>
+            <header className="header">{<HeaderLogo />}</header>
+            
             <main className="posting-main">
                 <div className="form-content" >
                         <form className="post-form" onSubmit={handleEdit}>
-                            <label className="form-label">Create Post</label>
+                            <label className="form-label">Edit Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
                                 <option value="">Select...</option>

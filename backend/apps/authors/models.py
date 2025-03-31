@@ -12,8 +12,7 @@ class Author(models.Model):
     )
 
     displayName = models.CharField(max_length=256)
-    host = models.URLField(default=None, blank=True, null=True) #this needs to be removed to be nullable later
-    github = models.URLField(default=None, blank=True, null=True)
+    host = models.URLField(default=None) #this needs to be removed to be nullable later
     profileImage = models.URLField(default=None, blank=True, null=True)
     page = models.URLField(default=None, blank=True, null=True) #this too
     # basically we'll use this in the future to identify whether our current Author is from another node
@@ -29,3 +28,9 @@ class Author(models.Model):
     )
     state = models.CharField(max_length=7, choices=allowed_states, default='PENDING')
     id_url = models.URLField(unique=True)
+
+class Host(models.Model):
+    host=models.URLField(null=False, blank=False, unique=True)
+    username=models.CharField(max_length=128, unique=True)
+    password=models.CharField(max_length=128)
+    is_active = models.BooleanField(default=False)

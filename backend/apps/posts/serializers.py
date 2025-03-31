@@ -29,8 +29,8 @@ class PostSerializer(serializers.ModelSerializer):
         post = Post.objects.create(author=author, **validated_data)
 
         # Update the post's id_url and page fields
-        post.id_url = f"{NODEHOSTNAME}/api/authors/{author.id}/posts/{post.id}"
-        post.page = f"{NODEHOSTNAME}/authors/{author.id}/posts/{post.id}"
+        post.id_url = f"{author.id_url}/posts/{post.id}"
+        post.page = f"{author.id_url}/posts/{post.id}"
         post.save()
         return post
 
@@ -182,7 +182,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
             post=post,
             **validated_data
         )
-        comment.id_url = f"{NODEHOSTNAME}/api/authors/{author.id}/commented/{comment.id}"
+        comment.id_url = f"{author.id_url}/commented/{comment.id}"
         comment.save()
         return comment
 
@@ -303,7 +303,7 @@ class RemotePostSerializer(serializers.ModelSerializer):
     author = RemoteAuthorSerializer()
     comments = RemoteCommentSerializer(many=True)
     likes = RemoteLikeSerializer(many=True)
-    page = serializers.URLField(read_only=True)
+    page = serializers.URLField()
 
     class Meta:
         model = Post
@@ -354,6 +354,31 @@ class RemotePostSerializer(serializers.ModelSerializer):
         instance.contentType = validated_data.get('contentType', instance.contentType)
         instance.content = validated_data.get('content', instance.content)
         instance.visibility = validated_data.get('visibility', instance.visibility)
+
+        for comment in validated_data.get('comments'):
+            try:
+                Comment.objects.get(id_url=comment.get("id"))
+                for like in comment.get('likes'):
+                    try:
+                        like_author = Author.objects.get(id_url=like.get('author').get('id'))
+                        Like.objects.get(author=like_author, object=like.get('object'))
+                    except (Like.DoesNotExist, Author.DoesNotExist) as e:
+                        like_obj = RemoteLikeSerializer(data=like)
+                        like_obj.is_valid(raise_exception=True)
+                        like_obj.save()
+            except Comment.DoesNotExist:
+                comment_obj = RemoteCommentSerializer(data=comment)
+                comment_obj.is_valid(raise_exception=True)
+                comment_obj.save()
+
+        for like in validated_data.get('likes'):
+            try:
+                like_author = Author.objects.get(id_url=like.get('author').get('id'))
+                Like.objects.get(author=like_author, object=like.get('object'))
+            except (Like.DoesNotExist, Author.DoesNotExist) as e:
+                like_obj = RemoteLikeSerializer(data=like)
+                like_obj.is_valid(raise_exception=True)
+                like_obj.save()
 
         instance.published = timezone.now()
         instance.save()

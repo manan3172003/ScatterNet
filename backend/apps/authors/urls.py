@@ -6,11 +6,13 @@ from ..follow import views as follows_views
 app_name = "authors"
 urlpatterns = [
     # Author fixed endpoints
+    path('/discover', authors_views.DiscoverRemoteAuthor.as_view(), name='discover-authors'),
     path('/login', authors_views.AuthorLoginView.as_view(), name='author-login'),
     path('/logout', authors_views.AuthorLogoutView.as_view(), name='author-logout'),
     path('/signup', authors_views.AuthorSignUpView.as_view(), name='author-signup'),
     path('/current-user', authors_views.get_current_user, name='author-current-user'),
     path('', authors_views.AuthorsView.as_view(), name='authors-list'),
+    path('/', authors_views.AuthorsView.as_view(), name='authors-list'),
     path('/<int:pk>', authors_views.AuthorRetrieveUpdateView.as_view(), name='author-list-or-update'),
 
     # Follow app endpoints numeric converter first, more specific before less specific
@@ -30,7 +32,8 @@ urlpatterns = [
     path("/<int:author_serial>/posts/<int:post_serial>/image", posts_views.ImagePostsView.as_view(), name="author-post-image"),
     path("/<int:author_serial>/liked", posts_views.LikesListView.as_view(), name="author-liked"),
     path("/<int:author_serial>/commented", posts_views.CommentedListCreateView.as_view(), name="author-commented"),
-
+    path("/<int:author_serial>/inbox/", authors_views.AuthorInbox.as_view(), name="author-inbox"),
+    path("/<int:author_serial>/inbox", authors_views.AuthorInbox.as_view(), name="author-inbox"),
 
     # Post app endpoints
     path("/<int:auth_id>/posts/<int:post_id>", posts_views.author_post, name="author-post"),
@@ -40,7 +43,6 @@ urlpatterns = [
 
     path("/<path:author_fqid>/liked", posts_views.LikesListView.as_view(), name="author-id_url-liked"),
     path("/<path:author_fqid>/commented", posts_views.CommentedListCreateView.as_view(), name="author-id_url-commented"),
-    path("/<path:author_fqid>/inbox", authors_views.Inbox.as_view(), name="author-inbox"),
 
     path('/<path:id_url>', authors_views.get_author_fqid, name='author-list-fqid'),
 ]
