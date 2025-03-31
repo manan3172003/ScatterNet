@@ -1,0 +1,17 @@
+.discover-container {
+    padding: 1.5rem 1.5rem 1.5rem 2.75rem;
+}
+
+.discover-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.discover-author-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+}
