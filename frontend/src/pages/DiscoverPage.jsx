@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {fetchDiscoverAuthors} from "../utils/authorsApi.js";
+import {fetchDiscoverAuthors} from "../utils/remoteAuthorsApi.js";
 import AuthorCard from "../components/AuthorCard.jsx";
 import "../assets/styles/discover-page.css";
 
