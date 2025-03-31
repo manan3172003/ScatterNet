@@ -19,7 +19,7 @@ import {
   getAuthorRelationship,
   handleFollowRequest,
 } from "../utils/followApi.js";
-import { apiCall, getAuthorObject } from "../utils/utils.js";
+import { apiCall, getAuthorObject, getPostHostname } from "../utils/utils.js";
 
 export default function Post({
   post,
@@ -68,7 +68,7 @@ export default function Post({
         return
       }
       const contentHeight = contentRef.current.scrollHeight
-      const contentElement = contentRef.current
+      
       const hasOverflow = contentHeight > maxHeight
       setIsTruncated(hasOverflow)
       if (hasOverflow){
@@ -76,30 +76,8 @@ export default function Post({
       }
     }
     checkTruncation()
-    // Images load slower so we have to check again as might change content heigh
-    const images = contentRef.current?.querySelectorAll('img') || []
-    if (images.length > 0){
-      let loadedCount = 0
-      const imageObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target
-            img.onload = () => {
-              loadedCount++
-              if (loadedCount === images.length) {
-                checkTruncation()
-              }
-            }
-            imageObserver.unobserve(img)
-          }
-        })
-      })
-      
-      images.forEach(img => imageObserver.observe(img))
-    }
-    window.addEventListener("resize", checkTruncation) 
-    return () => window.removeEventListener("resize", checkTruncation)
-  }, []);
+   
+    });
 
  
   const toggleExpand = (e) => {
@@ -250,7 +228,7 @@ export default function Post({
     return false;
   }
   
-
+  const postHostname = getPostHostname(post)
   return (
     <div
       className={`post-container ${
@@ -348,6 +326,8 @@ export default function Post({
           <ContentRenderer
             contentType={post.contentType}
             content={post.content}
+            postHostname={postHostname}
+              postId={post.id}
           />
 
         </div>
