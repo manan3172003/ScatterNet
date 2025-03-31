@@ -457,9 +457,10 @@ def post_like(author_id, object_url):
                             status=status.HTTP_403_FORBIDDEN)
 
 
-    #ok the logic below basically checks for a friends-only post, if the author liking a comment/post is a friend of the author of the post.
-    if (post_model.visibility == "FRIENDS" and not are_friends(author_id, post_model.author.id)) or post_model.visibility == "DELETED":
-        return Response({"error": "You are not allowed to like this object."}, status=status.HTTP_403_FORBIDDEN)
+    if author_id != post_model.author.id:
+        #ok the logic below basically checks for a friends-only post, if the author liking a comment/post is a friend of the author of the post.
+        if (post_model.visibility == "FRIENDS" and not are_friends(author_id, post_model.author.id)) or post_model.visibility == "DELETED":
+            return Response({"error": "You are not allowed to like this object."}, status=status.HTTP_403_FORBIDDEN)
 
     created_like, created_success = Like.objects.get_or_create(author=author, object=object_url)
 
@@ -523,6 +524,7 @@ def create_or_delete_like(request):
         return Response({'error': 'No object url present in request, cannot identify what was liked.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
+    author_id = int(author_id)
     if request.method == "POST":
         return post_like(author_id, object_url)
     else:
