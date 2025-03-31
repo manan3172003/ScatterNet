@@ -17,6 +17,7 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import AuthorsList from "./components/AuthorsList.jsx";
 import EditProfilePage from "./pages/EditProfilePage";
+import DiscoverPage from "./pages/DiscoverPage.jsx";
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -37,6 +38,7 @@ function App() {
           <Route path="/post" element={<ProtectedRoute element={<PostingPage />} />}/>
           <Route path="/editProfile" element={<ProtectedRoute element={<EditProfilePage />} />}/>
           <Route path="/requests" element={<ProtectedRoute element={<AuthorsList chosenMode="Requests" />} />}/>
+          <Route path="/discover" element={<ProtectedRoute element={<DiscoverPage />} />}/>
           <Route path="/authors/:authorId" element={<UserProfile/>} />
           <Route path="/authors/:authorId/followers" element={<ProtectedRoute element={<AuthorsList chosenMode="Followers" />} />}/>
           <Route path="/authors/:authorId/following" element={<ProtectedRoute element={<AuthorsList chosenMode="Following" />} />}/>
