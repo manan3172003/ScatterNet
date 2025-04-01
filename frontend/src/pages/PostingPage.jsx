@@ -3,10 +3,11 @@ notification on edit and create post needs to be fixed
 */
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
-import React, { useState } from "react";
+import  { useState, useRef } from "react";
+
 import Notification from "../components/Notification.jsx";
 import {useNavigate} from 'react-router-dom';
-import {fetchUserData, apiCall,handleFile,validExtensions} from "../utils/utils.js";
+import {fetchUserData, apiCall,handleFile,validExtensions,validVideoExtensions,handleVideoFile} from "../utils/utils.js";
 
 export default function PostingPage(){
 
@@ -14,6 +15,11 @@ export default function PostingPage(){
     const [base64ContentType, setBase64ContentType] = useState(""); 
     const [fileName, setFileName] = useState(""); 
     const navigate = useNavigate(); 
+
+    const [videoPreview,setVideoPreview] = useState(null)
+    const videoRef = useRef(null)
+    const [uploadProgress, setUploadProgress] = useState(0)
+    const [isUploading, setIsUploading] = useState(false)
 
      const [notification, setNotification] = useState({
         show: false,
@@ -25,11 +31,11 @@ export default function PostingPage(){
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        contentType: "text/markdown", //markdown, plain,img
+        contentType: "text/markdown", //markdown, plain,img, video
         content: "", //deets
         visibility: "PUBLIC",
     })
-
+    const validVideoExtensions = ["mp4","webm","mov"]
     const showNotification = (type, title, message) => {
         setNotification({
           show: true,
@@ -40,9 +46,9 @@ export default function PostingPage(){
       };
 
       // Helper to hide notifications
-  const hideNotification = () => {
-    setNotification((prev) => ({ ...prev, show: false }));
-  };
+    const hideNotification = () => {
+        setNotification((prev) => ({ ...prev, show: false }));
+    };
 
     function handleChange(e){
       setFormData({
@@ -61,10 +67,24 @@ export default function PostingPage(){
           content:""
           
         })
-        console.log(formData)
+        // Resetting the video preview when the user changes the content type
+        if (!e.target.value.includes("video")){
+            setVideoPreview(null)
+        }
   
-      }
-    
+    }
+    function handleVideoUpload(e) {
+        handleVideoFile(
+          e,
+          setFileName,
+          setBase64,
+          setBase64ContentType,
+          setVideoPreview,
+          setUploadProgress,
+          setIsUploading,
+          showNotification
+        )
+    }
     async function handlePost(e){
         e.preventDefault()
         // forces visibiity to be choses
@@ -81,6 +101,10 @@ export default function PostingPage(){
                 content = base64Data; 
                 contentType = base64ContentType;
                 //checks if extension is valid
+                if (contentType.includes("video/")){
+                    // Already taken care of by handleVideoFile
+                }
+
                 const extension = contentType.split("/")[1].split(";")[0];
                 if (!validExtensions.includes(extension)) {  
                     contentType = 'application/base64';
@@ -90,8 +114,13 @@ export default function PostingPage(){
                 contentType = formData.contentType;
             }
             
-              console.log(formData)
-              console.log(base64Data)
+            if (contentType.includes("video/")){
+                showNotification(
+                    "info",
+                    "Processing Video",
+                    "Your video is currently being uploaded and process. This may take a few minutes..."
+                )
+            }
 
             let resp = await fetchUserData();
             let AUTHOR_SERIAL = resp.user.author_id;
@@ -108,7 +137,7 @@ export default function PostingPage(){
                 );
 
             const data = await response.json()
-            console.log(data)
+            
             if (response.ok){
                 showNotification(
                     "success",
@@ -145,7 +174,7 @@ export default function PostingPage(){
             message={notification.message}
             onClose={hideNotification}
           />
-                 <header className="header">{<HeaderLogo />}</header>
+            <header className="header">{<HeaderLogo />}</header>
             <main className="posting-main">
                 <div className="form-content" >
                         <form className="post-form" onSubmit={handlePost}>
@@ -168,6 +197,7 @@ export default function PostingPage(){
                                 <option value="text/markdown">Markdown</option>
                                 <option value="text/plain">Plain</option>
                                 <option value="application/base64">Image </option> 
+                                <option value="video/mp4;base64">Video</option>
 
                             </select>
                               {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
@@ -185,6 +215,46 @@ export default function PostingPage(){
                                  {fileName && <p>Selected File: {fileName}</p>} 
                                 </>
                             )}
+                            {(formData.contentType === 'video/mp4;base64') && (
+                                <>
+                                    <label className="form-label">Video</label>
+                                    <div className="file-input-container">
+                                    <label className="file-input-label">
+                                        <span className="upload-button">Select Video</span>
+                                        <input 
+                                        type="file" 
+                                        className="file-input-hidden"
+                                        name="content" 
+                                        onChange={handleVideoUpload} 
+                                        accept="video/mp4,video/webm,video/quicktime"
+                                        />
+                                    </label>
+                                    {fileName && <p className="selected-file">Selected: {fileName}</p>}
+                                    
+                                    {isUploading && (
+                                        <div className="upload-progress">
+                                        <div 
+                                            className="upload-progress-bar" 
+                                            style={{ width: `${uploadProgress}%` }}
+                                        ></div>
+                                        </div>
+                                    )}
+                                    </div>
+                                    
+                                    {videoPreview && (
+                                    <div className="video-preview">
+                                        <label className="form-label">Preview</label>
+                                        <video 
+                                        ref={videoRef}
+                                        src={videoPreview} 
+                                        controls 
+                                        style={{ width: '100%', borderRadius: '4px' }}
+                                        />
+                                    </div>
+                                    )}
+                                </>
+                            )}
+
 
                             <button id= "post-button">Post</button>
                         </form>
