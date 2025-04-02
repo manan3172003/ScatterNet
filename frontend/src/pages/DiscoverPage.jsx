@@ -12,16 +12,18 @@ export default function DiscoverPage() {
 
     async function fetchAuthors() {
         const fetchedAuthors = await fetchDiscoverAuthors();
-        setAuthors(fetchedAuthors.authors); // TODO: remove .authors since we're only doing that for local testing
+        setAuthors(fetchedAuthors.authors);
     }
 
     return (
         <div className="discover-container">
             <h2 className="discover-header">Discover</h2>
             <div className="discover-author-grid">
-                {authors.length > 0 && authors.map((author) => (
+                {authors.length > 0 ? authors.map((author) => (
                     <AuthorCard key={author.id} author={author}></AuthorCard>
-                ))}
+                ))
+                    : <div className="empty-discover-message">No authors to show.</div>
+                }
             </div>
         </div>
     )
