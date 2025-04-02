@@ -25,7 +25,6 @@ export default function AuthorsList({ chosenMode }) {
         : await getAuthorObject(user);
 
     const relationship = await getAuthorRelationship(currAuthor);
-    await console.log(user, currAuthor, relationship, "te");
     setSameAuthor(relationship === "Same Author");
 
     let fetchedAuthors = [];
@@ -107,7 +106,7 @@ export default function AuthorsList({ chosenMode }) {
             <tbody>
               {authors.map((author) => (
                 <tr key={author.id}>
-                  <td className="author-name">{author.displayName}</td>
+                  <td>{author.displayName}</td>
                   <td className="actions-cell">
                     {chosenMode === "Requests" ? (
                         <>
