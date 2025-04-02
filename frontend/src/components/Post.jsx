@@ -173,6 +173,9 @@ export default function Post({
       );
 
       if (response.ok) {
+        if (onRefresh) {
+          onRefresh();
+        }
         alert(
           "Deleted Post! If you'd like to undelete your post, please contact a node admin for assistance."
         );
