@@ -5,7 +5,7 @@ import "../assets/styles/admin-page.css";
 const AdminPage = () => {
   return (
     <div className="admin-page">
-      <h1>Admin Management Dashboard</h1>
+      <h2 className="admin-page-title">Admin Management Dashboard</h2>
       <AdminDashboard />
     </div>
   );
