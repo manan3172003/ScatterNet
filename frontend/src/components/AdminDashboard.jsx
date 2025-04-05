@@ -133,7 +133,7 @@ const AdminDashboard = () => {
                       handleInputChange(index, "displayName", e.target.value)
                     }
                     placeholder="Display Name"
-                    className="desktop-input-field"
+                    className="desktop-admin-input-field"
                   />
               </div>
               <div className="form-group">
@@ -145,7 +145,7 @@ const AdminDashboard = () => {
                     handleInputChange(index, "profileImage", e.target.value)
                   }
                   placeholder="Profile Image URL"
-                  className="desktop-input-field"
+                  className="desktop-admin-input-field"
                 />
               </div>
               <div className="form-group">
@@ -153,7 +153,7 @@ const AdminDashboard = () => {
                 <input
                   type="text"
                   value={author.page || ""}
-                  className="desktop-input-field"
+                  className="desktop-admin-input-field"
                   disabled
                 />
               </div>
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
                   onChange={(e) =>
                     handleInputChange(index, "state", e.target.value)
                   }
-                  className="desktop-input-field"
+                  className="desktop-admin-input-field"
                 >
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="PENDING">PENDING</option>

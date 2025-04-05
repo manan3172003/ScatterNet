@@ -125,7 +125,7 @@
 }
 
 /* Editable fields styling */
-.desktop-input-field {
+.desktop-admin-input-field {
   width: 100%;
   background: #1e293b;
   border: 1px solid #2d3748;
@@ -138,7 +138,7 @@
   margin-top: 4px;
 }
 
-.desktop-input-field:focus {
+.desktop-admin-input-field:focus {
   outline: none;
   border-color: #0095f6;
 }
