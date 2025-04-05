@@ -20,6 +20,7 @@ import {
   handleFollowRequest,
 } from "../utils/followApi.js";
 import { apiCall, getAuthorObject, getPostHostname } from "../utils/utils.js";
+import {fetchAllComments, fetchAllLikes} from "../utils/commentsAndLikesApi.js";
 
 export default function Post({
   post,
@@ -30,10 +31,11 @@ export default function Post({
   onRefresh,
   isInModal = false,
   isGrid = false,
+  isCommentModalOpen
 }) {
   const { user } = useContext(AuthContext);
-  const [likeCount, setLikeCount] = useState(post.likes.count);
-  const [commentCount, setCommentCount] = useState(post.comments.count);
+  const [likeCount, setLikeCount] = useState(0);
+  const [commentCount, setCommentCount] = useState(0);
   const [hasLiked, setLikes] = useState(false); // Default to false
   const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
   const [needsGradient, setNeedsGradient] = useState(false)
@@ -62,6 +64,8 @@ export default function Post({
     }
     if (user) {
       fetchLikeAndFollowStatus();
+
+      if (!isCommentModalOpen) fetchCommentAndLikesCount();
     }
     function checkTruncation(){
       if (!contentRef.current){
@@ -77,7 +81,7 @@ export default function Post({
     }
     checkTruncation()
    
-    });
+    }, [isCommentModalOpen]);
 
  
   const toggleExpand = (e) => {
@@ -116,6 +120,16 @@ export default function Post({
     if (onRefresh) {
       onRefresh();
     }
+  }
+
+  async function fetchCommentAndLikesCount() {
+    const allComments = await fetchAllComments(post);
+    const fetchedCommentsCount = allComments.length;
+    setCommentCount(fetchedCommentsCount);
+
+    const allLikes = await fetchAllLikes(post);
+    const fetchedLikesCount = allLikes.length;
+    setLikeCount(fetchedLikesCount);
   }
 
   function handleShare() {
