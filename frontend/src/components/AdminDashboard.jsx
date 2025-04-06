@@ -108,15 +108,24 @@ const AdminDashboard = () => {
         message={notification.message}
         onClose={hideNotification}
       />
-      <h1>Node Authors List</h1>
       <div className="authors-list">
         {authors.map((author, index) => (
-          <div key={author.id} className="post-container">
-            <div className="post-header">
-              <div className="post-header-top">
-                <h2 className="post-title">{author.username}</h2>
-                <div className="form-group">
-                  <label>Display Name:</label>
+          <div key={author.id} className="admin-author-container">
+            <div className="admin-author-header">
+              <div className="admin-author-author">
+                {author.profileImage && (
+                  <img
+                    src={author.profileImage}
+                    alt={author.displayName}
+                    className="admin-author-avatar"
+                  />
+                )}
+                <h2 className="admin-author-title">{author.username}</h2>
+              </div>
+            </div>
+            <div className="admin-author-content">
+              <div className="form-group">
+                <label>Display Name:</label>
                   <input
                     type="text"
                     value={author.displayName || ""}
@@ -124,23 +133,9 @@ const AdminDashboard = () => {
                       handleInputChange(index, "displayName", e.target.value)
                     }
                     placeholder="Display Name"
-                    className="desktop-input-field"
+                    className="desktop-admin-input-field"
                   />
-                </div>
               </div>
-              <div className="post-author">
-                {author.profileImage && (
-                  <img
-                    src={author.profileImage}
-                    alt={author.displayName}
-                    className="post-avatar"
-                  />
-                )}
-                <div className="author-info">
-                </div>
-              </div>
-            </div>
-            <div className="post-content">
               <div className="form-group">
                 <label>Profile Image URL:</label>
                 <input
@@ -150,7 +145,7 @@ const AdminDashboard = () => {
                     handleInputChange(index, "profileImage", e.target.value)
                   }
                   placeholder="Profile Image URL"
-                  className="desktop-input-field"
+                  className="desktop-admin-input-field"
                 />
               </div>
               <div className="form-group">
@@ -158,7 +153,7 @@ const AdminDashboard = () => {
                 <input
                   type="text"
                   value={author.page || ""}
-                  className="desktop-input-field"
+                  className="desktop-admin-input-field"
                   disabled
                 />
               </div>
@@ -169,7 +164,7 @@ const AdminDashboard = () => {
                   onChange={(e) =>
                     handleInputChange(index, "state", e.target.value)
                   }
-                  className="desktop-input-field"
+                  className="desktop-admin-input-field"
                 >
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="PENDING">PENDING</option>

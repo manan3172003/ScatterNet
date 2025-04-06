@@ -6,6 +6,7 @@
   width: 100%;
   transition: transform 0.2s, box-shadow 0.2s;
   margin-bottom: 1.5rem;
+  padding: 1rem;
 }
 .post-in-modal {
   transform: none !important;
@@ -18,7 +19,7 @@
   box-sizing: border-box;
 }
 
-.post-in-modal, .post-container {
+.post-in-modal {
   overflow-y: scroll;
 }
 .profile-post-container {

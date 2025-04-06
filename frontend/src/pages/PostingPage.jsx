@@ -161,7 +161,7 @@ export default function PostingPage() {
       <main className="posting-main">
         <div className="form-content">
           <form className="post-form" onSubmit={handlePost}>
-            <label className="form-label">Create Post</label>
+            <label className="form-title">Create Post</label>
 
             <label className="form-label">Visibility</label>
             <select className="dropdown" name="visibility" value={formData.visibility} onChange={handleChange} required>
