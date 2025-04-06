@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from django.conf import settings
+from django.conf.urls.static import static
 from apps.frontend import views
 from apps.posts.views import LikeRetrieveView, create_or_delete_like, CommentRetrieveView
 from apps.authors.views import RegisterOnRemoteNode
@@ -46,5 +48,9 @@ urlpatterns = [
     path('api/liked/<path:like_fqid>', LikeRetrieveView.as_view(), name="get-like"),
     path('api/like', create_or_delete_like, name='post-delete-like'),
     path('api/commented/<path:comment_fqid>', CommentRetrieveView.as_view(), name="get-comment"),
-    re_path(r'^.*', views.home, name='frontend'),
+    path('api/', include('apps.reels.urls')),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 
+# Pattern for serving static files
+urlpatterns += [re_path(r'^.*', views.home, name='frontend')]
