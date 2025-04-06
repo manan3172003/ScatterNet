@@ -192,14 +192,14 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
                         className="desktop-comment-avatar"
                         src={
                           comment.author?.profileImageURL ||
-                          `https://robohash.org/${comment.author?.displayName || 'user'}.png`
+                          `https://robohash.org/${comment.author?.displayName}.png`
                         }
                         alt={`${comment.author?.displayName || 'User'}'s avatar`}
                       />
                       <div className="desktop-comment-content">
                         <div>
                           <span className="desktop-comment-author">
-                            {comment.author?.displayName || 'Anonymous'}
+                            {comment.author?.displayName}
                           </span>
                           {comment.contentType === "text/markdown" ? (
                             <ReactMarkdown>{comment.comment}</ReactMarkdown>
