@@ -5,6 +5,16 @@ from apps.utils.helper import fetch_remote_friends, fetch_all_remote_users, send
 from apps.follow.models import Follow
 from apps.authors.models import Author
 
+class FakeThread:
+    def __init__(self, target, daemon):
+        self._target = target
+
+    def start(self):
+        self._target()
+
+    def join(self):
+        pass
+
 @pytest.fixture
 def create_author():
     def _create_author(username, password='pass', is_local=True, state="ACTIVE", host="http://localhost:8000"):
@@ -71,26 +81,31 @@ def dummy_response(text):
     return response
 
 
-@patch("apps.utils.helper.request")
-def test_send_object(mock_request):
+@patch("apps.utils.helper.threading.Thread", new=FakeThread)
+@patch("apps.utils.helper.request", side_effect=lambda *args, **kwargs: dummy_response("Success"))
+@patch("apps.utils.helper.Host.objects.get")
+def test_send_object(mock_host_get, mock_request):
+    dummy_host = MagicMock()
+    dummy_host.username = "user"
+    dummy_host.password = "pass"
+    mock_host_get.return_value = dummy_host
+
+
     remote1 = MagicMock()
     remote1.host = "http://remote1.com"
-    remote1.id_url = "remote1_id"
+    remote1.id_url = "http://remote1.com/api/authors/remote1_id"
     remote2 = MagicMock()
     remote2.host = "http://remote2.com"
-    remote2.id_url = "remote2_id"
-
-    mock_request.return_value = dummy_response("Success")
+    remote2.id_url = "http://remote2.com/api/authors/remote2_id"
 
     payload = {"key": "value"}
     send_object(payload, [remote1, remote2])
 
     assert mock_request.call_count == 2
 
-    expected_url1 = f"{remote1.host}/api/authors/{remote1.id_url}/inbox"
-    expected_url2 = f"{remote2.host}/api/authors/{remote2.id_url}/inbox"
-
-    # check if the urls that we called match the ones we build
     called_urls = [call.kwargs.get("url") for call in mock_request.call_args_list]
+    expected_url1 = f"{remote1.id_url}/inbox/"
+    expected_url2 = f"{remote2.id_url}/inbox/"
+
     assert expected_url1 in called_urls
     assert expected_url2 in called_urls
