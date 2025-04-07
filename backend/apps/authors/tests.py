@@ -5,7 +5,7 @@ from rest_framework import status
 from urllib.parse import quote
 from dodgerblue.settings import NODEHOSTNAME
 from .models import Author
-
+import base64
 
 User = get_user_model()
 
@@ -130,3 +130,142 @@ def test_normal_user_cannot_change_author_state(api_client, create_author):
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert author.state == "PENDING"
+
+
+@pytest.mark.django_db
+def test_remote_author_creation(api_client, create_author):
+    # node which sends the req
+    node_user, node_author = create_author("nodeuser", "nodepassword", "Node User", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+
+    # create the inbox owner
+    _, local_author = create_author("localuser", "localpassword", "Local User", state="ACTIVE")
+
+    remote_author_payload = {
+        "id": "http://remote.host/api/authors/123",
+        "host": "http://remote.host/api/",
+        "displayName": "Remote Author",
+        "profileImage": "http://remote.host/images/remote.png",
+        "page": "http://remote.host/authors/123",
+        "type": "author"
+    }
+
+    credentials = base64.b64encode("nodeuser:nodepassword".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+
+    url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(url, remote_author_payload, format='json')
+
+    assert response.status_code == status.HTTP_200_OK
+    remote_author = Author.objects.get(id_url=remote_author_payload["id"])
+    assert remote_author.displayName == "Remote Author"
+    assert remote_author.is_local is False
+    assert remote_author.state == "ACTIVE"
+
+
+@pytest.mark.django_db
+def test_remote_author_update(api_client, create_author):
+    node_user, node_author = create_author("nodeuser2", "nodepassword", "Node User 2", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+
+    _, local_author = create_author("localuser2", "localpassword", "Local User 2", state="ACTIVE")
+
+    #create the remote author
+    remote_author_payload = {
+        "id": "http://remote.host/api/authors/456",
+        "host": "http://remote.host/api/",
+        "displayName": "Remote Author Original",
+        "profileImage": "http://remote.host/images/original.png",
+        "page": "http://remote.host/authors/456",
+        "type": "author"
+    }
+
+    credentials = base64.b64encode("nodeuser2:nodepassword".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(url, remote_author_payload, format='json')
+    assert response.status_code == status.HTTP_200_OK
+    remote_author = Author.objects.get(id_url=remote_author_payload["id"])
+    assert remote_author.displayName == "Remote Author Original"
+
+    # update the payload
+    updated_payload = remote_author_payload.copy()
+    updated_payload["displayName"] = "Remote Author Updated"
+
+    response_update = api_client.post(url, updated_payload, format='json')
+    assert response_update.status_code == status.HTTP_200_OK
+    remote_author.refresh_from_db()
+    assert remote_author.displayName == "Remote Author Updated"
+
+
+@pytest.mark.django_db
+def test_remote_author_missing_id(api_client, create_author):
+    node_user, node_author = create_author("nodeuser3", "nodepassword", "Node User 3", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+
+    _, local_author = create_author("localuser3", "localpassword", "Local User 3", state="ACTIVE")
+    #missing id
+    incomplete_payload = {
+        # "id": "http://remote.host/api/authors/789",
+        "host": "http://remote.host/api/",
+        "displayName": "Incomplete Remote Author",
+        "profileImage": "http://remote.host/images/incomplete.png",
+        "page": "http://remote.host/authors/789",
+        "type": "author"
+    }
+
+    credentials = base64.b64encode("nodeuser3:nodepassword".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(url, incomplete_payload, format='json')
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "id" in response.data
+
+
+@pytest.mark.django_db
+def test_discover_remote_author_unauthenticated(api_client):
+    response = api_client.get("/api/authors/discover")
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_discover_remote_author_authenticated(api_client, create_author, monkeypatch):
+    """
+    this is to test that an authenticated user can retrieve remote authors
+    get_remote_authors helper is monkeypatched to return dummy data
+    """
+
+    user, local_author = create_author("localuser4", "localpassword", "Local User 4", state="ACTIVE")
+
+    node_user, node_author = create_author("nodeuser4", "nodepassword", "Node User 4", state="ACTIVE")
+    node_author.is_node = True
+    node_author.host = "http://dummy.remote/api/"
+    node_author.save()
+
+    dummy_remote_data = {
+        "authors": [
+            {
+                "id": "http://remote.node/api/authors/999",
+                "host": "http://remote.node/api/",
+                "displayName": "Remote Node Author",
+                "profileImage": "http://remote.node/images/999.png",
+                "page": "http://remote.node/authors/999",
+                "type": "author"
+            }
+        ]
+    }
+    # patch the get_remote_authors function.
+    # replace 'your_app.views' with the actual module path where get_remote_authors is imported.
+    monkeypatch.setattr("apps.authors.views.get_remote_authors", lambda endpoint: dummy_remote_data)
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get("/api/authors/discover")
+    assert response.status_code == status.HTTP_200_OK
+    data = response.data
+    assert "authors" in data
+
+    assert any(author["id"] == "http://remote.node/api/authors/999" for author in data["authors"])

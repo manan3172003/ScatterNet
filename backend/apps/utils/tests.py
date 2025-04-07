@@ -90,7 +90,7 @@ def test_send_object(mock_host_get, mock_request):
     dummy_host.password = "pass"
     mock_host_get.return_value = dummy_host
 
-    # Setup remote author mocks.
+
     remote1 = MagicMock()
     remote1.host = "http://remote1.com"
     remote1.id_url = "http://remote1.com/api/authors/remote1_id"
@@ -101,7 +101,6 @@ def test_send_object(mock_host_get, mock_request):
     payload = {"key": "value"}
     send_object(payload, [remote1, remote2])
 
-    # Ensure our dummy request was called twice.
     assert mock_request.call_count == 2
 
     called_urls = [call.kwargs.get("url") for call in mock_request.call_args_list]
