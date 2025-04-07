@@ -5,3 +5,13 @@
   text-align: center;
   margin-top: 5rem;
 }
+.public-post-page-container{
+  padding-top: 32px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.wrapper {
+  max-width: 800px;
+}

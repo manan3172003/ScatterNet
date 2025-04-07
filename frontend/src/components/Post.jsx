@@ -42,7 +42,7 @@ export default function Post({
   const [authorsRelationship, setAuthorsRelationship] = useState("Follow");
   const [needsGradient, setNeedsGradient] = useState(false)
   // This state is going keep track of whether the post has been expanded since by default we truncate excess text
- 
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [isTruncated, setIsTruncated] = useState(false);
   const contentRef = useRef(null);
