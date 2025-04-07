@@ -27,7 +27,9 @@ export default function EditPostPage(){
     message: "",
   });
 
-    // Helper to show notifications
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Helper to show notifications
   const showNotification = (type, title, message) => {
     setNotification({
       show: true,
@@ -71,6 +73,13 @@ export default function EditPostPage(){
             showNotification("error", "Edit Post", "Please select a valid option!")
             return;
           }
+
+          // Prevent multiple submissions
+          if (isSubmitting) {
+            return;
+          }
+
+          setIsSubmitting(true);
 
           try {
             let content = "";
@@ -120,11 +129,13 @@ export default function EditPostPage(){
             } else {
                 console.error("Error updating post");
                 showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
+                setIsSubmitting(false);
             }
         }
         catch (error){
             showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
             console.log(error)
+            setIsSubmitting(false);
         }
     }
 
@@ -227,13 +238,15 @@ export default function EditPostPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64,setBase64ContentType)} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64, setBase64ContentType, showNotification)} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
 
                                 </>
                             )}
                            
-                            <button id= "post-button">Edit</button>
+                            <button id= "post-button" disabled={isSubmitting}>
+                              {isSubmitting ? "Updating..." : "Edit"}
+                            </button>
                         </form>
                 </div>
             </main>

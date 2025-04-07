@@ -1,4 +1,3 @@
-// PostingPage.jsx
 import HeaderLogo from "../components/HeaderLogo";
 import Notification from "../components/Notification.jsx";
 import VideoPlayer from "../components/VideoPlayer.jsx"; // New component for video
@@ -39,6 +38,8 @@ export default function PostingPage() {
     visibility: "PUBLIC",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const showNotification = (type, title, message) => {
     setNotification({ show: true, type, title, message });
   };
@@ -78,8 +79,16 @@ export default function PostingPage() {
   async function handlePost(e) {
     e.preventDefault();
 
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     if (!formData.visibility || !formData.contentType) {
       showNotification("error", "Incorrect Option Selected", "Please select a valid option!");
+      setIsSubmitting(false);
       return;
     }
 
@@ -113,9 +122,11 @@ export default function PostingPage() {
                 errorMessage = errorText.substring(0, 100) || errorMessage;
               }
               showNotification("error", "Upload Failed", errorMessage);
+              setIsSubmitting(false);
             }
           } catch (err) {
             showNotification("error", "Upload Failed", `An error occurred: ${err.message}`);
+            setIsSubmitting(false);
           }
           return;
         }
@@ -147,10 +158,12 @@ export default function PostingPage() {
         setTimeout(() => { navigate(`/home`); }, 1500);
       } else {
         showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
+        setIsSubmitting(false);
       }
     } catch (error) {
       showNotification("error", "Post Creation Failed", "Something went wrong. Please try again.");
       console.log(error);
+      setIsSubmitting(false);
     }
   }
 
@@ -194,7 +207,7 @@ export default function PostingPage() {
             {formData.contentType === 'application/base64' && (
               <>
                 <label className="form-label">Image</label>
-                <input type="file" accept="image/*" onChange={(e) => handleFile(e, setFileName, setBase64, setBase64ContentType)} />
+                <input type="file" accept="image/*" onChange={(e) => handleFile(e, setFileName, setBase64, setBase64ContentType, showNotification)} />
                 {fileName && <p>Selected File: {fileName}</p>}
               </>
             )}
@@ -223,7 +236,9 @@ export default function PostingPage() {
               </>
             )}
 
-            <button id="post-button">Post</button>
+            <button id="post-button" disabled={isSubmitting}>
+              {isSubmitting ? "Posting..." : "Post"}
+            </button>
           </form>
         </div>
       </main>
