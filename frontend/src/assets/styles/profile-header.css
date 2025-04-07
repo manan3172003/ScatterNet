@@ -1,6 +1,6 @@
 :root {
-  --primaryBlue: #57659e;
-  --secondaryBlue: #a7a2c1;
+  --primaryBlue: #111827;
+  --secondaryBlue: #374151;
 }
 p {
   margin: 0;
@@ -37,7 +37,7 @@ p {
   display: flex;
   gap: 1rem;
   padding: 1rem;
-  border-bottom: 1px solid white;
+  box-shadow: 0 4px 6px #0000004d;
   margin-bottom: 1.5rem;
 }
 
@@ -54,6 +54,7 @@ p {
   height: auto;
   border-radius: 50%;
   object-fit: cover;
+  box-shadow: 0 4px 6px #0000004d;
   border: 8px solid var(--secondaryBlue);
 }
 
@@ -63,7 +64,8 @@ p {
   gap: 0.25rem;
   margin-top: 2rem;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  flex-direction: column;
 }
 #displayname {
   font-family: "Karantina";
@@ -79,7 +81,8 @@ p {
   gap: 10px;
 }
 
-.button, .link-button {
+.button,
+.link-button {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -96,7 +99,7 @@ p {
   box-shadow: none;
   font-size: 0.9rem;
   text-decoration: none;
-  font-family: "Montserrat", sans-serif;;
+  font-family: "Montserrat", sans-serif;
 }
 
 /* The link button has its own styling so I needed a separate one to make the sizing
@@ -107,10 +110,12 @@ the same */
   width: 7.5rem;
 }
 
-.button:hover:enabled, .link-button:hover {
+.button:hover:enabled,
+.link-button:hover {
   background-color: #5b689e;
 }
-.button:disabled, link-button:disabled {
+.button:disabled,
+link-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
   opacity: 0.7;
@@ -148,7 +153,7 @@ the same */
   color: white;
   cursor: pointer;
   padding: 0;
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 .follow-data button:hover {
@@ -159,7 +164,6 @@ the same */
   .info-wrapper {
     display: flex;
     gap: 10px;
-    padding: 0 40px;
     width: 100%;
   }
 
@@ -170,6 +174,10 @@ the same */
   #displayname {
     font-size: 96px;
   }
+  .info-names-wrapper {
+    align-items: center;
+    flex-direction: row;
+  }
 
   .info-names-subwrapper {
     font-size: 24px;
@@ -179,7 +187,8 @@ the same */
     gap: 5rem;
   }
 
-  .button, .link-button {
+  .button,
+  .link-button {
     padding: 0.4rem 1rem;
     min-width: 7rem;
     height: 2.5rem;
@@ -192,7 +201,12 @@ the same */
     height: 3.5rem;
   }
 
-  .button > p, .link-button > p {
+  .button > p,
+  .link-button > p {
+    font-size: 1rem;
+  }
+
+  .follow-data button {
     font-size: 1rem;
   }
 }
