@@ -1,5 +1,8 @@
+
 export const validExtensions = ['png','jpeg']
 export const validVideoExtensions  = ["mp4","webm","mov"]
+import { useEffect, useRef } from 'react';
+
 function convertToBase64(selectedFile) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -200,5 +203,46 @@ export async function handleVideoFile(e,setFileName,setBase64,setBase64ContentTy
 
 }   
 
+
+ function autoResize(maxHeight = 300, minHeight = 100) {
+  const textareaRef = useRef(null);
+
+  const resizeTextarea = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    
+    const newHeight = Math.min(
+      Math.max(textarea.scrollHeight, minHeight),
+      maxHeight
+    );
+    
+    textarea.style.height = `${newHeight}px`;
+    
+    if (textarea.scrollHeight > maxHeight) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
+  };
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    resizeTextarea();
+
+    textarea.addEventListener('input', resizeTextarea);
+    textarea.addEventListener('change', resizeTextarea);
+
+    return () => {
+      textarea.removeEventListener('input', resizeTextarea);
+      textarea.removeEventListener('change', resizeTextarea);
+    };
+  }, []);
+
+  return { textareaRef, resizeTextarea };
+} 
+
 export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById,
-    getPostHostname}
+    getPostHostname, autoResize}

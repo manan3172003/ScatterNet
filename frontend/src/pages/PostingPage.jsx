@@ -4,14 +4,15 @@ import Notification from "../components/Notification.jsx";
 import VideoPlayer from "../components/VideoPlayer.jsx"; // New component for video
 import "../assets/styles/posting-page.css";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import {
   fetchUserData,
   apiCall,
   handleFile,
   validExtensions,
-  handleVideoFile
+  handleVideoFile,
+  autoResize
 } from "../utils/utils.js";
 
 export default function PostingPage() {
@@ -39,6 +40,19 @@ export default function PostingPage() {
     visibility: "PUBLIC",
   });
 
+  const { textareaRef: descriptionRef, resizeTextarea: resizeDescription } = autoResize(200, 100);
+  const { textareaRef: contentRef, resizeTextarea: resizeContent } = autoResize(300, 100);
+
+  // resize text areas when form data changes
+  useEffect(() => {
+    if (formData.description) {
+      setTimeout(resizeDescription, 100);
+    }
+    if (formData.content) {
+      setTimeout(resizeContent, 100);
+    }
+  }, [formData.description, formData.content]);
+
   const showNotification = (type, title, message) => {
     setNotification({ show: true, type, title, message });
   };
@@ -49,6 +63,13 @@ export default function PostingPage() {
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    
+    // resize text areas when content changes
+    if (e.target.name === 'description') {
+      setTimeout(resizeDescription, 0);
+    } else if (e.target.name === 'content') {
+      setTimeout(resizeContent, 0);
+    }
   }
 
   function handleDropdownChange(e) {
@@ -174,7 +195,7 @@ export default function PostingPage() {
             <input type="text" name="title" placeholder="Enter a title" value={formData.title} onChange={handleChange} required />
 
             <label className="form-label">Description</label>
-            <textarea name="description" placeholder="Enter description" value={formData.description} onChange={handleChange} required />
+            <textarea name="description" placeholder="Enter description" value={formData.description} onChange={handleChange} required ref={descriptionRef} />
 
             <label className="form-label">Content Type</label>
             <select className="dropdown" name="contentType" value={formData.contentType} onChange={handleDropdownChange} required>
@@ -187,7 +208,7 @@ export default function PostingPage() {
             {(formData.contentType === 'text/plain' || formData.contentType === 'text/markdown') && (
               <>
                 <label className="form-label">Content</label>
-                <textarea name="content" placeholder="Enter content" value={formData.content} onChange={handleChange} required />
+                <textarea name="content" placeholder="Enter content" value={formData.content} onChange={handleChange} required ref={contentRef} />
               </>
             )}
 

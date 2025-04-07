@@ -69,11 +69,14 @@ body {
     background: #1e293b;
     color: #e2e8f0; 
     resize: none; 
-    min-height: 3em; 
-    max-height: 8em; 
+    min-height: 100px; 
+    max-height: 300px; 
     overflow-y: auto; 
     font-family: "Inter", sans-serif; 
-    transition: border-color 0.3s, background-color 0.3s; 
+    transition: border-color 0.3s, background-color 0.3s, height 0.1s ease; 
+    width: 100%;
+    box-sizing: border-box;
+    line-height: 1.5;
 }
 
 .post-form textarea:focus {
