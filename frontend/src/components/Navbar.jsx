@@ -15,7 +15,7 @@ export default function Navbar() {
     { icon: Home, label: "Home", path: "/home" },
     { icon: SquarePlus, label: "Post", path: "/post" },
     { icon: User, label: "Profile", path: "/profile" },
-    { icon: Video, label: "Stream", path: "/stream" },
+    { icon: Video, label: "Reels", path: "/reels" },
     { icon: AiOutlineNotification, label: "Requests", path: "/requests "},
     { icon: AiOutlineSearch, label: "Discover", path: "/discover "},
     ...(isAdminFromCookie ? [{ icon: Shield, label: "Admin", path: "/admin" }] : []),

@@ -39,7 +39,7 @@ function App() {
           <Route path="/editProfile" element={<ProtectedRoute element={<EditProfilePage />} />}/>
           <Route path="/requests" element={<ProtectedRoute element={<AuthorsList chosenMode="Requests" />} />}/>
           <Route path="/discover" element={<ProtectedRoute element={<DiscoverPage />} />}/>
-          <Route path="/stream" element={<ProtectedRoute element={<StreamPage />} />}/>
+          <Route path="/reels" element={<ProtectedRoute element={<StreamPage />} />}/>
           <Route path="/authors/:authorId" element={<UserProfile/>} />
           <Route path="/authors/:authorId/followers" element={<ProtectedRoute element={<AuthorsList chosenMode="Followers" />} />}/>
           <Route path="/authors/:authorId/following" element={<ProtectedRoute element={<AuthorsList chosenMode="Following" />} />}/>
