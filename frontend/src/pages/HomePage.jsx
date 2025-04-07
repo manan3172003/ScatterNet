@@ -7,6 +7,8 @@ import getCookie from "../context/Cookie";
 import DesktopCommentModal from "../components/DesktopCommentModal";
 import HeaderLogo from "../components/HeaderLogo";
 import {apiCall} from "../utils/utils.js";
+import Notification from "../components/Notification.jsx";
+
 export default function HomePage() {
     const [posts, setPosts] = useState([]);
     const csrfToken = getCookie('csrftoken');
@@ -23,6 +25,21 @@ export default function HomePage() {
         currentPage: 1
     });
     const [loading, setLoading] = useState(false);
+    
+    const [notification, setNotification] = useState({
+        show: false,
+        type: "success",
+        title: "",
+        message: "",
+    });
+
+    const showNotification = (type, title, message) => {
+        setNotification({ show: true, type, title, message });
+    };
+
+    const hideNotification = () => {
+        setNotification((prev) => ({ ...prev, show: false }));
+    };
     
     // Save scroll position when opening comments
     useEffect(() => {
@@ -140,6 +157,7 @@ export default function HomePage() {
 
   return (
     <div className="home-page-wrapper">
+      <Notification {...notification} onClose={hideNotification} />
       <header className="header">{<HeaderLogo />}</header>
       <InfiniteScroll
         dataLength={posts.length}
@@ -160,6 +178,13 @@ export default function HomePage() {
                   onCommentClick={(e) => handleCommentClick(post, e)}
                   isCommentModalOpen={showComments}
                   onRefresh={refreshFeed}
+                  onDeletePost={(success) => {
+                    if (success) {
+                      showNotification("success", "Post Deleted", "Contact a node admin to recover this post.");
+                    } else {
+                      showNotification("error", "Delete Failed", "Failed to delete the post. Please try again.");
+                    }
+                  }}
                 />
               ))
             : !loading && (
