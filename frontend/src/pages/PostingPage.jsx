@@ -1,4 +1,3 @@
-// PostingPage.jsx
 import HeaderLogo from "../components/HeaderLogo";
 import Notification from "../components/Notification.jsx";
 import VideoPlayer from "../components/VideoPlayer.jsx"; // New component for video
@@ -194,7 +193,7 @@ export default function PostingPage() {
             {formData.contentType === 'application/base64' && (
               <>
                 <label className="form-label">Image</label>
-                <input type="file" accept="image/*" onChange={(e) => handleFile(e, setFileName, setBase64, setBase64ContentType)} />
+                <input type="file" accept="image/*" onChange={(e) => handleFile(e, setFileName, setBase64, setBase64ContentType, showNotification)} />
                 {fileName && <p>Selected File: {fileName}</p>}
               </>
             )}

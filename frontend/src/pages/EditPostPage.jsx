@@ -27,7 +27,7 @@ export default function EditPostPage(){
     message: "",
   });
 
-    // Helper to show notifications
+  // Helper to show notifications
   const showNotification = (type, title, message) => {
     setNotification({
       show: true,
@@ -227,7 +227,7 @@ export default function EditPostPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64,setBase64ContentType)} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64, setBase64ContentType, showNotification)} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
 
                                 </>
