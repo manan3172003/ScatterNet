@@ -1,22 +1,23 @@
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react"; // Import useContext
 import "../assets/styles/header-logo.css";
 import { apiCall } from "../utils/utils.js";
+import getCookie from "../context/Cookie";
 import { AuthContext } from "../context/AuthContext";
+import { useContext } from "react";
 
 export default function HeaderLogo() {
   const navigate = useNavigate();
-  const { logout } = useContext(AuthContext); 
+  const {user} = useContext(AuthContext)
 
   const handleLogout = async () => {
     try {
-    
-      const result = await logout();
+      const response = await apiCall('authors/logout',"POST");
       
-      if (result.success) {
-        navigate('/login'); 
+      if (response.ok) {
+        
+        window.location.reload();
       } else {
-        console.error("Logout failed:", result.status);
+        console.error("Logout failed");
       }
     } catch (error) {
       console.error("Logout error:", error);
@@ -26,13 +27,13 @@ export default function HeaderLogo() {
   return (
     <div className="header-container"> 
       <h1 className="logo">OnlyNodes</h1>
-      <button 
+      { user ? <button 
         className="logout-button" 
         onClick={handleLogout}
         aria-label="Logout"
       >
         Logout
-      </button>
+      </button>: <></>}
     </div>
   );
 }
