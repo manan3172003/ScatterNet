@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'apps.posts',
     'apps.follow',
     'rest_framework',
+    'apps.reels',
 ]
 
 MIDDLEWARE = [
@@ -160,3 +161,10 @@ SWAGGER_SETTINGS = {
 
 DODGERBLUE_NODE_USERNAME = os.environ.get('DODGERBLUE_NODE_USERNAME', 'node8000')
 DODGERBLUE_NODE_PASSWORD = os.environ.get('DODGERBLUE_NODE_PASSWORD', 'node8000')
+DATA_UPLOAD_MAX_MEMORY_SIZE = 31457280  
+
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 31457280 
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

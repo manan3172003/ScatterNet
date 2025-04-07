@@ -1,5 +1,4 @@
 .admin-dashboard {
-  background-color: #1F2937;
   color: #E5E7EB;
   padding: 2rem;
   min-height: 100vh;
@@ -18,52 +17,34 @@
   gap: 1.5rem;
 }
 
-.post-container {
+.admin-author-container {
   overflow: hidden;
   border-radius: 0.75rem;
   background-color: #1F2937;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 100%;
   transition: transform 0.2s, box-shadow 0.2s;
   margin-bottom: 1.5rem;
   padding: 1rem;
 }
 
-.post-container:hover {
+.admin-author-container:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-.post-header {
+.admin-author-header {
   padding: 1.25rem 1.25rem 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Header top section (title and any extra controls) */
-.post-header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-/* Title style for author name */
-.post-title {
-  margin: 0;
-  font-size: 1.5rem;
-  line-height: 1.75rem;
-  font-weight: 700;
-  color: #F3F4F6;
-}
-
 /* Author information block */
-.post-author {
+.admin-author-author {
   display: flex;
   align-items: center;
   margin-bottom: 0.75rem;
 }
 
-.post-avatar {
+.admin-author-avatar {
   width: 48px;
   height: 48px;
   margin-right: 0.75rem;
@@ -77,14 +58,8 @@
   flex-direction: column;
 }
 
-.post-author-name {
-  font-weight: 600;
-  color: #E5E7EB;
-  margin-bottom: 0.25rem;
-}
-
 /* Optional meta info (e.g., GitHub link) */
-.post-meta {
+.admin-author-meta {
   display: flex;
   align-items: center;
   color: #9CA3AF;
@@ -92,19 +67,19 @@
 }
 
 /* Content section for state controls */
-.post-content {
-  padding: 1.25rem;
+.admin-author-content {
+  padding: 1.25rem 1.25rem 1.25rem 0;
 }
 
 /* Label styling for the dropdown */
-.post-content label {
+.admin-author-content label {
   display: block;
   margin-bottom: 0.5rem;
   font-size: 1rem;
 }
 
 /* Dropdown (select) styling */
-.post-content select {
+.admin-author-content select {
   padding: 0.5rem;
   background-color: #374151;
   color: #E5E7EB;
@@ -114,7 +89,7 @@
   margin-right: 1rem;
 }
 
-.post-content select:focus {
+.admin-author-content select:focus {
   outline: none;
   box-shadow: 0 0 0 2px #60A5FA;
 }
@@ -140,31 +115,35 @@
   cursor: not-allowed;
 }
 
-/* Ensure the post title (username) looks greyed out and stands out as a header */
-.post-title {
-  font-size: 1.5rem;
+/* Ensure the admin-author title (username) looks greyed out and stands out as a header */
+.admin-author-title {
   line-height: 1.75rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: #9CA3AF; /* A grey tone for non-editable username */
   margin: 0;
 }
 
 /* Editable fields styling */
-.desktop-input-field {
+.desktop-admin-input-field {
   width: 100%;
-  background: #121212;
-  border: 1px solid #333;
-  border-radius: 4px;
+  background: #1e293b;
+  border: 1px solid #2d3748;
+  border-radius: 6px;
   padding: 8px 12px;
   color: #E5E7EB;
   font-size: 14px;
   transition: border-color 0.2s;
+  font-family: "Inter", sans-serif;
   margin-top: 4px;
 }
 
-.desktop-input-field:focus {
+.desktop-admin-input-field:focus {
   outline: none;
   border-color: #0095f6;
+}
+.form-group {
+  padding: 0.5rem;
 }
 
 .form-group label {
@@ -173,4 +152,10 @@
   color: #E5E7EB;
   display: block;
   margin-bottom: 4px;
+}
+
+@media screen and (max-width: 768px) {
+  .admin-dashboard {
+    padding: 0;
+  }
 }

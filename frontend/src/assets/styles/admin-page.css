@@ -1,13 +1,18 @@
 .admin-page {
-  padding: 2rem;
-  background-color: #111827;
-  color: #E5E7EB;
-  min-height: 100vh;
+    padding: 1.5rem 1.5rem 1.5rem 2.75rem;
 }
 
-.admin-page h1 {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  color: #F3F4F6;
+.admin-page-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
 }
+
+@media screen and (max-width: 768px) {
+  .admin-page-title {
+      justify-content: center;
+  }
+}
+

@@ -1,11 +1,12 @@
 /* eslint-disable react/prop-types */
 import { useState, useContext, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { X, Heart, Plus } from "lucide-react";
+import { X, Heart } from "lucide-react";
 import "../assets/styles/desktop-comment-modal.css";
 import { AuthContext } from "../context/AuthContext";
 import Post from "./Post";
 import { apiCall } from "../utils/utils.js";
+import {fetchAllComments} from "../utils/commentsAndLikesApi.js";
 
 export default function DesktopCommentModal({ post: initialPost, onClose }) {
   const [newComment, setNewComment] = useState("");
@@ -13,10 +14,7 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
   const [isMarkdown, setIsMarkdown] = useState(false);
   const commentListRef = useRef(null);
   const [post, setPost] = useState(initialPost);
-  const [nextCommentsUrl, setNextCommentsUrl] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
   const [likedComments, setLikedComments] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useContext(AuthContext);
 
@@ -92,110 +90,9 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
   }
 
   async function fetchComments() {
-    try {
-      setIsLoading(true);
-      const response = await apiCall(`posts/${post.id}/comments`);
-      if (response.ok) {
-        const data = await response.json();
-        const processedComments = (data.src || []).map(comment => ({
-          ...comment,
-          likes: comment.likes || { count: 0 }
-        }));
-        setComments(processedComments);
-        setNextCommentsUrl(data.next || null);
-        setHasMore(!!data.next);
-        
-        // Load more comments to get to initial 10
-        if (processedComments.length < 10 && data.next) {
-          await loadMoreComments();
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-      setHasMore(false);
-    } finally {
-      setIsLoading(false);
-    }
+    const allComments = await fetchAllComments(post);
+    setComments(allComments);
   }
-  
-  async function loadMoreComments() {
-    if (!nextCommentsUrl || isLoading) {
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      // Extract just the endpoint path
-      let apiPath;
-      
-      // Handle full URL case
-      if (nextCommentsUrl.includes('://')) {
-        try {
-          // Parse the URL
-          const url = new URL(nextCommentsUrl);
-          
-          // Extract just the path and search parameters
-          const pathWithSearch = url.pathname + url.search;
-          
-          // Remove /api/ prefix if present
-          apiPath = pathWithSearch.replace(/^\/api\//, '');
-        } catch (e) {
-          console.error("Error parsing URL:", e);
-          apiPath = nextCommentsUrl;
-        }
-      } else if (nextCommentsUrl.startsWith('/api/')) {
-        // Handle relative URL with /api/ prefix
-        apiPath = nextCommentsUrl.substring(5); // Remove the /api/ prefix
-      } else {
-        // It's already a clean relative path
-        apiPath = nextCommentsUrl;
-      }
-      
-      // Log for debugging
-      console.log("Fetching from cleaned path:", apiPath);
-      
-      // Make the API call directly with the clean path
-      const response = await apiCall(apiPath);
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (!data || !data.src || data.src.length === 0) {
-          setHasMore(false);
-        } else {
-          // Process and add the new comments
-          const newComments = (data.src || []).map(comment => ({
-            ...comment,
-            id: comment.id || `comment-${comment.serial}`,
-            likes: comment.likes || { count: 0 }
-          }));
-          
-          setComments(prevComments => [...prevComments, ...newComments]);
-          
-          // Update the pagination state
-          if (data.next) {
-            console.log("Next URL set to:", data.next);
-            setNextCommentsUrl(data.next);
-            setHasMore(true);
-          } else {
-            console.log("No more pages available");
-            setNextCommentsUrl(null);
-            setHasMore(false);
-          }
-        }
-      } else {
-        console.error("API response not OK:", response.status);
-        setHasMore(false);
-      }
-    } catch (error) {
-      console.error("Error loading more comments:", error);
-      setHasMore(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-  
   
   async function handleLike(commentId) {
     if (!user) return;
@@ -249,7 +146,7 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
       if (response.ok) {
         setNewComment("");
         // Refresh the comments to show the new comment
-        fetchComments(); 
+        await fetchComments();
       }
     } catch (error) {
       console.error("Error posting comment:", error);
@@ -289,21 +186,20 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
               ref={commentListRef}
             >
               {comments.length > 0 ? (
-                <>
-                  {comments.map((comment) => (
+                  comments.map((comment) => (
                     <div key={comment.id} className="desktop-comment-item">
                       <img
                         className="desktop-comment-avatar"
                         src={
                           comment.author?.profileImageURL ||
-                          `https://robohash.org/${comment.author?.displayName || 'user'}.png`
+                          `https://robohash.org/${comment.author?.displayName}.png`
                         }
                         alt={`${comment.author?.displayName || 'User'}'s avatar`}
                       />
                       <div className="desktop-comment-content">
                         <div>
                           <span className="desktop-comment-author">
-                            {comment.author?.displayName || 'Anonymous'}
+                            {comment.author?.displayName}
                           </span>
                           {comment.contentType === "text/markdown" ? (
                             <ReactMarkdown>{comment.comment}</ReactMarkdown>
@@ -330,32 +226,10 @@ export default function DesktopCommentModal({ post: initialPost, onClose }) {
                         <Heart size={12} className={likedComments[comment.id] ? "heart-filled" : ""} />
                       </button>
                     </div>
-                  ))}
-                  
-                  {hasMore && (
-                    <div className="load-more-container">
-                      <button 
-                        className="load-more-btn" 
-                        onClick={loadMoreComments}
-                        disabled={isLoading}
-                      >
-                        <Plus size={24} />
-                      </button>
-                      {isLoading && <span>Loading comments...</span>}
-                    </div>
-                  )}
-                  
-                  {!hasMore && (
-                    <p className="end-message">No more comments to show.</p>
-                  )}
-                </>
+                  ))
               ) : (
                 <div className="desktop-no-comments">
-                  {isLoading ? (
-                    <p>Loading comments...</p>
-                  ) : (
                     <p>No comments yet. Be the first to comment!</p>
-                  )}
                 </div>
               )}
             </div>

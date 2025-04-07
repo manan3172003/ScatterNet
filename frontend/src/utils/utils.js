@@ -1,5 +1,5 @@
 export const validExtensions = ['png','jpeg']
-
+export const validVideoExtensions  = ["mp4","webm","mov"]
 function convertToBase64(selectedFile) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -89,7 +89,7 @@ async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
         } catch (error) {
             console.error('Error converting file to Base64: ', error);
         }
-    }
+}
 
 async function apiCall(
     endpoint,
@@ -140,7 +140,65 @@ function getPostHostname(post) {
     }
   }
 }
+export async function handleVideoFile(e,setFileName,setBase64,setBase64ContentType,setVideoPreview,setUploadProgress,setIsUploading,showNotification) {
+  const file = e.target.files[0]
+  if (!file){
+    return false
+  }
 
+  setFileName(file.name)
+  const maxSize = 50 * 1024 * 1024
+  if (file.size > maxSize) {
+    showNotification(
+      "error",
+      "File Size Too Large",
+      `Video must be less than 50MB`
+    )
+    return false
+  }
+
+  const extension = file.name.split(".").pop().toLowerCase()
+  if (!validVideoExtensions.includes(extension)){
+    showNotification(
+      "error",
+      "Invalid File Type",
+      "Please upload a video with one of the following file types(mp4, mov, webm)."
+    )
+    return false
+  }
+  const videoURL = URL.createObjectURL(file)
+  setVideoPreview(videoURL)
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onprogress = (event) => {
+
+      if (event.lengthComputable){
+        const progress = Math.round((event.loaded / event.total) * 100)
+        setUploadProgress(progress)
+        setIsUploading(true)
+      }
+    }
+
+    reader.onload =() => {
+      const base64String = reader.result.split(",")[1]
+      setBase64(base64String)
+      setBase64ContentType(`video/${extension};base64`)
+      setIsUploading(false)
+      setUploadProgress(100)
+      
+      showNotification(
+          "success",
+          "Video Ready",
+          "Your video has been successfully loaded."
+      )
+      resolve(true)
+    }
+    reader.readAsDataURL(file)
+
+  })
+
+}   
 
 export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById,
     getPostHostname}
