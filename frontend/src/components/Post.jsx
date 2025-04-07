@@ -32,7 +32,8 @@ export default function Post({
   onRefresh,
   isInModal = false,
   isGrid = false,
-  isCommentModalOpen
+  isCommentModalOpen,
+  onDeletePost
 }) {
   const { user } = useContext(AuthContext);
   const [likeCount, setLikeCount] = useState(0);
@@ -217,11 +218,17 @@ export default function Post({
         if (onRefresh) {
           onRefresh();
         }
+        if (onDeletePost) {
+          onDeletePost(true);
+        }
       } else {
         throw new Error("Failed to delete post");
       }
     } catch (error) {
       console.log(error);
+      if (onDeletePost) {
+        onDeletePost(false);
+      }
     }
   }
 
