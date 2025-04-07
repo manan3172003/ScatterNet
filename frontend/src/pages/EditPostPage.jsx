@@ -68,7 +68,7 @@ export default function EditPostPage(){
         e.preventDefault()
         // forces visibiity to be choses
         if ((e.visibility === "")||(e.contentType==="")) {
-            alert("Please select a valid option!");
+            showNotification("error", "Edit Post", "Please select a valid option!")
             return;
           }
 
@@ -123,7 +123,7 @@ export default function EditPostPage(){
             }
         }
         catch (error){
-            alert("Something went wrong. Please try again.");
+            showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
             console.log(error)
         }
     }
