@@ -65,14 +65,28 @@ async function getAuthorObjectById(author_serial) {
         }
 }
 
-async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
+async function handleFile(e, setFileName, setBase64, setBase64ContentType, showNotification) {
         const selectedFile = e.target.files[0];
 
         if (!selectedFile) {
             console.error("No file selected!");
-            return;
+            return false;
         }
         console.log('File being processed:', selectedFile);
+
+        // check file size (2MB limit)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        console.log("size", selectedFile.size)
+        if (selectedFile.size > maxSize) {
+            if (showNotification) {
+                showNotification(
+                    "error",
+                    "File Size Too Large",
+                    "Image must be less than 2MB"
+                );
+            }
+            return false;
+        }
 
         try {
             setFileName(selectedFile.name);
@@ -87,9 +101,11 @@ async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
             console.log('Base64 Content Type:', base64ContentType);
             console.log('Base64 Data:', base64DataString);
             console.log('Base64 String: ', base64string);
+            return true;
     
         } catch (error) {
             console.error('Error converting file to Base64: ', error);
+            return false;
         }
 }
 
