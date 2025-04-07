@@ -73,7 +73,10 @@ body {
     max-height: 8em; 
     overflow-y: auto; 
     font-family: "Inter", sans-serif; 
-    transition: border-color 0.3s, background-color 0.3s; 
+    transition: border-color 0.3s, background-color 0.3s, height 0.1s ease; 
+    width: 100%;
+    box-sizing: border-box;
+    line-height: 1.5;
 }
 
 .post-form textarea:focus {

@@ -1,5 +1,7 @@
 export const validExtensions = ['png','jpeg']
 export const validVideoExtensions  = ["mp4","webm","mov"]
+import { useEffect, useRef } from 'react';
+
 function convertToBase64(selectedFile) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -216,5 +218,73 @@ export async function handleVideoFile(e,setFileName,setBase64,setBase64ContentTy
 
 }   
 
+
+ function autoResize(maxHeight = 8, minHeight = 3) {
+  const textareaRef = useRef(null);
+
+  const resizeTextarea = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const cursorPosition = textarea.selectionStart;
+    const scrollTop = textarea.scrollTop;
+    
+    textarea.style.height = 'auto';
+    
+    // Convert em to pixels for calculation
+    const fontSize = parseFloat(getComputedStyle(textarea).fontSize);
+    const maxHeightPx = maxHeight * fontSize;
+    const minHeightPx = minHeight * fontSize;
+    
+    const newHeight = Math.min(
+      Math.max(textarea.scrollHeight, minHeightPx),
+      maxHeightPx
+    );
+    
+    // Set height in em units
+    textarea.style.height = `${newHeight / fontSize}em`;
+    
+    if (textarea.scrollHeight > maxHeightPx) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
+    
+    // Restore cursor position
+    textarea.setSelectionRange(cursorPosition, cursorPosition);
+    
+    // Auto-scroll to cursor position if it's below the visible area
+    const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || fontSize * 1.5;
+    const linesAboveCursor = textarea.value.substring(0, cursorPosition).split('\n').length;
+    const estimatedCursorY = linesAboveCursor * lineHeight;
+    
+    // If cursor is below the visible area, scroll to it
+    if (estimatedCursorY > scrollTop + textarea.clientHeight) {
+      textarea.scrollTop = estimatedCursorY - textarea.clientHeight + lineHeight;
+    }
+  };
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    resizeTextarea();
+
+    textarea.addEventListener('input', resizeTextarea);
+    textarea.addEventListener('change', resizeTextarea);
+    textarea.addEventListener('keyup', resizeTextarea);
+    textarea.addEventListener('keydown', resizeTextarea);
+
+    return () => {
+      textarea.removeEventListener('input', resizeTextarea);
+      textarea.removeEventListener('change', resizeTextarea);
+      textarea.removeEventListener('keyup', resizeTextarea);
+      textarea.removeEventListener('keydown', resizeTextarea);
+    };
+  }, []);
+
+  return { textareaRef, resizeTextarea };
+} 
+
 export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById,
-    getPostHostname}
+    getPostHostname, autoResize}
