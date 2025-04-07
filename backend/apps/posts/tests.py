@@ -8,8 +8,9 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 from ..authors.models import Author
-from .models import Post, Comment, Like
+from .models import Post, Comment, Like, Inbox
 from dodgerblue.settings import NODEHOSTNAME
+import base64
 
 User = get_user_model()
 
@@ -425,3 +426,228 @@ def test_like_comment_nested_paginated_likes(api_client, create_author, create_p
     like2 = results[1]
     assert like2.get("type") == "like"
     assert like2["author"]["id"] == author2.id_url
+
+
+@pytest.mark.django_db
+def test_remote_post_creation(api_client, create_author):
+    # create remote node and mark as node
+    node_user, node_author = create_author("node_remote", "password", "Node Remote", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+    # create inbox owner
+    _, local_author = create_author("local_receiver", "password", "Local Receiver", state="ACTIVE")
+
+    remote_post_payload = {
+        "id": "http://remote.example/api/posts/1000",
+        "host": "http://remote.example/api/",
+        "title": "Remote Post Title",
+        "description": "Remote post description",
+        "contentType": "text/plain",
+        "content": "Content from remote post.",
+        "author": {
+            "id": "http://remote.example/api/authors/2000",
+            "host": "http://remote.example/api/",
+            "displayName": "Remote Author",
+            "profileImage": "http://remote.example/images/remote_author.png",
+            "page": "http://remote.example/authors/2000",
+            "type": "author"
+        },
+        "comments": {"src": []},
+        "likes": {"src": []},
+        "published": "2025-04-07T12:00:00Z",
+        "visibility": "PUBLIC",
+        "page": "http://remote.example/posts/1000",
+        "type": "post"
+    }
+    credentials = base64.b64encode("node_remote:password".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+
+    inbox_url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(inbox_url, remote_post_payload, format="json")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    post = Post.objects.get(id_url=remote_post_payload["id"])
+    assert post.title == "Remote Post Title"
+
+    inbox_entry = Inbox.objects.filter(author=local_author, post=post).first()
+    assert inbox_entry is not None
+
+
+@pytest.mark.django_db
+def test_remote_post_update(api_client, create_author):
+    """
+    test updating existing remote post by re-sending an updated payload
+    """
+    node_user, node_author = create_author("node_remote_update", "password", "Node Remote Update", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+    _, local_author = create_author("local_receiver_update", "password", "Local Receiver Update", state="ACTIVE")
+
+    remote_post_payload = {
+        "id": "http://remote.example/api/posts/1001",
+        "host": "http://remote.example/api/",
+        "title": "Initial Remote Post Title",
+        "description": "Initial description",
+        "contentType": "text/plain",
+        "content": "Initial remote content.",
+        "author": {
+            "id": "http://remote.example/api/authors/2001",
+            "host": "http://remote.example/api/",
+            "displayName": "Remote Author Update",
+            "profileImage": "http://remote.example/images/remote_author_update.png",
+            "page": "http://remote.example/authors/2001",
+            "type": "author"
+        },
+        "comments": {"src": []},
+        "likes": {"src": []},
+        "published": "2025-04-07T12:00:00Z",
+        "visibility": "PUBLIC",
+        "page": "http://remote.example/posts/1001",
+        "type": "post"
+    }
+
+    credentials = base64.b64encode("node_remote_update:password".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    inbox_url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(inbox_url, remote_post_payload, format="json")
+    assert response.status_code == status.HTTP_200_OK
+
+    updated_payload = remote_post_payload.copy()
+    updated_payload["title"] = "Updated Remote Post Title"
+
+    response_update = api_client.post(inbox_url, updated_payload, format="json")
+    assert response_update.status_code == status.HTTP_200_OK
+
+    post = Post.objects.get(id_url=remote_post_payload["id"])
+    assert post.title == "Updated Remote Post Title"
+
+
+@pytest.mark.django_db
+def test_remote_post_missing_likes(api_client, create_author):
+    node_user, node_author = create_author("node_missing_likes", "password", "Node Missing Likes", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+    _, local_author = create_author("local_missing_likes", "password", "Local Missing Likes", state="ACTIVE")
+
+    remote_post_payload = {
+        "id": "http://remote.example/api/posts/1002",
+        "host": "http://remote.example/api/",
+        "title": "Remote Post Without Likes",
+        "description": "Description",
+        "contentType": "text/plain",
+        "content": "Content",
+        "author": {
+            "id": "http://remote.example/api/authors/2002",
+            "host": "http://remote.example/api/",
+            "displayName": "Remote Author NL",
+            "profileImage": "http://remote.example/images/remote_author_nl.png",
+            "page": "http://remote.example/authors/2002",
+            "type": "author"
+        },
+        "comments": {"src": []},
+        # "likes" key is missing
+        "published": "2025-04-07T12:00:00Z",
+        "visibility": "PUBLIC",
+        "page": "http://remote.example/posts/1002",
+        "type": "post"
+    }
+    credentials = base64.b64encode("node_missing_likes:password".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    inbox_url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(inbox_url, remote_post_payload, format="json")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "No likes object" in response.data["error"]
+
+
+@pytest.mark.django_db
+def test_remote_comment_creation(api_client, create_author, create_post):
+    node_user, node_author = create_author("node_comment", "password", "Node Comment", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+    _, local_author = create_author("local_comment", "password", "Local Comment", state="ACTIVE")
+    post = create_post(local_author, title="Post for Remote Comment")
+
+    remote_comment_payload = {
+        "id": "http://remote.example/api/comments/3000",
+        "author": {
+            "id": "http://remote.example/api/authors/2003",
+            "host": "http://remote.example/api/",
+            "displayName": "Remote Commenter",
+            "profileImage": "http://remote.example/images/remote_commenter.png",
+            "page": "http://remote.example/authors/2003",
+            "type": "author"
+        },
+        "post": post.id_url,
+        "published": "2025-04-07T12:00:00Z",
+        "contentType": "text/plain",
+        "comment": "This is a remote comment",
+        "likes": {"src": []},
+        "type": "comment"
+    }
+
+    credentials = base64.b64encode("node_comment:password".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    inbox_url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(inbox_url, remote_comment_payload, format="json")
+
+    assert response.status_code == status.HTTP_200_OK
+    comment = Comment.objects.get(id_url=remote_comment_payload["id"])
+    assert comment.comment == "This is a remote comment"
+
+
+@pytest.mark.django_db
+def test_remote_like_creation(api_client, create_author, create_post):
+    node_user, node_author = create_author("node_like", "password", "Node Like", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+    _, local_author = create_author("local_like", "password", "Local Like", state="ACTIVE")
+    post = create_post(local_author, title="Post for Remote Like")
+
+    remote_like_payload = {
+        "id": "http://remote.example/api/likes/4000",
+        "author": {
+            "id": "http://remote.example/api/authors/2004",
+            "host": "http://remote.example/api/",
+            "displayName": "Remote Liker",
+            "profileImage": "http://remote.example/images/remote_liker.png",
+            "page": "http://remote.example/authors/2004",
+            "type": "author"
+        },
+        "published": "2025-04-07T12:00:00Z",
+        "object": post.id_url,
+        "type": "like"
+    }
+
+    credentials = base64.b64encode("node_like:password".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    inbox_url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(inbox_url, remote_like_payload, format="json")
+
+    assert response.status_code == status.HTTP_200_OK
+    like = Like.objects.get(id_url=remote_like_payload["id"])
+    assert like.object == post.id_url
+
+
+@pytest.mark.django_db
+def test_inbox_invalid_auth(api_client, create_author):
+    _, local_author = create_author("local_inbox", "password", "Local Inbox", state="ACTIVE")
+    payload = {"type": "post"}
+    url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(url, payload, format="json")
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_inbox_invalid_type(api_client, create_author):
+    node_user, node_author = create_author("node_invalid", "password", "Node Invalid", state="ACTIVE")
+    node_author.is_node = True
+    node_author.save()
+    _, local_author = create_author("local_invalid", "password", "Local Invalid", state="ACTIVE")
+    payload = {"type": "invalid_type"}
+    credentials = base64.b64encode("node_invalid:password".encode("utf-8")).decode("utf-8")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    url = f"/api/authors/{local_author.id}/inbox"
+    response = api_client.post(url, payload, format="json")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Invalid request type" in response.data["error"]
