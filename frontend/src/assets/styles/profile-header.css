@@ -153,7 +153,7 @@ link-button:disabled {
   color: white;
   cursor: pointer;
   padding: 0;
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 .follow-data button:hover {
@@ -164,7 +164,7 @@ link-button:disabled {
   .info-wrapper {
     display: flex;
     gap: 10px;
-    padding: 0 40px;
+    padding: 0 0 0 40px;
     width: 100%;
   }
 
@@ -204,6 +204,10 @@ link-button:disabled {
 
   .button > p,
   .link-button > p {
+    font-size: 1rem;
+  }
+
+  .follow-data button {
     font-size: 1rem;
   }
 }
