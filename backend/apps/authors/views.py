@@ -451,6 +451,15 @@ class AuthorInbox(APIView):
             return Response({'error': 'Invalid request type'}, status=status.HTTP_400_BAD_REQUEST)
 
 class DiscoverRemoteAuthor(APIView):
+    """
+    This endpoint allows you to discover remote authors that are connected to an instance of this distributed node.
+    Also allows you to send follow requests to those remote authors.
+
+    URL: /api/authors/discover
+    Methods:
+        - GET
+        - POST
+    """
     def get(self, request):
         if not request.user.is_authenticated:
             return Response({'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -492,6 +501,15 @@ class DiscoverRemoteAuthor(APIView):
 
 
 class RegisterOnRemoteNode(ListCreateAPIView):
+    """
+    This endpoint allows you to register remote nodes and perform a node connection between the remote node and our instance.
+
+    URL: /api/register
+    Methods:
+        - GET
+        - POST
+        - PUT
+    """
     serializer_class = HostSerializer
 
     def get_queryset(self):
