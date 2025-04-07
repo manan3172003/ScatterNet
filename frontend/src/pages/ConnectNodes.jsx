@@ -63,9 +63,10 @@ const NodeRegistration = () => {
         console.error("Failed to register remote node");
       }
 
-      const activateResponse = await apiCall("/register/", "PUT", {
-        host: remoteNodeCredentials.remoteHost,
-        is_active: true,
+      const registerResponseData = await registerResponse.json();
+
+      const activateResponse = await apiCall(`authors/${registerResponseData.user.author_id}`, "PUT", {
+        state: "ACTIVE",
       });
 
       if (!activateResponse.ok) {
@@ -92,15 +93,16 @@ const NodeRegistration = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await apiCall("/register/", "POST", {
+      const response = await apiCall("register/", "POST", {
         host: homeCredentials.host,
         username: homeCredentials.homeUsername,
         password: homeCredentials.homePassword,
       });
 
       if (response.ok) {
-        const responseIsActive = await apiCall("/register/", "PUT", {
-          is_active: true,
+        const responseIsActive = await apiCall("register/", "PUT", {
+          host: homeCredentials.host,
+          is_active: "true",
         });
 
         if (responseIsActive) {
