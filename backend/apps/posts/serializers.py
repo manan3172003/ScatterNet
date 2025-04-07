@@ -30,7 +30,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         # Update the post's id_url and page fields
         post.id_url = f"{author.id_url}/posts/{post.id}"
-        post.page = f"{author.id_url}/posts/{post.id}"
+        post.page = f"{author.id_url.replace('/api', '')}/posts/{post.id}"
         post.save()
         return post
 

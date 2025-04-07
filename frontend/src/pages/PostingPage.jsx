@@ -102,7 +102,7 @@ export default function PostingPage() {
 
             if (response.ok) {
               showNotification("success", "Reel Created!", "Redirecting to stream...");
-              setTimeout(() => { navigate('/stream'); }, 1500);
+              setTimeout(() => { navigate('/reels'); }, 1500);
             } else {
               const errorText = await response.text();
               let errorMessage = "Failed to upload video";

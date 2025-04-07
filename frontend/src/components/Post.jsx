@@ -164,7 +164,13 @@ export default function Post({
         .catch((err) => console.error("Failed to copy URL", err));
     }
     else{
-      showNotification("error", "Share Post", "Failed to copy Post URL to clipboard.")
+      const input = document.createElement('textarea')
+      input.value = post.page
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      showNotification("success", "Share Post", "Post URL copied to clipboard!")
     }
   }
   function handleEdit() {
