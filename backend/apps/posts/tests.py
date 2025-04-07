@@ -9,6 +9,7 @@ from rest_framework import status
 
 from ..authors.models import Author
 from .models import Post, Comment, Like
+from dodgerblue.settings import NODEHOSTNAME
 
 User = get_user_model()
 
@@ -21,7 +22,7 @@ def api_client():
 def create_author():
     def _create_author(username, password, display_name, state='ACTIVE', is_staff=False):
         user = User.objects.create_user(username=username, password=password, is_staff=is_staff)
-        author = Author.objects.create(username=username, displayName=display_name, state=state, user=user)
+        author = Author.objects.create(username=username, displayName=display_name, state=state, user=user, host=NODEHOSTNAME)
         author.id_url = f"http://localhost:8000/api/authors/{author.id}"
         author.save()
 

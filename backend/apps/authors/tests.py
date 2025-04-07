@@ -3,8 +3,9 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 from urllib.parse import quote
-from .models import Author
 from dodgerblue.settings import NODEHOSTNAME
+from .models import Author
+
 
 User = get_user_model()
 
@@ -20,9 +21,9 @@ def create_author():
                                        displayName=display_name,
                                        state=state,
                                        user=user,
+                                       host=NODEHOSTNAME,
                                        is_local=is_local)
         author.id_url = f"{NODEHOSTNAME}/api/authors/{author.id}"
-        author.host = NODEHOSTNAME
         author.page = f"{NODEHOSTNAME}/authors/{author.id}"
         author.save()
         return user, author
