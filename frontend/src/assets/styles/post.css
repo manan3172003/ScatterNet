@@ -20,8 +20,7 @@
 }
 
 
-.post-in-modal,
-.post-container {
+.post-in-modal {
   overflow-y: scroll;
 }
 .profile-post-container {
