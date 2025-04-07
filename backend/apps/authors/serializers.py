@@ -28,6 +28,7 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         username = validated_data.get('username')
         password = validated_data.pop('password')
+        requested_host = validated_data.pop('host', f'{NODEHOSTNAME}api/')
         created_user = User(username=username)
         created_user.set_password(password)
         created_user.save()
@@ -36,7 +37,7 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
             user=created_user,
             state='PENDING', #by default, we'll keep it pending until accepted by node admin
             is_local=True,
-            host = f'{NODEHOSTNAME}api/',
+            host = requested_host,
             **validated_data)
 
         author.id_url = "{}api/authors/{}".format(NODEHOSTNAME, author.id)
