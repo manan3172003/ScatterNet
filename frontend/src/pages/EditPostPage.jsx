@@ -27,6 +27,8 @@ export default function EditPostPage(){
     message: "",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Helper to show notifications
   const showNotification = (type, title, message) => {
     setNotification({
@@ -71,6 +73,13 @@ export default function EditPostPage(){
             showNotification("error", "Edit Post", "Please select a valid option!")
             return;
           }
+
+          // Prevent multiple submissions
+          if (isSubmitting) {
+            return;
+          }
+
+          setIsSubmitting(true);
 
           try {
             let content = "";
@@ -120,11 +129,13 @@ export default function EditPostPage(){
             } else {
                 console.error("Error updating post");
                 showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
+                setIsSubmitting(false);
             }
         }
         catch (error){
             showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
             console.log(error)
+            setIsSubmitting(false);
         }
     }
 
@@ -233,7 +244,9 @@ export default function EditPostPage(){
                                 </>
                             )}
                            
-                            <button id= "post-button">Edit</button>
+                            <button id= "post-button" disabled={isSubmitting}>
+                              {isSubmitting ? "Updating..." : "Edit"}
+                            </button>
                         </form>
                 </div>
             </main>
