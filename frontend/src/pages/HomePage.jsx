@@ -180,7 +180,7 @@ export default function HomePage() {
                   onRefresh={refreshFeed}
                   onDeletePost={(success) => {
                     if (success) {
-                      showNotification("success", "Post Deleted", "The post has been successfully deleted.");
+                      showNotification("success", "Post Deleted", "Contact a node admin to recover this post.");
                     } else {
                       showNotification("error", "Delete Failed", "Failed to delete the post. Please try again.");
                     }
