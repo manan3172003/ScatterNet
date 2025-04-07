@@ -1,9 +1,10 @@
 import HeaderLogo from "../components/HeaderLogo"
 import "../assets/styles/posting-page.css"
 import React, {useState, useEffect} from "react";
-import {fetchUserData, handleFile, apiCall,validExtensions} from "../utils/utils.js";
+import {fetchUserData, handleFile, apiCall,validExtensions, autoResize} from "../utils/utils.js";
 import {useLocation, useNavigate} from 'react-router-dom';
 import Notification from "../components/Notification.jsx";
+
 export default function EditPostPage(){
 
     const [base64Data, setBase64] = useState(""); 
@@ -27,7 +28,12 @@ export default function EditPostPage(){
     message: "",
   });
 
-    // Helper to show notifications
+  const { textareaRef: descriptionRef, resizeTextarea: resizeDescription } = autoResize(8, 3);
+  const { textareaRef: contentRef, resizeTextarea: resizeContent } = autoResize(8, 3);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+  // Helper to show notifications
   const showNotification = (type, title, message) => {
     setNotification({
       show: true,
@@ -50,8 +56,13 @@ export default function EditPostPage(){
         [e.target.name]:e.target.value
         
       })
-      console.log(formData)
-
+      
+      // resize text areas when content changes
+      if (e.target.name === 'description') {
+        setTimeout(resizeDescription, 0);
+      } else if (e.target.name === 'content') {
+        setTimeout(resizeContent, 0);
+      }
     }
     function handleDropdownChange(e){
         setFormData({
@@ -68,9 +79,16 @@ export default function EditPostPage(){
         e.preventDefault()
         // forces visibiity to be choses
         if ((e.visibility === "")||(e.contentType==="")) {
-            alert("Please select a valid option!");
+            showNotification("error", "Edit Post", "Please select a valid option!")
             return;
           }
+
+          // Prevent multiple submissions
+          if (isSubmitting) {
+            return;
+          }
+
+          setIsSubmitting(true);
 
           try {
             let content = "";
@@ -120,17 +138,29 @@ export default function EditPostPage(){
             } else {
                 console.error("Error updating post");
                 showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
+                setIsSubmitting(false);
             }
         }
         catch (error){
-            alert("Something went wrong. Please try again.");
+            showNotification("error", "Update Failed", data.message || "Something went wrong. Please try again.");
             console.log(error)
+            setIsSubmitting(false);
         }
     }
 
   useEffect(() => {
     fetchPost();
   }, []);
+
+  // Resize text areas when form data changes
+  useEffect(() => {
+    if (formData.description) {
+      setTimeout(resizeDescription, 100);
+    }
+    if (formData.content) {
+      setTimeout(resizeContent, 100);
+    }
+  }, [formData.description, formData.content]);
 
   const fetchPost = async () => {
     setLoading(true);
@@ -156,28 +186,6 @@ export default function EditPostPage(){
     setLoading(false);
   };
 
-  // set large at start
-  document.addEventListener('DOMContentLoaded', () => {
-    const textareas = document.querySelectorAll('.post-form textarea');
-
-    textareas.forEach(textarea => {
-        if (textarea) {
-          textarea.style.height = `${Math.min(textarea.scrollHeight, parseInt(getComputedStyle(textarea).maxHeight))}px`; 
-        }
-    });
-});
-//dynamic resizing
-  const textareas = document.querySelectorAll('.post-form textarea');
-
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = "auto";
-            this.style.height = `${Math.min(this.scrollHeight, parseInt(getComputedStyle(this).maxHeight))}px`; 
-        });
-    });
-
-  
-
   if (loading) {
     return <div>Loading author...</div>
   }
@@ -195,7 +203,7 @@ export default function EditPostPage(){
             <main className="posting-main">
                 <div className="form-content" >
                         <form className="post-form" onSubmit={handleEdit}>
-                            <label className="form-label">Edit Post</label>
+                            <label className="form-title">Edit Post</label>
                             <label className="form-label">Visibility</label>
                             <select id="dropdown" name = "visibility" value={formData.visibility} required onChange={handleChange}>
                                 <option value="">Select...</option>
@@ -207,7 +215,7 @@ export default function EditPostPage(){
                             <input type="text" name="title" placeholder="Enter a title for your post" required onChange={handleChange} value={formData.title}/>
 
                             <label className="form-label">Description</label>
-                            <textarea name="description" placeholder="Enter the description of your post" required onChange={handleChange} value={formData.description}/>
+                            <textarea name="description" placeholder="Enter the description of your post" required onChange={handleChange} value={formData.description} ref={descriptionRef}/>
                             
                             <label className="form-label">Content Type</label>
                             <select id="dropdown" name = "contentType" value={formData.contentType} required onChange={handleDropdownChange}>
@@ -219,7 +227,7 @@ export default function EditPostPage(){
                               {(formData.contentType === 'text/plain'|| formData.contentType === 'text/markdown') && (
                                 <>
                                 <label className="form-label">Content</label>
-                            <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content}/>
+                            <textarea name="content" placeholder="Enter the content of your post" required onChange={handleChange} value={formData.content} ref={contentRef}/>
                                 </>
                             )}
 
@@ -227,13 +235,15 @@ export default function EditPostPage(){
                                 <>
                                  <label className="form-label">Image</label>
                                     
-                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64,setBase64ContentType)} value={formData.content}/>
+                                 <input type="file" name="content" placeholder="An optional Image" onChange={(e) => handleFile(e, setFileName, setBase64, setBase64ContentType, showNotification)} value={formData.content}/>
                                  {fileName && <p>Selected File: {fileName}</p>} 
 
                                 </>
                             )}
                            
-                            <button id= "post-button">Edit</button>
+                            <button id= "post-button" disabled={isSubmitting}>
+                              {isSubmitting ? "Updating..." : "Edit"}
+                            </button>
                         </form>
                 </div>
             </main>

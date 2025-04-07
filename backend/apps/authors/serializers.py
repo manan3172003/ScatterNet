@@ -1,3 +1,4 @@
+from urllib.parse import quote
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from dodgerblue.settings import NODEHOSTNAME
@@ -28,6 +29,7 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         username = validated_data.get('username')
         password = validated_data.pop('password')
+        requested_host = validated_data.pop('host', f'{NODEHOSTNAME}api/')
         created_user = User(username=username)
         created_user.set_password(password)
         created_user.save()
@@ -36,15 +38,15 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
             user=created_user,
             state='PENDING', #by default, we'll keep it pending until accepted by node admin
             is_local=True,
-            host = f'{NODEHOSTNAME}api/',
+            host = requested_host,
             **validated_data)
 
         author.id_url = "{}api/authors/{}".format(NODEHOSTNAME, author.id)
         author.page = "{}authors/{}".format(NODEHOSTNAME, author.id)
 
         if not author.profileImage:
-            author.profileImage = f"https://robohash.org/{author.displayName}.png"
-
+            author.profileImage = quote(f"https://robohash.org/{author.displayName}.png")
+        print(author.profileImage)
         author.save()
 
         return author

@@ -122,7 +122,7 @@ export default function EditProfilePage() {
       <div className="editing-main">
         <div className="form-content">
           <form className="edit-profile-form" onSubmit={handleEdit}>
-            <label className="form-label">Edit Profile</label>
+            <label className="edit-title">Edit Profile</label>
             <label className="form-label">Display Name</label>
             <input
               type="text"

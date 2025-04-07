@@ -70,7 +70,7 @@ export default function LandingPage(){
                     username: formData.username,
                     password: formData.password,
                     displayName: formData.displayName,
-                    profileImage: formData.profileImage || `https://robohash.org/${formData.displayName}.png`
+                    profileImage: formData.profileImage || encodeURI(`https://robohash.org/${formData.displayName}.png`)
                 }
                 )
 

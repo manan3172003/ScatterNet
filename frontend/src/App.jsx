@@ -18,10 +18,11 @@ import AdminPage from "./pages/AdminPage.jsx";
 import AuthorsList from "./components/AuthorsList.jsx";
 import EditProfilePage from "./pages/EditProfilePage";
 import DiscoverPage from "./pages/DiscoverPage.jsx";
+import StreamPage from "./pages/StreamPage.jsx";
+import ConnectNode from "./pages/ConnectNodes.jsx"
 
 function App() {
   const { user } = useContext(AuthContext);
-  console.log(user);
   return (
     <Router>
       <Routes>
@@ -39,15 +40,20 @@ function App() {
           <Route path="/editProfile" element={<ProtectedRoute element={<EditProfilePage />} />}/>
           <Route path="/requests" element={<ProtectedRoute element={<AuthorsList chosenMode="Requests" />} />}/>
           <Route path="/discover" element={<ProtectedRoute element={<DiscoverPage />} />}/>
+          <Route path="/reels" element={<ProtectedRoute element={<StreamPage />} />}/>
           <Route path="/authors/:authorId" element={<UserProfile/>} />
           <Route path="/authors/:authorId/followers" element={<ProtectedRoute element={<AuthorsList chosenMode="Followers" />} />}/>
           <Route path="/authors/:authorId/following" element={<ProtectedRoute element={<AuthorsList chosenMode="Following" />} />}/>
           <Route path="/authors/:authorId/posts/:postId" element={<PublicPostPage />}/>
-
+          
           {/* Admin Routes only accessible to admins */}
           <Route
             path="/admin"
             element={<AdminProtectedRoute element={<AdminPage />} />}
+          />
+          <Route
+            path="/connectnodes"
+            element={<AdminProtectedRoute element={<ConnectNode />} />}
           />
         </Route>
       </Routes>

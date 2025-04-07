@@ -1,5 +1,5 @@
 
-import { Home, User, SquarePlus, Shield } from "lucide-react";
+import { Home, User, SquarePlus, Shield, Video } from "lucide-react";
 import { AiOutlineNotification, AiOutlineSearch } from "react-icons/ai";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -15,6 +15,7 @@ export default function Navbar() {
     { icon: Home, label: "Home", path: "/home" },
     { icon: SquarePlus, label: "Post", path: "/post" },
     { icon: User, label: "Profile", path: "/profile" },
+    { icon: Video, label: "Reels", path: "/reels" },
     { icon: AiOutlineNotification, label: "Requests", path: "/requests "},
     { icon: AiOutlineSearch, label: "Discover", path: "/discover "},
     ...(isAdminFromCookie ? [{ icon: Shield, label: "Admin", path: "/admin" }] : []),

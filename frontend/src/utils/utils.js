@@ -1,4 +1,6 @@
 export const validExtensions = ['png','jpeg']
+export const validVideoExtensions  = ["mp4","webm","mov"]
+import { useEffect, useRef } from 'react';
 
 function convertToBase64(selectedFile) {
     return new Promise((resolve, reject) => {
@@ -63,14 +65,28 @@ async function getAuthorObjectById(author_serial) {
         }
 }
 
-async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
+async function handleFile(e, setFileName, setBase64, setBase64ContentType, showNotification) {
         const selectedFile = e.target.files[0];
 
         if (!selectedFile) {
             console.error("No file selected!");
-            return;
+            return false;
         }
         console.log('File being processed:', selectedFile);
+
+        // check file size (2MB limit)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        console.log("size", selectedFile.size)
+        if (selectedFile.size > maxSize) {
+            if (showNotification) {
+                showNotification(
+                    "error",
+                    "File Size Too Large",
+                    "Image must be less than 2MB"
+                );
+            }
+            return false;
+        }
 
         try {
             setFileName(selectedFile.name);
@@ -85,11 +101,13 @@ async function handleFile(e, setFileName, setBase64,setBase64ContentType) {
             console.log('Base64 Content Type:', base64ContentType);
             console.log('Base64 Data:', base64DataString);
             console.log('Base64 String: ', base64string);
+            return true;
     
         } catch (error) {
             console.error('Error converting file to Base64: ', error);
+            return false;
         }
-    }
+}
 
 async function apiCall(
     endpoint,
@@ -140,7 +158,133 @@ function getPostHostname(post) {
     }
   }
 }
+export async function handleVideoFile(e,setFileName,setBase64,setBase64ContentType,setVideoPreview,setUploadProgress,setIsUploading,showNotification) {
+  const file = e.target.files[0]
+  if (!file){
+    return false
+  }
 
+  setFileName(file.name)
+  const maxSize = 50 * 1024 * 1024
+  if (file.size > maxSize) {
+    showNotification(
+      "error",
+      "File Size Too Large",
+      `Video must be less than 50MB`
+    )
+    return false
+  }
+
+  const extension = file.name.split(".").pop().toLowerCase()
+  if (!validVideoExtensions.includes(extension)){
+    showNotification(
+      "error",
+      "Invalid File Type",
+      "Please upload a video with one of the following file types(mp4, mov, webm)."
+    )
+    return false
+  }
+  const videoURL = URL.createObjectURL(file)
+  setVideoPreview(videoURL)
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onprogress = (event) => {
+
+      if (event.lengthComputable){
+        const progress = Math.round((event.loaded / event.total) * 100)
+        setUploadProgress(progress)
+        setIsUploading(true)
+      }
+    }
+
+    reader.onload =() => {
+      const base64String = reader.result.split(",")[1]
+      setBase64(base64String)
+      setBase64ContentType(`video/${extension};base64`)
+      setIsUploading(false)
+      setUploadProgress(100)
+      
+      showNotification(
+          "success",
+          "Video Ready",
+          "Your video has been successfully loaded."
+      )
+      resolve(true)
+    }
+    reader.readAsDataURL(file)
+
+  })
+
+}   
+
+
+ function autoResize(maxHeight = 8, minHeight = 3) {
+  const textareaRef = useRef(null);
+
+  const resizeTextarea = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const cursorPosition = textarea.selectionStart;
+    const scrollTop = textarea.scrollTop;
+    
+    textarea.style.height = 'auto';
+    
+    // Convert em to pixels for calculation
+    const fontSize = parseFloat(getComputedStyle(textarea).fontSize);
+    const maxHeightPx = maxHeight * fontSize;
+    const minHeightPx = minHeight * fontSize;
+    
+    const newHeight = Math.min(
+      Math.max(textarea.scrollHeight, minHeightPx),
+      maxHeightPx
+    );
+    
+    // Set height in em units
+    textarea.style.height = `${newHeight / fontSize}em`;
+    
+    if (textarea.scrollHeight > maxHeightPx) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
+    
+    // Restore cursor position
+    textarea.setSelectionRange(cursorPosition, cursorPosition);
+    
+    // Auto-scroll to cursor position if it's below the visible area
+    const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || fontSize * 1.5;
+    const linesAboveCursor = textarea.value.substring(0, cursorPosition).split('\n').length;
+    const estimatedCursorY = linesAboveCursor * lineHeight;
+    
+    // If cursor is below the visible area, scroll to it
+    if (estimatedCursorY > scrollTop + textarea.clientHeight) {
+      textarea.scrollTop = estimatedCursorY - textarea.clientHeight + lineHeight;
+    }
+  };
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    resizeTextarea();
+
+    textarea.addEventListener('input', resizeTextarea);
+    textarea.addEventListener('change', resizeTextarea);
+    textarea.addEventListener('keyup', resizeTextarea);
+    textarea.addEventListener('keydown', resizeTextarea);
+
+    return () => {
+      textarea.removeEventListener('input', resizeTextarea);
+      textarea.removeEventListener('change', resizeTextarea);
+      textarea.removeEventListener('keyup', resizeTextarea);
+      textarea.removeEventListener('keydown', resizeTextarea);
+    };
+  }, []);
+
+  return { textareaRef, resizeTextarea };
+} 
 
 export {getCookie, fetchUserData, getAuthorObject, apiCall, convertToBase64, handleFile, getAuthorObjectById,
-    getPostHostname}
+    getPostHostname, autoResize}
