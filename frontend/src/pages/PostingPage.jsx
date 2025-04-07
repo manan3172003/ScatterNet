@@ -40,8 +40,8 @@ export default function PostingPage() {
     visibility: "PUBLIC",
   });
 
-  const { textareaRef: descriptionRef, resizeTextarea: resizeDescription } = autoResize(200, 100);
-  const { textareaRef: contentRef, resizeTextarea: resizeContent } = autoResize(300, 100);
+  const { textareaRef: descriptionRef, resizeTextarea: resizeDescription } = autoResize(8, 3);
+  const { textareaRef: contentRef, resizeTextarea: resizeContent } = autoResize(8, 3);
 
   // resize text areas when form data changes
   useEffect(() => {
