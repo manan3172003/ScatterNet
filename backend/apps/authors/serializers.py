@@ -1,3 +1,4 @@
+from urllib.parse import quote
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from dodgerblue.settings import NODEHOSTNAME
@@ -44,8 +45,8 @@ class AuthorSignUpSerializer(serializers.ModelSerializer):
         author.page = "{}authors/{}".format(NODEHOSTNAME, author.id)
 
         if not author.profileImage:
-            author.profileImage = f"https://robohash.org/{author.displayName}.png"
-
+            author.profileImage = quote(f"https://robohash.org/{author.displayName}.png")
+        print(author.profileImage)
         author.save()
 
         return author
