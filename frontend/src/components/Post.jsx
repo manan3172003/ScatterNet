@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 
-import { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/post.css";
 import ContentRenderer from "../components/ContentRenderer";
@@ -21,6 +21,7 @@ import {
 } from "../utils/followApi.js";
 import { apiCall, getAuthorObject, getPostHostname } from "../utils/utils.js";
 import {fetchAllComments, fetchAllLikes} from "../utils/commentsAndLikesApi.js";
+import Notification from "./Notification.jsx";
 
 export default function Post({
   post,
@@ -45,8 +46,30 @@ export default function Post({
   const [isTruncated, setIsTruncated] = useState(false);
   const contentRef = useRef(null);
   const navigate = useNavigate();
- 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const maxHeight = 400; // Max Height in pixels
+
+      const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
+    // Helper to show notifications
+  const showNotification = (type, title, message) => {
+    setNotification({
+      show: true,
+      type,
+      title,
+      message,
+    });
+  };
+  // Helper to hide notifications
+  const hideNotification = () => {
+    setNotification((prev) => ({ ...prev, show: false }));
+  };
   
  
   const formattedDate = new Date(post.published).toLocaleDateString("en-US", {
@@ -136,8 +159,11 @@ export default function Post({
     if (navigator.clipboard) {
       navigator.clipboard
         .writeText(post.page)
-        .then(() => alert("Post URL copied to clipboard!"))
+        .then(() => showNotification("success", "Share Post", "Post URL copied to clipboard!"))
         .catch((err) => console.error("Failed to copy URL", err));
+    }
+    else{
+      showNotification("error", "Share Post", "Failed to copy Post URL to clipboard.")
     }
   }
   function handleEdit() {
@@ -156,14 +182,15 @@ export default function Post({
   }
 
   function handleDelete() {
-    const userConfirmed = window.confirm(
-      "Are you sure you want to delete this post?"
-    );
-    if (userConfirmed) {
-      deletePost();
-      console.log("User confirmed!");
-    } else {
-      console.log("User canceled.");
+    setShowDeleteModal(true);
+  }
+
+  async function confirmDelete() {
+    try {
+      await deletePost();
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -190,14 +217,10 @@ export default function Post({
         if (onRefresh) {
           onRefresh();
         }
-        alert(
-          "Deleted Post! If you'd like to undelete your post, please contact a node admin for assistance."
-        );
       } else {
         throw new Error("Failed to delete post");
       }
     } catch (error) {
-      alert("Something went wrong. Please try again.");
       console.log(error);
     }
   }
@@ -253,6 +276,13 @@ export default function Post({
       }`}
       onClick={onPostClick}
     >
+      <Notification
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={hideNotification}
+      />
       <div className="post-header">
         <div className="post-header-top">
           <h2 className="post-title">{post.title}</h2>
@@ -414,6 +444,27 @@ export default function Post({
           </button>
         )}
       </div>
+
+      {showDeleteModal && (
+      <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+        <div
+          className="modal"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <p>Are you sure you want to delete this post?</p>
+          <div className="modal-buttons">
+            <button className="confirm-button" onClick={confirmDelete}>
+              Yes, delete
+            </button>
+            <button className="cancel-button" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

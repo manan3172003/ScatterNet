@@ -376,3 +376,68 @@
 .read-more-button:hover {
   text-decoration: underline;
 }
+
+/* Modal Overlay for Delete Confirmation */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(31, 41, 55, 0.8); /* dark overlay matching your theme */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000; /* makes sure it sits above everything */
+}
+
+/* Modal Container */
+.modal {
+  background: #1f2937; /* matching the post container background */
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  color: #e5e7eb; /* using your post text color */
+}
+
+.modal p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.modal-buttons button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.confirm-button {
+  background-color: #ef4444; /* similar to your delete-post-button color */
+  color: white;
+}
+
+.confirm-button:hover {
+  background-color: #c03636;
+}
+
+.cancel-button {
+  background-color: #374151; /* a darker tone matching your theme */
+  color: #e5e7eb;
+}
+
+.cancel-button:hover {
+  background-color: #4b5563;
+}
